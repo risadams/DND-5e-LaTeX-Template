@@ -19,14 +19,14 @@
   % Part
   \titleformat {\part}
     [display]
-    { \centering \DndFontPart } % format
+    { \__dnd_part_art_apply: \centering \DndFontPart } % format
     { \DndContour{\partname\ \thepart} } % label
     { 2ex } % sep
     { \DndContour } % before-code
 
   % Chapter
   \titleformat {\chapter}
-    { \DndFontChapter } % format
+    { \__dnd_chapter_art_apply: \DndFontChapter } % format
     { \DndContour{\chaptertitlename\ \thechapter :} } % label
     { \wordsep } % sep
     { \DndContour } % before-code

@@ -199,6 +199,24 @@ Disable multi-column table of contents.
 
 Excludes all deprecated code from the build process.
 
+## Artwork
+
+Art is scaled to fill its space and cropped at the centre, so it is never stretched. `fade` blends an edge into the page: `none`, `bottom`, `top`, `left`, `right`, `sides` or `all`. `graphics={...}` passes options to `\includegraphics`, e.g. `graphics={trim=0 0 0 2in, clip}`.
+
+| Command | Result |
+| ------- | ------ |
+| `\DndChapterArt[height=.4\paperheight, fade=bottom]{file}` | Put before `\chapter`: art across the top of the chapter's first page, edge to edge, with the title below it. |
+| `\DndPartArt{file}` | Put before `\part`: full-page art behind the part title. |
+| `\DndFullPageImage{file}` | A page holding only the image, such as a map or a splash illustration. |
+| `\DndPageBackground{file}` | Art behind the current page's text. |
+| `\DndFadedImage[fade=bottom]{file}` | An image in the column that fades into the page. `\DndFadedImage*` spans the full text width. |
+| `\DndSpanImage[t]{file}` | An image across both columns at the top (`t`) or bottom (`b`) of a page. Bottom placement needs `\usepackage{stfloats}`. |
+| `\DndImage{file}`, `\DndCaptionedImage{caption}{file}` | Images in a box sized to the column (`*` for full width), with an optional caption. |
+
+Cut-out art (a PNG with a transparent background) works with every command. Save PNGs as 8-bit: XeLaTeX cannot show 16-bit PNGs with transparency. `bin/prepare-images SRC DEST` converts a folder of images to 8-bit, lists the largest size each can print at 300 dpi, and with `--cmyk PROFILE.icc` converts them to CMYK for print.
+
+Text cannot flow around irregular art shapes. Place cut-out art in a column, or use a faded image, instead.
+
 ## Dependencies
 
 If you don't have LaTeX installed, we recommend installing a complete [TeX Live distribution](https://www.tug.org/texlive/).

@@ -1,0 +1,271 @@
+\ExplSyntaxOn
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Artwork: full-page images, chapter and part openers, faded images and
+% images spanning both columns.
+%
+% Art is scaled to cover the area it is given and cropped at the centre, so
+% it is never distorted. Images can fade into the page at chosen edges.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\RequirePackage {eso-pic}
+\usetikzlibrary {fadings}
+
+% Fadings: white is opaque, black is transparent. Vertical shadings run
+% bottom (0bp) to top (100bp); horizontal ones left to right.
+\pgfdeclareverticalshading {__dnd_fade_bottom} {100bp}
+  { color(0bp)=(pgftransparent!100); color(30bp)=(pgftransparent!0); color(100bp)=(pgftransparent!0) }
+\pgfdeclareverticalshading {__dnd_fade_top} {100bp}
+  { color(0bp)=(pgftransparent!0); color(70bp)=(pgftransparent!0); color(100bp)=(pgftransparent!100) }
+\pgfdeclarehorizontalshading {__dnd_fade_left} {100bp}
+  { color(0bp)=(pgftransparent!100); color(30bp)=(pgftransparent!0); color(100bp)=(pgftransparent!0) }
+\pgfdeclarehorizontalshading {__dnd_fade_right} {100bp}
+  { color(0bp)=(pgftransparent!0); color(70bp)=(pgftransparent!0); color(100bp)=(pgftransparent!100) }
+\pgfdeclarehorizontalshading {__dnd_fade_sides} {100bp}
+  {
+    color(0bp)=(pgftransparent!100); color(20bp)=(pgftransparent!0);
+    color(80bp)=(pgftransparent!0); color(100bp)=(pgftransparent!100)
+  }
+\pgfdeclareradialshading {__dnd_fade_all} { \pgfpoint{0bp}{0bp} }
+  { color(0bp)=(pgftransparent!0); color(30bp)=(pgftransparent!0); color(50bp)=(pgftransparent!100) }
+
+\clist_map_inline:nn { bottom, top, left, right, sides, all }
+  { \pgfdeclarefading { dnd~fade~#1 } { \pgfuseshading { __dnd_fade_#1 } } }
+
+\box_new:N \l__dnd_art_box
+\tl_new:N \l__dnd_art_fade_tl
+\tl_new:N \l__dnd_art_graphics_tl
+
+\msg_new:nnn { dnd } { art / unknown_fade }
+  { Unknown~fade~"#1".~Use~none,~bottom,~top,~left,~right,~sides~or~all. }
+
+% #1 - includegraphics options, #2 - file
+\cs_new_protected:Npn \__dnd_art_graphics:nn #1#2
+  {
+    \bool_if:NTF \l__dnd_img_draft_bool
+      { \includegraphics [ draft , #1 ] {#2} }
+      { \includegraphics [ #1 ] {#2} }
+  }
+
+% Scale an image to cover a w x h area, crop it at the centre and fade it.
+% #1 - includegraphics options, #2 - file, #3 - width, #4 - height, #5 - fade
+\cs_new_protected:Npn \__dnd_art_cover:nnnnn #1#2#3#4#5
+  {
+    \hbox_set:Nn \l__dnd_art_box { \__dnd_art_graphics:nn { width = #3 , #1 } {#2} }
+    \dim_compare:nNnT
+      { \box_ht:N \l__dnd_art_box + \box_dp:N \l__dnd_art_box } < { #4 }
+      { \hbox_set:Nn \l__dnd_art_box { \__dnd_art_graphics:nn { height = #4 , #1 } {#2} } }
+    \str_case:nnF {#5}
+      {
+        { none } {} { bottom } {} { top } {} { left } {}
+        { right } {} { sides } {} { all } {}
+      }
+      { \msg_error:nnn { dnd } { art / unknown_fade } {#5} }
+    \begin {tikzpicture}
+      \path [ use~as~bounding~box ]
+        ( 0pt , 0pt ) rectangle ( \dim_eval:n {#3} , \dim_eval:n {#4} );
+      \clip ( 0pt , 0pt ) rectangle ( \dim_eval:n {#3} , \dim_eval:n {#4} );
+      \begin {scope}
+        \str_if_eq:nnF {#5} { none }
+          {
+            \path [ scope~fading = dnd~fade~#5 , fit~fading = true ]
+              ( 0pt , 0pt ) rectangle ( \dim_eval:n {#3} , \dim_eval:n {#4} );
+          }
+        \node [ inner~sep = 0pt ]
+          at ( \dim_eval:n { (#3) / 2 } , \dim_eval:n { (#4) / 2 } )
+          { \box_use:N \l__dnd_art_box };
+      \end {scope}
+    \end {tikzpicture}
+  }
+
+\keys_define:nn { dnd / art }
+  {
+    fade .tl_set:N = \l__dnd_art_fade_tl,
+    fade .value_required:n = true,
+    graphics .tl_set:N = \l__dnd_art_graphics_tl,
+    graphics .value_required:n = true,
+    height .dim_set:N = \l__dnd_art_height_dim,
+    height .value_required:n = true,
+    width .dim_set:N = \l__dnd_art_width_dim,
+    width .value_required:n = true,
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Full-page images. They fill the physical page, including any bleed.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% #1 - key-values, #2 - file
+\cs_new_protected:Npn \__dnd_page_background:nn #1#2
+  {
+    \group_begin:
+      \keys_set:nn { dnd / art } { fade = none , graphics = {} , #1 }
+      \use:e
+        {
+          \exp_not:N \AddToShipoutPictureBG*
+            {
+              \exp_not:N \AtPageLowerLeft
+                {
+                  \exp_not:N \__dnd_art_cover:nnnnn
+                    { \exp_not:V \l__dnd_art_graphics_tl }
+                    { \exp_not:n {#2} }
+                    { \exp_not:N \paperwidth }
+                    { \exp_not:N \paperheight }
+                    { \exp_not:V \l__dnd_art_fade_tl }
+                }
+            }
+        }
+    \group_end:
+  }
+
+% Art behind the current page's text.
+% \DndPageBackground[fade=..., graphics={<includegraphics options>}]{<file>}
+\NewDocumentCommand {\DndPageBackground} { O{} m }
+  { \__dnd_page_background:nn {#1} {#2} }
+
+% A page that holds only an image, such as a map or a piece of art.
+% \DndFullPageImage[fade=..., graphics={...}]{<file>}
+\NewDocumentCommand {\DndFullPageImage} { O{} m }
+  {
+    \clearpage
+    \group_begin:
+      \thispagestyle {dndart}
+      \__dnd_page_background:nn {#1} {#2}
+      \null
+    \group_end:
+    \clearpage
+  }
+
+% Page style with no header or footer, so the paper background is left off.
+% Defined at \begin{document} because fancyhdr is loaded by lib/dndheader.
+\AddToHook { begindocument / before }
+  {
+    \cs_if_exist:NTF \fancypagestyle
+      { \fancypagestyle {dndart} { \fancyhf {} } }
+      { \cs_gset_eq:NN \ps@dndart \ps@empty }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Chapter and part openers. Declare the art before \chapter or \part; it is
+% applied to the page the heading starts.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tl_new:N \g__dnd_chapter_art_tl
+\tl_new:N \g__dnd_part_art_tl
+\dim_new:N \g__dnd_chapter_art_height_dim
+
+% Art across the top of the next chapter's first page, edge to edge.
+% \DndChapterArt[height=<dim>, fade=<edge>, graphics={...}]{<file>}
+% height is measured from the top of the paper (default .4\paperheight),
+% and fade defaults to bottom so the art blends into the page.
+\NewDocumentCommand {\DndChapterArt} { O{} m }
+  {
+    \group_begin:
+      \keys_set:nn { dnd / art }
+        { height = .4\paperheight , fade = bottom , graphics = {} , #1 }
+      \dim_gset_eq:NN \g__dnd_chapter_art_height_dim \l__dnd_art_height_dim
+      \tl_gset:Ne \g__dnd_chapter_art_tl
+        {
+          \exp_not:N \AddToShipoutPictureBG*
+            {
+              \exp_not:N \AtPageUpperLeft
+                {
+                  \exp_not:N \raisebox { - \dim_use:N \l__dnd_art_height_dim }
+                    {
+                      \exp_not:N \__dnd_art_cover:nnnnn
+                        { \exp_not:V \l__dnd_art_graphics_tl }
+                        { \exp_not:n {#2} }
+                        { \exp_not:N \paperwidth }
+                        { \dim_use:N \l__dnd_art_height_dim }
+                        { \exp_not:V \l__dnd_art_fade_tl }
+                    }
+                }
+            }
+        }
+    \group_end:
+  }
+
+% Called from the chapter heading: draw pending art and push the title below
+% it. The text area starts 1in + \voffset + \topmargin + \headheight + \headsep
+% below the top of the paper.
+\cs_new_protected:Npn \__dnd_chapter_art_apply:
+  {
+    \tl_if_empty:NF \g__dnd_chapter_art_tl
+      {
+        \tl_use:N \g__dnd_chapter_art_tl
+        \tl_gclear:N \g__dnd_chapter_art_tl
+        \vspace*
+          {
+            \dim_max:nn { 0pt }
+              {
+                \g__dnd_chapter_art_height_dim
+                - 1in - \voffset - \topmargin - \headheight - \headsep
+                - .5in
+              }
+          }
+      }
+  }
+
+% Full-page art behind the next part's title page.
+% \DndPartArt[fade=<edge>, graphics={...}]{<file>}
+\NewDocumentCommand {\DndPartArt} { O{} m }
+  { \tl_gset:Nn \g__dnd_part_art_tl { \__dnd_page_background:nn {#1} {#2} } }
+
+\cs_new_protected:Npn \__dnd_part_art_apply:
+  {
+    \tl_if_empty:NF \g__dnd_part_art_tl
+      {
+        \tl_use:N \g__dnd_part_art_tl
+        \tl_gclear:N \g__dnd_part_art_tl
+      }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Images in the text
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% An image that fades into the page. Width defaults to the column (or the
+% full text width with *); height defaults to the image's own proportions.
+% \DndFadedImage*[fade=<edge>, width=<dim>, height=<dim>, graphics={...}]{<file>}
+\NewDocumentCommand {\DndFadedImage} { s O{} m }
+  {
+    \group_begin:
+      \keys_set:nn { dnd / art }
+        {
+          fade = bottom , graphics = {} , height = 0pt ,
+          width = \IfBooleanTF {#1} { \textwidth } { \linewidth } ,
+          #2
+        }
+      \dim_compare:nNnT { \l__dnd_art_height_dim } = { 0pt }
+        {
+          \hbox_set:Nn \l__dnd_art_box
+            {
+              \exp_args:Ne \__dnd_art_graphics:nn
+                { width = \dim_use:N \l__dnd_art_width_dim , \exp_not:V \l__dnd_art_graphics_tl }
+                {#3}
+            }
+          \dim_set:Nn \l__dnd_art_height_dim
+            { \box_ht:N \l__dnd_art_box + \box_dp:N \l__dnd_art_box }
+        }
+      \par \noindent
+      \use:e
+        {
+          \exp_not:N \__dnd_art_cover:nnnnn
+            { \exp_not:V \l__dnd_art_graphics_tl }
+            { \exp_not:n {#3} }
+            { \dim_use:N \l__dnd_art_width_dim }
+            { \dim_use:N \l__dnd_art_height_dim }
+            { \exp_not:V \l__dnd_art_fade_tl }
+        }
+      \par
+    \group_end:
+  }
+
+% An image across both columns at the top or bottom of a page. Bottom
+% placement needs the stfloats package.
+% \DndSpanImage[t|b][<\DndFadedImage options>]{<file>}
+\NewDocumentCommand {\DndSpanImage} { O{t} O{fade=none} m }
+  {
+    \begin {figure*} [#1]
+      \DndFadedImage* [#2] {#3}
+    \end {figure*}
+  }

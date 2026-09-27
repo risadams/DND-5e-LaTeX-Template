@@ -1,0 +1,53 @@
+#!/bin/sh
+# Prepare artwork for the template with ImageMagick (`magick`).
+#
+#   bin/prepare-images SRC_DIR DEST_DIR [--cmyk PROFILE.icc]
+#
+# * PNGs are rewritten as 8-bit RGBA. XeLaTeX cannot show 16-bit PNGs with
+#   transparency, and 8 bits are all a printer uses.
+# * Every image's pixel size is listed with the largest size it can print at
+#   300 dpi, so art that is too small for its spot is easy to catch.
+# * With --cmyk, images are also converted to CMYK JPEG using the given ICC
+#   output profile (ask your printer which one they want). JPEG has no
+#   transparency, so cut-out PNGs are flattened onto white; keep RGB PNGs
+#   for those unless your printer requires CMYK everywhere.
+
+set -eu
+
+usage() { echo "usage: $0 SRC_DIR DEST_DIR [--cmyk PROFILE.icc]" >&2; exit 1; }
+
+[ $# -ge 2 ] || usage
+SRC="$1"; DEST="$2"; shift 2
+PROFILE=""
+if [ $# -gt 0 ]; then
+  [ "$1" = "--cmyk" ] && [ $# -eq 2 ] || usage
+  PROFILE="$2"
+  [ -f "$PROFILE" ] || { echo "ICC profile not found: $PROFILE" >&2; exit 1; }
+fi
+
+command -v magick >/dev/null || { echo "ImageMagick (magick) is required" >&2; exit 1; }
+
+# Windows builds of ImageMagick need native paths when run from Git Bash
+native() { if command -v cygpath >/dev/null; then cygpath -m "$1"; else printf '%s' "$1"; fi; }
+mkdir -p "$DEST"
+
+printf '%-40s %12s  %s\n' "image" "pixels" "max size at 300 dpi"
+find "$SRC" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) |
+while read -r f; do
+  name="$(basename "$f")"
+  base="${name%.*}"
+  size="$(magick identify -format '%w %h\n' "$(native "$f")" | head -n 1)"
+  w="${size% *}"; h="${size#* }"
+  printf '%-40s %12s  %s x %s in\n' "$name" "${w}x${h}" \
+    "$(awk "BEGIN{printf \"%.2f\", $w/300}")" "$(awk "BEGIN{printf \"%.2f\", $h/300}")"
+
+  if [ -n "$PROFILE" ]; then
+    magick "$(native "$f")" -background white -flatten \
+      -profile "$(native "$PROFILE")" -quality 95 "$(native "$DEST/$base.jpg")"
+  else
+    case "$name" in
+      *.png|*.PNG) magick "$(native "$f")" -depth 8 "PNG32:$(native "$DEST/$name")" ;;
+      *) cp "$f" "$DEST/$name" ;;
+    esac
+  fi
+done

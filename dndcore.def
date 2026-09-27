@@ -82,6 +82,7 @@
   { \RequirePackage {lib/dnddeprecated} }
 
 % Main modules in alphabetical order
+\RequirePackage {lib/dndart}        % full-page, chapter, part and faded art
 \RequirePackage {lib/dndcomment}    % inline comment boxes
 \RequirePackage {lib/dndheader}     % fancy headers and footers
 \RequirePackage {lib/dndimage}      % image display
