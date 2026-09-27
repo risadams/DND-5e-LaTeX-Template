@@ -145,6 +145,12 @@
       },
     colormodel .initial:n = rgb,
 
+    % Print cover spread: back cover, spine and front cover on one sheet
+    cover .bool_set:N = \l__dnd_cover_bool,
+    cover .default:n  = true,
+    spine .dim_set:N  = \l__dnd_spine_dim,
+    spine .initial:n  = 0pt,
+
     % Justified text
     justified .code:n =
       {

@@ -122,6 +122,7 @@ Note that the package has only been tested with the `book` class.
 | `bleed`        | ✓               | ✓                 |
 | `cropmarks`    | ✓               | ✓                 |
 | `colormodel`   | ✓               | ✓                 |
+| `cover`, `spine` | ✓             | ✓                 |
 | `justified`    | ✓               | ✓                 |
 | `layout`       | ✓               |                   |
 | `nomultitoc`   | ✓               | ✓                 |
@@ -212,6 +213,32 @@ Art is scaled to fill its space and cropped at the centre, so it is never stretc
 | `\DndFadedImage[fade=bottom]{file}` | An image in the column that fades into the page. `\DndFadedImage*` spans the full text width. |
 | `\DndSpanImage[t]{file}` | An image across both columns at the top (`t`) or bottom (`b`) of a page. Bottom placement needs `\usepackage{stfloats}`. |
 | `\DndImage{file}`, `\DndCaptionedImage{caption}{file}` | Images in a box sized to the column (`*` for full width), with an optional caption. |
+
+### Covers
+
+`\DndFrontCover` and `\DndBackCover` add full-bleed cover pages to a book:
+
+```latex
+\DndFrontCover[title=The Sunless Citadel, subtitle=An Adventure for Levels 1--3,
+               author=A. Writer, title-position=top]{art/cover}
+...
+\DndBackCover[blurb={Deep beneath the earth lies a fortress...}]{art/back}
+```
+
+Options: `title-position` (`top` or `bottom`), `title-size` (default `54pt`; the subtitle and author are 40% of it), `title-color`, `outline-color`, and `guides` to show the trim line and the safe area where printers want text kept.
+
+Print-on-demand services want the cover as a separate PDF with the back cover, spine and front cover on one sheet. Make a second document for it, using the spine width from your printer's calculator (it depends on page count and paper):
+
+```latex
+\documentclass[cover, spine=0.6in, bleed=0.125in, fonts=solbera]{dndbook}
+\begin{document}
+\DndCoverSpread[title=The Sunless Citadel, author=A. Writer,
+                blurb={Deep beneath the earth...},
+                art=art/cover, back-art=art/back, guides]
+\end{document}
+```
+
+Use `wrap-art=<file>` instead of `art` and `back-art` for one image across the whole spread. The spine is filled with `spine-color` (default `titlered`) and gets the title and author in `spine-text-color` when it is wider than 0.25in. Remove `guides` before sending the file to print.
 
 Cut-out art (a PNG with a transparent background) works with every command. Save PNGs as 8-bit: XeLaTeX cannot show 16-bit PNGs with transparency. `bin/prepare-images SRC DEST` converts a folder of images to 8-bit, lists the largest size each can print at 300 dpi, and with `--cmyk PROFILE.icc` converts them to CMYK for print.
 

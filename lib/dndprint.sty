@@ -17,18 +17,30 @@
 \dim_set:Nn \l__dnd_trim_width_dim  { \paperwidth }
 \dim_set:Nn \l__dnd_trim_height_dim { \paperheight }
 
-% Lower-left corner of the trimmed page, for positioning page furniture
+% Trimmed width of the whole sheet: one page, or with the cover option a
+% cover spread (back cover, spine, front cover)
+\dim_new:N \l__dnd_sheet_width_dim
+\bool_if:NTF \l__dnd_cover_bool
+  { \dim_set:Nn \l__dnd_sheet_width_dim { 2 \l__dnd_trim_width_dim + \l__dnd_spine_dim } }
+  { \dim_set_eq:NN \l__dnd_sheet_width_dim \l__dnd_trim_width_dim }
+
+% True when the physical sheet differs from the trimmed page
+\bool_new:N \l__dnd_print_sheet_bool
+\bool_set:Nn \l__dnd_print_sheet_bool
+  { \l__dnd_cover_bool || \dim_compare_p:nNn { \l__dnd_bleed_dim } > { 0pt } }
+
+% Bleed width, for positioning page furniture from the paper edge
 \NewExpandableDocumentCommand {\DndBleed} {} { \dim_use:N \l__dnd_bleed_dim }
 
 \bool_if:NT \l__dnd_layout_bool
   {
-    \dim_compare:nNnT { \l__dnd_bleed_dim } > { 0pt }
+    \bool_if:NT \l__dnd_print_sheet_bool
       {
         \geometry
           {
-            paperwidth    = \dim_eval:n { \l__dnd_trim_width_dim  + 2 \l__dnd_bleed_dim },
+            paperwidth    = \dim_eval:n { \l__dnd_sheet_width_dim  + 2 \l__dnd_bleed_dim },
             paperheight   = \dim_eval:n { \l__dnd_trim_height_dim + 2 \l__dnd_bleed_dim },
-            layoutwidth   = \l__dnd_trim_width_dim,
+            layoutwidth   = \l__dnd_sheet_width_dim,
             layoutheight  = \l__dnd_trim_height_dim,
             layouthoffset = \l__dnd_bleed_dim,
             layoutvoffset = \l__dnd_bleed_dim,
@@ -48,21 +60,21 @@
     [
       \dim_to_decimal_in_bp:n { \l__dnd_bleed_dim } ~
       \dim_to_decimal_in_bp:n { \l__dnd_bleed_dim } ~
-      \dim_to_decimal_in_bp:n { \l__dnd_trim_width_dim  + \l__dnd_bleed_dim } ~
+      \dim_to_decimal_in_bp:n { \l__dnd_sheet_width_dim  + \l__dnd_bleed_dim } ~
       \dim_to_decimal_in_bp:n { \l__dnd_trim_height_dim + \l__dnd_bleed_dim }
     ]
   }
 \tl_set:Ne \l__dnd_bleed_box_tl
   {
     [ 0 ~ 0 ~
-      \dim_to_decimal_in_bp:n { \l__dnd_trim_width_dim  + 2 \l__dnd_bleed_dim } ~
+      \dim_to_decimal_in_bp:n { \l__dnd_sheet_width_dim  + 2 \l__dnd_bleed_dim } ~
       \dim_to_decimal_in_bp:n { \l__dnd_trim_height_dim + 2 \l__dnd_bleed_dim }
     ]
   }
 \tl_set:Ne \l__dnd_page_boxes_tl
   { /TrimBox ~ \l__dnd_trim_box_tl \c_space_tl /BleedBox ~ \l__dnd_bleed_box_tl }
 
-\dim_compare:nNnT { \l__dnd_bleed_dim } > { 0pt }
+\bool_if:NT \l__dnd_print_sheet_bool
   {
     \AddToHook { begindocument / end }
       {

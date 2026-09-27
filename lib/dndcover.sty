@@ -1,0 +1,299 @@
+\ExplSyntaxOn
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Covers
+%
+% \DndFrontCover and \DndBackCover make full-bleed cover pages inside a book.
+% For print, compile a separate document with the class options
+% `cover, spine=<width>, bleed=<width>` and use \DndCoverSpread, which lays
+% out the back cover, spine and front cover on one sheet.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tl_new:N \l__dnd_cover_title_tl
+\tl_new:N \l__dnd_cover_subtitle_tl
+\tl_new:N \l__dnd_cover_author_tl
+\tl_new:N \l__dnd_cover_blurb_tl
+\tl_new:N \l__dnd_cover_art_tl
+\tl_new:N \l__dnd_cover_back_art_tl
+\tl_new:N \l__dnd_cover_wrap_art_tl
+\tl_new:N \l__dnd_cover_title_position_tl
+\tl_new:N \l__dnd_cover_node_options_tl
+\tl_new:N \l__dnd_cover_title_block_tl
+\tl_new:N \l__dnd_cover_author_block_tl
+\box_new:N \g__dnd_cover_box
+
+\keys_define:nn { dnd / cover }
+  {
+    title .tl_set:N    = \l__dnd_cover_title_tl,
+    subtitle .tl_set:N = \l__dnd_cover_subtitle_tl,
+    author .tl_set:N   = \l__dnd_cover_author_tl,
+    blurb .tl_set:N    = \l__dnd_cover_blurb_tl,
+    art .tl_set:N      = \l__dnd_cover_art_tl,
+    back-art .tl_set:N = \l__dnd_cover_back_art_tl,
+    wrap-art .tl_set:N = \l__dnd_cover_wrap_art_tl,
+    title-color .tl_set:N       = \l__dnd_cover_title_color_tl,
+    title-color .initial:n      = white,
+    outline-color .tl_set:N     = \l__dnd_cover_outline_color_tl,
+    outline-color .initial:n    = black,
+    title-size .dim_set:N       = \l__dnd_cover_title_size_dim,
+    title-size .initial:n       = 54pt,
+    title-position .choices:nn  = { top, bottom }
+      { \tl_set_eq:NN \l__dnd_cover_title_position_tl \l_keys_choice_tl },
+    title-position .initial:n   = top,
+    spine-color .tl_set:N       = \l__dnd_cover_spine_color_tl,
+    spine-color .initial:n      = titlered,
+    spine-text-color .tl_set:N  = \l__dnd_cover_spine_text_color_tl,
+    spine-text-color .initial:n = white,
+    guides .bool_set:N          = \l__dnd_cover_guides_bool,
+    guides .default:n           = true,
+  }
+
+% Distance of the title and author from the trim edge
+\dim_const:Nn \c__dnd_cover_margin_dim { .75in }
+
+% All drawing below happens inside a picture whose origin is the lower-left
+% corner of the paper (bleed included).
+
+% Art filling a rectangle of the sheet.
+% #1 - x, #2 - y, #3 - width, #4 - height, #5 - file
+\cs_new_protected:Npn \__dnd_cover_art:nnnnn #1#2#3#4#5
+  {
+    \tl_if_empty:nF {#5}
+      {
+        \put ( \LenToUnit { \dim_eval:n {#1} } , \LenToUnit { \dim_eval:n {#2} } )
+          { \__dnd_art_cover:nnnnn { } {#5} { \dim_eval:n {#3} } { \dim_eval:n {#4} } { none } }
+      }
+  }
+
+% A text node at a point of the sheet.
+% #1 - x, #2 - y, #3 - tikz node options, #4 - content
+\cs_new_protected:Npn \__dnd_cover_node:nnnn #1#2#3#4
+  {
+    \put ( \LenToUnit { \dim_eval:n {#1} } , \LenToUnit { \dim_eval:n {#2} } )
+      {
+        \begin {tikzpicture} [ overlay ]
+          \node [ inner~sep = 0pt , align = center , #3 ] at ( 0 , 0 ) {#4};
+        \end {tikzpicture}
+      }
+  }
+\cs_generate_variant:Nn \__dnd_cover_node:nnnn { nnen }
+
+% Subtitle and author: heading font at 40% of the title size
+\cs_new_protected:Npn \__dnd_cover_small_font:
+  {
+    \sctitlefont
+    \fontsize { \dim_eval:n { .4 \l__dnd_cover_title_size_dim } }
+      { \dim_eval:n { .5 \l__dnd_cover_title_size_dim } }
+    \selectfont
+  }
+
+% Title, subtitle and author on a front cover whose trimmed left edge is at #1
+\cs_new_protected:Npn \__dnd_cover_front_text:n #1
+  {
+    \tl_set:Ne \l__dnd_cover_node_options_tl
+      {
+        text~width = \dim_eval:n { \l__dnd_trim_width_dim - 2 \c__dnd_cover_margin_dim } ,
+        text = \l__dnd_cover_title_color_tl
+      }
+    \tl_set:Nn \l__dnd_cover_title_block_tl
+      {
+        \group_begin:
+          \booktitlefont
+          \fontsize { \l__dnd_cover_title_size_dim } { \l__dnd_cover_title_size_dim }
+          \selectfont
+          \DndContour [ \l__dnd_cover_outline_color_tl ] { \l__dnd_cover_title_tl }
+        \group_end:
+        \tl_if_empty:NF \l__dnd_cover_subtitle_tl
+          {
+            \\[ .2em ]
+            \__dnd_cover_small_font:
+            \DndContour [ \l__dnd_cover_outline_color_tl ] { \l__dnd_cover_subtitle_tl }
+          }
+      }
+    \tl_set:Nn \l__dnd_cover_author_block_tl
+      {
+        \__dnd_cover_small_font:
+        \DndContour [ \l__dnd_cover_outline_color_tl ] { \l__dnd_cover_author_tl }
+      }
+    \str_if_eq:VnTF \l__dnd_cover_title_position_tl { top }
+      {
+        \__dnd_cover_node:nnen
+          { #1 + \l__dnd_trim_width_dim / 2 }
+          { \l__dnd_bleed_dim + \l__dnd_trim_height_dim - \c__dnd_cover_margin_dim }
+          { anchor = north , \l__dnd_cover_node_options_tl }
+          { \l__dnd_cover_title_block_tl }
+        \tl_if_empty:NF \l__dnd_cover_author_tl
+          {
+            \__dnd_cover_node:nnen
+              { #1 + \l__dnd_trim_width_dim / 2 }
+              { \l__dnd_bleed_dim + \c__dnd_cover_margin_dim }
+              { anchor = south , \l__dnd_cover_node_options_tl }
+              { \l__dnd_cover_author_block_tl }
+          }
+      }
+      {
+        \__dnd_cover_node:nnen
+          { #1 + \l__dnd_trim_width_dim / 2 }
+          { \l__dnd_bleed_dim + 2 \c__dnd_cover_margin_dim }
+          { anchor = south , \l__dnd_cover_node_options_tl }
+          { \l__dnd_cover_title_block_tl }
+        \tl_if_empty:NF \l__dnd_cover_author_tl
+          {
+            \__dnd_cover_node:nnen
+              { #1 + \l__dnd_trim_width_dim / 2 }
+              { \l__dnd_bleed_dim + \l__dnd_trim_height_dim - \c__dnd_cover_margin_dim }
+              { anchor = north , \l__dnd_cover_node_options_tl }
+              { \l__dnd_cover_author_block_tl }
+          }
+      }
+  }
+
+% Blurb box on a back cover whose trimmed left edge is at #1
+\cs_new_protected:Npn \__dnd_cover_back_text:n #1
+  {
+    \tl_if_empty:NF \l__dnd_cover_blurb_tl
+      {
+        \__dnd_cover_node:nnen
+          { #1 + \l__dnd_trim_width_dim / 2 }
+          { \l__dnd_bleed_dim + .55 \l__dnd_trim_height_dim }
+          {
+            anchor = center , fill = bgtan , fill~opacity = .85 ,
+            text~opacity = 1 , inner~sep = 12pt , rounded~corners = 3pt ,
+            align = justify ,
+            text~width = \dim_eval:n
+              { \l__dnd_trim_width_dim - 2 \c__dnd_cover_margin_dim - 24pt }
+          }
+          { \normalfont \l__dnd_cover_blurb_tl }
+      }
+  }
+
+% Trim, fold and safe-area lines for checking a layout; not for printing.
+% Safe area: .25in inside the trim, where printers keep text.
+\cs_new_protected:Npn \__dnd_cover_guides:
+  {
+    \bool_if:NT \l__dnd_cover_guides_bool
+      {
+        \put (0,0)
+          {
+            \begin {tikzpicture} [ overlay , line~width = .5pt ]
+              \draw [ cyan , dashed ]
+                ( \l__dnd_bleed_dim , \l__dnd_bleed_dim ) rectangle ++
+                ( \l__dnd_sheet_width_dim , \l__dnd_trim_height_dim );
+              \bool_if:NT \l__dnd_cover_bool
+                {
+                  \draw [ cyan , dashed ]
+                    ( \dim_eval:n { \l__dnd_bleed_dim + \l__dnd_trim_width_dim } , 0pt )
+                    -- ++ ( 0pt , \paperheight );
+                  \draw [ cyan , dashed ]
+                    ( \dim_eval:n { \l__dnd_bleed_dim + \l__dnd_trim_width_dim + \l__dnd_spine_dim } , 0pt )
+                    -- ++ ( 0pt , \paperheight );
+                }
+              \draw [ magenta , dotted ]
+                ( \dim_eval:n { \l__dnd_bleed_dim + .25in } , \dim_eval:n { \l__dnd_bleed_dim + .25in } )
+                rectangle ++
+                ( \dim_eval:n { \l__dnd_sheet_width_dim - .5in } , \dim_eval:n { \l__dnd_trim_height_dim - .5in } );
+            \end {tikzpicture}
+          }
+      }
+  }
+
+% Typeset a cover page now (so the keys are still set) and put it behind an
+% otherwise empty page.
+% #1 - key-values, #2 - drawing code
+\cs_new_protected:Npn \__dnd_cover_page:nn #1#2
+  {
+    \clearpage
+    \group_begin:
+      \keys_set:nn { dnd / cover } {#1}
+      \hbox_gset:Nn \g__dnd_cover_box
+        {
+          \setlength { \unitlength } { 1pt }
+          \begin {picture} (0,0) #2 \end {picture}
+        }
+    \group_end:
+    \thispagestyle {dndart}
+    \AddToShipoutPictureBG* { \AtPageLowerLeft { \box_use_drop:N \g__dnd_cover_box } }
+    \null
+    \clearpage
+  }
+
+% \DndFrontCover[title=..., subtitle=..., author=..., title-position=top|bottom,
+%                title-color=..., outline-color=..., title-size=...]{<art>}
+\NewDocumentCommand {\DndFrontCover} { O{} m }
+  {
+    \__dnd_cover_page:nn {#1}
+      {
+        \__dnd_cover_art:nnnnn { 0pt } { 0pt } { \paperwidth } { \paperheight } {#2}
+        \__dnd_cover_front_text:n { \l__dnd_bleed_dim }
+        \__dnd_cover_guides:
+      }
+  }
+
+% \DndBackCover[blurb={...}]{<art>}
+\NewDocumentCommand {\DndBackCover} { O{} m }
+  {
+    \__dnd_cover_page:nn {#1}
+      {
+        \__dnd_cover_art:nnnnn { 0pt } { 0pt } { \paperwidth } { \paperheight } {#2}
+        \__dnd_cover_back_text:n { \l__dnd_bleed_dim }
+        \__dnd_cover_guides:
+      }
+  }
+
+% Print cover spread (needs the `cover` class option):
+% \DndCoverSpread[title=..., subtitle=..., author=..., blurb={...},
+%                 art=<front>, back-art=<back>, wrap-art=<whole spread>,
+%                 spine-color=..., spine-text-color=..., guides]
+\msg_new:nnn { dnd } { cover / needs_option }
+  { \token_to_str:N \DndCoverSpread \c_space_tl needs~the~"cover"~class~option. }
+
+\cs_new_protected:Npn \__dnd_cover_spine_text:
+  {
+    \dim_set:Nn \l_tmpa_dim { \dim_min:nn { .55 \l__dnd_spine_dim } { 24pt } }
+    \__dnd_cover_node:nnen
+      { \l__dnd_bleed_dim + \l__dnd_trim_width_dim + \l__dnd_spine_dim / 2 }
+      { \l__dnd_bleed_dim + \l__dnd_trim_height_dim / 2 }
+      { rotate = -90 , text = \l__dnd_cover_spine_text_color_tl }
+      {
+        \booktitlefont \fontsize { \l_tmpa_dim } { \l_tmpa_dim } \selectfont
+        \l__dnd_cover_title_tl
+        \tl_if_empty:NF \l__dnd_cover_author_tl
+          { \quad \textbullet \quad \l__dnd_cover_author_tl }
+      }
+  }
+
+\NewDocumentCommand {\DndCoverSpread} { O{} }
+  {
+    \bool_if:NF \l__dnd_cover_bool
+      { \msg_error:nn { dnd } { cover / needs_option } }
+    \__dnd_cover_page:nn {#1}
+      {
+        % Whole spread, or back / spine / front separately
+        \tl_if_empty:NTF \l__dnd_cover_wrap_art_tl
+          {
+            \__dnd_cover_art:nnnnn { 0pt } { 0pt }
+              { \l__dnd_bleed_dim + \l__dnd_trim_width_dim } { \paperheight }
+              { \l__dnd_cover_back_art_tl }
+            \__dnd_cover_art:nnnnn
+              { \l__dnd_bleed_dim + \l__dnd_trim_width_dim + \l__dnd_spine_dim } { 0pt }
+              { \l__dnd_bleed_dim + \l__dnd_trim_width_dim } { \paperheight }
+              { \l__dnd_cover_art_tl }
+            \put ( \LenToUnit { \dim_eval:n { \l__dnd_bleed_dim + \l__dnd_trim_width_dim } } , 0 )
+              {
+                \textcolor { \l__dnd_cover_spine_color_tl }
+                  { \rule { \l__dnd_spine_dim } { \paperheight } }
+              }
+          }
+          {
+            \__dnd_cover_art:nnnnn { 0pt } { 0pt } { \paperwidth } { \paperheight }
+              { \l__dnd_cover_wrap_art_tl }
+          }
+        \__dnd_cover_back_text:n { \l__dnd_bleed_dim }
+        \__dnd_cover_front_text:n
+          { \l__dnd_bleed_dim + \l__dnd_trim_width_dim + \l__dnd_spine_dim }
+        % Printers only allow spine text on spines wider than about .25in
+        \dim_compare:nNnT { \l__dnd_spine_dim } > { .25in }
+          { \__dnd_cover_spine_text: }
+        \__dnd_cover_guides:
+      }
+  }

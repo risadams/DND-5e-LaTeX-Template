@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Skill check macros also built on those, e.g. `\DndAthletics{12}` gets 'DC 12 Strength (Athletics)', or `\DndAthletics[\conname]{12}` gets 'DC 12 Constitution (Athletics)'.
 * Print production options: `bleed=<length>` adds bleed on every side and writes PDF TrimBox/BleedBox, `cropmarks` draws trim marks, and `colormodel=cmyk` converts colors for print
 * Artwork commands: `\DndChapterArt` (edge-to-edge art at the top of a chapter's first page), `\DndPartArt` (art behind a part title), `\DndFullPageImage` (image-only pages), `\DndPageBackground` (art behind a page's text), `\DndFadedImage` (images that fade into the page) and `\DndSpanImage` (art across both columns). Art fills its space without distortion and extends into the bleed.
+* Covers: `\DndFrontCover` and `\DndBackCover` for full-bleed cover pages, and `\DndCoverSpread` with the `cover` and `spine` options for print-on-demand cover spreads (#235)
 * `bin/prepare-images` converts art to 8-bit, reports its printable size at 300 dpi and optionally converts it to CMYK
 * `\damagetypename` caption sets the word order of monster attack damage, e.g. "de daño veneno" in Spanish; Spanish, Portuguese and French now put the damage type after the noun (#324, #190)
 * `DndMonster` stat blocks can be referenced: `\begin{DndMonster}[label=monster:wolf]{Wolf}` works with `\pageref`, `\nameref` and hyperref links (#337)
