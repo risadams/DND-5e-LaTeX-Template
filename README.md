@@ -149,6 +149,8 @@ Choose the font set:
 * `wotc`: The fonts used in the official books. You must buy and install them; requires XeLaTeX or LuaLaTeX.
 * `dmsguild`: The free fonts from the DMs Guild creator resources; requires XeLaTeX or LuaLaTeX.
 
+Scaly Sans, used for tables and stat blocks with `fonts=solbera`, has no en dash (`--`). Use an em dash (`---`) for empty table cells, as the core books do, and `\DndMinus` for negative numbers.
+
 Solbera's fonts are licensed [CC BY-SA 4.0](https://github.com/jonathonf/solbera-dnd-fonts). You may sell documents typeset with them, but credit Solbera, Ryrok, Ners and LUCASTUCIOUS, and do not sell the fonts themselves.
 
 #### `fontpath`

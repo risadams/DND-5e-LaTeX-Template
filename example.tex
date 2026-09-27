@@ -159,6 +159,23 @@ The |DndTable| colors the even rows and is set to the width of a line by default
     Some value  & Some value
 \end{DndTable}
 
+The |DndClassTable| spans both columns, like the class tables in the core books. |\DndClassTableGroup| adds a heading over several columns.
+
+\begin{DndClassTable}[title=The Typesetter, header-rows=2]{ccXccc}
+  \DndClassTableGroup{3}{3}{Macros per Page}
+  \DndClassTableHeader{Level & Proficiency Bonus & Features & 1st & 2nd & 3rd}
+  1st & +2 & Typesetting, Font Recovery & 2 & --- & --- \\
+  2nd & +2 & Package Tradition          & 3 & --- & --- \\
+  3rd & +2 & ---                        & 4 & 2   & --- \\
+  4th & +2 & Ability Score Improvement  & 4 & 3   & --- \\
+  5th & +3 & Kerning Surge              & 4 & 3  & 2  \\
+\end{DndClassTable}
+
+\begin{DndSpellList}[heading=section]{Typesetter Spells}
+  \DndSpellListLevel{0}{Mending Margins, Hyphenate, Blank Page}
+  \DndSpellListLevel{1}{Widow Ward, Orphan's Bane, Detect Overfull Box}
+\end{DndSpellList}
+
 \chapter{Monsters and NPCs}
 
 % Monster stat block
