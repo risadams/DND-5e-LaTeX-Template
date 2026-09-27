@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 * `DndReadAloud`, `DndSidebar` and `DndComment` no longer fail on TeX Live 2026 when the optional argument is omitted (#391)
 * Accented characters in translated captions (e.g. Spanish "al día") are no longer garbled under pdfLaTeX (#388)
+* Ability scores of 30 no longer wrap onto two lines in monster stat blocks (#373)
 
 ## [0.8.0] - 2020-04-21
 
