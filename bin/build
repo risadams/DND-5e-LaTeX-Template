@@ -117,6 +117,13 @@ local function file_exists(path)
   return lfs.attributes(path, "mode") == "file"
 end
 
+-- Run a command; true if it succeeded. texlua's os.execute returns the exit
+-- code (0 on success), Lua 5.2+ returns true or nil.
+local function run(command)
+  local result = os.execute(command)
+  return result == true or result == 0
+end
+
 local function quote(arg)
   if arg:match('^[%w%./:=_%-]+$') then return arg end
   return '"' .. arg:gsub('"', '\\"') .. '"'
@@ -268,7 +275,7 @@ local function build(edition)
     settings.verbose and "" or "-silent",
     "-jobname=" .. quote(job), quote(wrapper),
   }, " ")
-  local ok = os.execute(command)
+  local ok = run(command)
   os.remove(wrapper)
   assert(lfs.chdir(previous))
   if not ok then
@@ -294,7 +301,7 @@ for _, edition in ipairs(wanted) do
       if settings.cmyk then table.insert(command, "--cmyk") end
     end
     table.insert(command, quote(pdf))
-    if not os.execute(table.concat(command, " ")) then failures = failures + 1 end
+    if not run(table.concat(command, " ")) then failures = failures + 1 end
   end
 end
 

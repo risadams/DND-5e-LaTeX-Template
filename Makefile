@@ -75,7 +75,9 @@ examples:
 TESTS = deprecated-code package-mode toc-line-breaks appendix-include
 
 test:
-	texlua bin/build print test/preflight-fail.tex
+	if texlua bin/build --preflight print test/preflight-fail.tex; then \
+	  echo "bin/build passed a PDF that failed preflight"; exit 1; \
+	fi
 	if texlua bin/preflight --print test/preflight-fail-print.pdf; then \
 	  echo "preflight passed a PDF it should have rejected"; exit 1; \
 	fi

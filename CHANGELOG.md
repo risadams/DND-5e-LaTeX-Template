@@ -66,6 +66,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Documents built without `nodeprecatedcode` (including package mode) no longer stop with "Undefined color `statblockbg'"; the old name is kept as an alias of `statblockbg14`
 * `\\` and `\newline` in part, chapter and section titles no longer break the table of contents; they break the line in the heading and show as a space in the contents, bookmarks and footer
 * Appendices in an `\include`d file are labeled "Appendix" in the table of contents instead of "Ch."
+* Builds with TeX Live 2023 again: PDF navigation no longer uses `\IfPackageLoadedT`/`\IfPackageLoadedF`, which need LaTeX 2024
+* `bin/build` exits with an error when a build or preflight check fails; it used to report success, so CI passed with broken PDFs
 
 ## [0.8.0] - 2020-04-21
 
