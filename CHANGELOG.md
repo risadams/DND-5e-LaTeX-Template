@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `\DndAbilityCheck` (DC 11 Strength) and `\DndSkillCheck` (DC 11 Strength (Athletics))
   - Ability check macros built on those, e.g. `\DndStrSave{12}` gets 'DC 12 Strength'
   - Skill check macros also built on those, e.g. `\DndAthletics{12}` gets 'DC 12 Strength (Athletics)', or `\DndAthletics[\conname]{12}` gets 'DC 12 Constitution (Athletics)'.
+* `area-reset` option for `DndSetAreaOptions` restarts area numbering at each part, chapter or section (#313)
 * Portuguese translation
 * French translation
 * Automatically bolds the first row of tables
@@ -38,7 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * `DndReadAloud`, `DndSidebar`, `DndComment`, `DndQuotation` and `DndAside` no longer fail on TeX Live 2026 when the optional argument is omitted (#391)
 * Accented characters in translated captions (e.g. Spanish "al día") are no longer garbled under pdfLaTeX (#388)
 * Ability scores of 30 no longer wrap onto two lines in monster stat blocks (#373)
-* German "ß" and other non-Latin-1-compatible characters print correctly with LuaLaTeX and the default fonts (#346)
+* German "ß" prints correctly with LuaLaTeX and the default fonts (#346)
 
 ## [0.8.0] - 2020-04-21
 

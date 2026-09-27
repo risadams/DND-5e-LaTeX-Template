@@ -155,6 +155,56 @@
 
 \tl_new:N \l__dnd_area_num_depth_tl
 
+% Sectioning level that resets the area counter (empty for none), and its
+% depth (-1 part, 0 chapter, 1 section) so it can be checked against the
+% level used for area headings.
+\tl_new:N \g__dnd_area_reset_tl
+\int_new:N \g__dnd_area_reset_depth_int
+
+\msg_new:nnn { dnd } { area_reset_too_deep }
+  {
+    area-reset~=~#1~cannot~be~used~with~area-num-depth~=~#2,~because~each~
+    area~heading~would~reset~its~own~number.~Reset~at~a~higher~level,~or~
+    increase~area-num-depth.
+  }
+
+% #1 - sectioning level that resets the areas, or empty for none
+% #2 - its sectioning depth
+\cs_new_protected:Npn \__dnd_area_reset:nn #1#2
+  {
+    \tl_gset:Nn \g__dnd_area_reset_tl {#1}
+    \int_gset:Nn \g__dnd_area_reset_depth_int {#2}
+  }
+
+% Sections are unnumbered, so a counter reset list would never fire for
+% them. Hook the sectioning commands instead; a heading resets the areas
+% when it is at or above the chosen level.
+% #1 - depth of the heading being started
+\cs_new_protected:Npn \__dnd_area_reset_at:n #1
+  {
+    \tl_if_empty:NF \g__dnd_area_reset_tl
+      {
+        \int_compare:nNnF {#1} > {\g__dnd_area_reset_depth_int}
+          { \DndResetAreas }
+      }
+  }
+
+\AddToHook { cmd / part / before }    { \__dnd_area_reset_at:n {-1} }
+\AddToHook { cmd / chapter / before } { \__dnd_area_reset_at:n {0} }
+\AddToHook { cmd / section / before } { \__dnd_area_reset_at:n {1} }
+
+\cs_new_protected:Npn \__dnd_area_check_reset:
+  {
+    \tl_if_empty:NF \g__dnd_area_reset_tl
+      {
+        \int_compare:nNnF {\g__dnd_area_reset_depth_int} < {\l__dnd_area_num_depth_tl}
+          {
+            \msg_error:nnVV { dnd } { area_reset_too_deep }
+              \g__dnd_area_reset_tl \l__dnd_area_num_depth_tl
+          }
+      }
+  }
+
 % Options
 \keys_define:nn { dnd / areas }
   {
@@ -171,6 +221,11 @@
       { 1, 2, 3, 4 }
       { \tl_set:Nn \l__dnd_area_num_depth_tl {#1} },
     area-num-depth .initial:n  = 2, % subsection
+    area-reset .choice:,
+    area-reset / none    .code:n = \__dnd_area_reset:nn {} {0},
+    area-reset / part    .code:n = \__dnd_area_reset:nn {part} {-1},
+    area-reset / chapter .code:n = \__dnd_area_reset:nn {chapter} {0},
+    area-reset / section .code:n = \__dnd_area_reset:nn {section} {1},
   }
 
 \NewDocumentCommand {\DndSetAreaOptions} {o}
@@ -195,6 +250,7 @@
 % Functions to create an area including text and label
 \NewDocumentCommand {\DndArea} { o m }
   {
+    \__dnd_area_check_reset:
     \refstepcounter {DndAreaCounter}
     \label { \l__dnd_region_tl \l__dnd_area_label_tl :\tl_if_novalue:nTF{#1}{#2}{#1} }
 
@@ -211,6 +267,7 @@
 
 \NewDocumentCommand {\DndAreaRange} { o m m }
   {
+    \__dnd_area_check_reset:
     \refstepcounter {DndAreaCounter}
     \tl_set:Nx \l_from_tl { \arabic {DndAreaCounter} }
     \addtocounter{DndAreaCounter}{#2}
