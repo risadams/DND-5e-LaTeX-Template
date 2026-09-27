@@ -38,7 +38,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * `area-reset` option for `\DndSetAreaOptions` restarts area numbering at each part, chapter or section (#313)
 * PDF navigation: `hyperref` and `bookmark` load automatically, so the PDF has a bookmarks panel, a clickable table of contents, and linked map and area references. The `hyperref`, `links=hidden|color` and `bookmarksdepth` options control it, and `\DndSetMetadata` sets the PDF title, author, subject and keywords. Covers, the contents page, the list of maps and the index get bookmarks, and cover pages are no longer counted in the page numbers (risadams/DND-5e-LaTeX-Template#1)
 * Credits and legal page: `\DndCreditsPage` with `\DndCredit`, `\DndCreditsHeading`, `\DndLegalText` and `\DndCreditsLogo`. The `srd=5.1|5.2|5.2.1` option adds the SRD attribution statement, copied from Wizards of the Coast's SRDs, in German, Spanish, French or Italian where Wizards publishes one. The active font set is credited automatically when it uses Solbera's fonts. Credit roles are translated (risadams/DND-5e-LaTeX-Template#2)
-* Build-time options: `\DndBuildOptions` overrides the document's class options, `make book-srd5.1.pdf book-srd5.2.1.pdf` builds one PDF per SRD version, and `\DndIfSRD` selects text for one version
+* Build-time options: `\DndBuildOptions` overrides the document's class options, `make all-editions SRD=5.1` builds for another SRD version, and `\DndIfSRD` selects text for one version
+* Editions: `make screen`, `print`, `printer-friendly`, `cover` and `all-editions` build one PDF per file a product ships with, named after the book, from any folder. `bin/build` does the same without `make` (it runs on `texlua`, so it works on Windows). `\DndIfEdition` selects text per edition (risadams/DND-5e-LaTeX-Template#3, rpgtex/DND-5e-LaTeX-Template#340)
+* `printerfriendly` option: no page backgrounds, footer scroll, page, part or chapter art, and lighter box fills, for printing at home; `\DndIfPrinterFriendly` selects text for it
+* Preflight checks: `bin/preflight` and `make preflight` check the log for errors, undefined references, missing characters and overfull boxes, and the PDF for unembedded fonts, bleed and trim boxes, page counts and image resolution and color (risadams/DND-5e-LaTeX-Template#4)
+* `examples` folder with three books (a 2014-style adventure with a cover spread, 2024-style player options and a German A4 gazetteer); `make examples` builds and checks every edition of each
 * Portuguese translation
 * French translation
 * Automatically bolds the first row of tables
@@ -51,6 +55,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Negative modifiers use a true minus sign when the font has one; `\DndMinus` gives the same sign in documents
 
 ### Fixed
+* `DndReadAloud` no longer typesets a stray `;` (a "Missing character" warning in the log)
+* With XeLaTeX and the default fonts, curly quotes, guillemets, dashes, the ellipsis, "œ" and "ß" print correctly instead of going missing (or "ß" printing as "SS")
+* `fontpath` is looked up like any input file, so a book in another folder finds the template's `fonts/solbera/`
+* `\DndCredit` no longer splits a credit across the columns of the credits page
 * `DndReadAloud`, `DndSidebar`, `DndComment`, `DndQuotation` and `DndAside` no longer fail on TeX Live 2026 when the optional argument is omitted (#391)
 * Accented characters in translated captions (e.g. Spanish "al día") are no longer garbled under pdfLaTeX (#388)
 * Ability scores of 30 no longer wrap onto two lines in monster stat blocks (#373)

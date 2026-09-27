@@ -1,29 +1,48 @@
-.PHONY: all clean fonts lint
+.PHONY: all clean fonts lint screen print printer-friendly cover all-editions preflight examples test
 
-LATEX ?= pdflatex
+# The book to build, and its cover document (default: cover.tex next to it)
+BOOK ?= example.tex
+COVER ?=
 
-# Class options that override the document's, e.g.
-#   make example.pdf DND_OPTIONS="srd=5.2.1"
-DND_OPTIONS ?=
+# pdflatex, xelatex or lualatex
+ENGINE ?= pdflatex
 
-SRD_VERSIONS = 5.1 5.2 5.2.1
+# Print settings; check your printer's requirements
+BLEED ?= 0.125in
+SPINE ?= 0.25in
+CMYK ?=
+PAGE_MULTIPLE ?= 1
 
-LATEXMK = latexmk --interaction=nonstopmode --pdf --pdflatex=$(LATEX)
+# Build for another SRD version (5.1, 5.2 or 5.2.1); the files are named
+# <book>-<edition>-srd<version>.pdf
+SRD ?=
+
+# More class options for every edition, e.g. OPTIONS="img=draft"
+OPTIONS ?=
 
 comma := ,
+BUILD_OPTIONS = $(if $(SRD),srd=$(SRD)$(if $(OPTIONS),$(comma)))$(OPTIONS)
 
-# Build $(2).pdf from $(1).tex with the class options $(3). The options go in
-# a wrapper file because latexmk mangles TeX code on the Windows command line.
-define build_with_options
-	printf '%s\n' '\def\DndBuildOptions{$(3)}' '\input{$(1)}' > $(2).build.tex
-	$(LATEXMK) -jobname=$(2) $(2).build.tex; status=$$?; rm -f $(2).build.tex; exit $$status
-endef
+BUILD = texlua bin/build --engine=$(ENGINE) --bleed=$(BLEED) --spine=$(SPINE) \
+	--page-multiple=$(PAGE_MULTIPLE) $(if $(COVER),--cover=$(COVER)) \
+	$(if $(CMYK),--cmyk) $(if $(BUILD_OPTIONS),--options=$(BUILD_OPTIONS)) \
+	$(if $(SRD),--suffix=-srd$(SRD))
+
+# Example books and the engine each needs
+EXAMPLES = examples/adventure/adventure.tex:xelatex \
+	examples/player-options/player-options.tex:pdflatex \
+	examples/gazetteer/gazetteer.tex:lualatex
 
 all: example.pdf
 
+# Edition outputs of BOOK, by extension (never .tex)
+EDITIONS = screen print printer-friendly cover
+OUTPUTS = pdf log aux toc out fls fdb_latexmk idx ind ilg lom
+BOOK_BASE = $(basename $(BOOK))
+
 clean:
 	latexmk -C
-	rm -f $(foreach v,$(SRD_VERSIONS),*-srd$(v).*)
+	rm -f $(foreach e,$(EDITIONS),$(foreach x,$(OUTPUTS),$(BOOK_BASE)-$(e)*.$(x)))
 
 fonts:
 	bin/get-solbera-fonts
@@ -32,15 +51,28 @@ lint:
 	npx eclint check *.cls *.sty *.tex lib/
 
 %.pdf: %.tex
-ifeq ($(DND_OPTIONS),)
-	$(LATEXMK) $<
-else
-	$(call build_with_options,$*,$*,$(DND_OPTIONS))
-endif
+	latexmk --interaction=nonstopmode --pdf $<
 
-# One book, one PDF per SRD version: make example-srd5.1.pdf example-srd5.2.1.pdf
-define srd_rule
-%-srd$(1).pdf: %.tex
-	$$(call build_with_options,$$*,$$*-srd$(1),srd=$(1)$(if $(DND_OPTIONS),$(comma)$(DND_OPTIONS)))
-endef
-$(foreach v,$(SRD_VERSIONS),$(eval $(call srd_rule,$(v))))
+# One PDF per edition: <book>-screen.pdf, <book>-print.pdf, ...
+screen print printer-friendly cover:
+	$(BUILD) $@ $(BOOK)
+
+all-editions:
+	$(BUILD) all $(BOOK)
+
+# Build every edition and check each PDF
+preflight:
+	$(BUILD) --preflight all $(BOOK)
+
+# Build and check every edition of every example book
+examples:
+	@status=0; for e in $(EXAMPLES); do \
+	  $(MAKE) --no-print-directory preflight BOOK=$${e%%:*} ENGINE=$${e##*:} || status=1; \
+	done; exit $$status
+
+# bin/preflight must reject a PDF with known problems
+test:
+	texlua bin/build print test/preflight-fail.tex
+	if texlua bin/preflight --print test/preflight-fail-print.pdf; then \
+	  echo "preflight passed a PDF it should have rejected"; exit 1; \
+	fi

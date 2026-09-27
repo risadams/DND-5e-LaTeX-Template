@@ -37,10 +37,9 @@
 % The color used in \DndSetThemeColor when a new color is not set
 \colorlet {themecolor} {PhbLightGreen} % Set the default theme to Part 1 of the PHB.
 
-% Element colors that change when \DndSetThemeColor is used
-\colorlet {commentcolor} {themecolor} % DndComment background
-\colorlet {sidebarcolor} {themecolor} % DndSidebar background
-\colorlet {tablecolor}   {themecolor} % DndTable even row background
+% Element colors that change when \DndSetThemeColor is used, set below:
+% commentcolor (DndComment background), sidebarcolor (DndSidebar background)
+% and tablecolor (DndTable even row background)
 
 % Element colors that do not respond to \DndSetThemeColor
 \colorlet {readaloudcolor} {bgtan} % DndReadAloud background
@@ -57,12 +56,48 @@
 \definecolor {mentalattrscore}   {HTML} {D8DAD1}
 \definecolor {mentalattrmod}     {HTML} {D0CACA}
 
+% Box and stat block fills, as a percentage of their color mixed with white.
+% The printer-friendly edition uses lighter fills to save ink.
+\tl_const:Ne \c__dnd_fill_tint_tl
+  { \bool_if:NTF \l__dnd_printer_friendly_bool { 35 } { 100 } }
+
+% #1 - color name, #2 - color it is based on
+\cs_new_protected:Npn \__dnd_fill_color:nn #1#2
+  { \colorlet {#1} { #2 ! \c__dnd_fill_tint_tl ! white } }
+
+\bool_if:NT \l__dnd_printer_friendly_bool
+  {
+    \clist_map_inline:nn
+      {
+        readaloudcolor, quotecolor, statblockbg14, statblockbg24,
+        vehiclestatbg, physicalattrscore, physicalattrmod, mentalattrscore,
+        mentalattrmod
+      }
+      { \__dnd_fill_color:nn {#1} {#1} }
+  }
+
 % Sets the themecolor and colors for all themed elements
 % If called without the optional color, resets the color of all themed elements to the current themecolor
 \NewDocumentCommand {\DndSetThemeColor} { O {themecolor} }
   {
-    \colorlet {themecolor}   {#1}
-    \colorlet {commentcolor} {#1}
-    \colorlet {sidebarcolor} {#1}
-    \colorlet {tablecolor}   {#1}
+    \colorlet {themecolor} {#1}
+    \__dnd_fill_color:nn {commentcolor} {#1}
+    \__dnd_fill_color:nn {sidebarcolor} {#1}
+    \__dnd_fill_color:nn {tablecolor}   {#1}
   }
+\DndSetThemeColor
+
+% \DndIfPrinterFriendly{<printer-friendly edition>}{<other editions>}
+\NewExpandableDocumentCommand {\DndIfPrinterFriendly} { m m }
+  { \bool_if:NTF \l__dnd_printer_friendly_bool {#1} {#2} }
+
+% \DndIfEdition{<edition list>}{<true>}{<false>}, e.g.
+% \DndIfEdition{screen, printer-friendly}{\DndFrontCover{art}}{}
+\prg_new_conditional:Npnn \__dnd_if_edition:n #1 { TF }
+  {
+    \clist_if_in:nVTF {#1} \l__dnd_edition_tl
+      { \prg_return_true: } { \prg_return_false: }
+  }
+
+\NewDocumentCommand {\DndIfEdition} { m m m }
+  { \__dnd_if_edition:nTF {#1} {#2} {#3} }

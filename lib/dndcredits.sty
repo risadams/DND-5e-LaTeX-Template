@@ -311,6 +311,9 @@ disponibile all'indirizzo
 \NewDocumentCommand \DndCredit { m m }
   {
     \par
+    \group_begin:
+    % Keep each credit in one column
+    \interlinepenalty = 10000
     \hangindent = 1em
     \hangafter = 1
     \noindent
@@ -323,6 +326,7 @@ disponibile all'indirizzo
       } ~
     #2
     \par
+    \group_end:
   }
 
 \NewDocumentCommand \DndCreditsHeading { m }

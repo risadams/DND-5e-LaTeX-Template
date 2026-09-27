@@ -1,0 +1,148 @@
+% The Drowned Chapel: a short adventure in the style of the 2014 core books.
+%
+% Shows: Solbera's fonts, the full page background, SRD 5.1 attribution,
+% covers that appear only in the screen editions, chapter art, a drop cap,
+% read-aloud text, numbered areas with a map, a classic stat block and a
+% sidebar that changes in the printer-friendly edition.
+%
+% Build from the template folder (XeLaTeX, because of Solbera's fonts; run
+% `make fonts` once to download them):
+%   make all-editions BOOK=examples/adventure/adventure.tex ENGINE=xelatex
+% or without make:
+%   texlua bin/build --engine=xelatex all examples/adventure/adventure.tex
+\documentclass[letterpaper,twoside,twocolumn,openany,nodeprecatedcode,
+  fonts=solbera,srd=5.1]{dndbook}
+
+\usepackage[english]{babel}
+
+\title{The Drowned Chapel}
+\author{A. Writer}
+\DndSetMetadata{
+  subject  = {An adventure for four characters of 3rd level},
+  keywords = {D\&D, 5e, adventure},
+}
+
+\begin{document}
+
+% The print service gets the cover as its own file (cover.tex), so the print
+% interior leaves these pages out.
+\DndIfEdition{screen, printer-friendly}{%
+  \DndFrontCover[title=The Drowned Chapel,
+    subtitle=An Adventure for Characters of 3rd Level,
+    author=A. Writer]{../art/cover}%
+}{}
+
+\frontmatter
+
+\DndCreditsPage{
+  \DndCredit{design}{A. Writer}
+  \DndCredit{editing}{B. Editor}
+  \DndCredit{cover-art}{Placeholder art generated with ImageMagick}
+  \DndCredit{cartography}{The rpgTeX Team}
+  \DndCredit{playtesting}{C. Player, D. Player, E. Player, F. Player}
+}
+
+\tableofcontents
+
+\mainmatter
+
+\DndChapterArt{../art/chapter}
+\chapter{The Drowned Chapel}
+
+\DndDropCapLine{F}{or a hundred years} the chapel of Saint Orla stood on a rise above the fens, its bell calling the fisherfolk home through the fog. Then the river changed its course one spring, and the water rose over the chapel's floor and never went down. The bell still rings on foggy nights, though no one has climbed the tower in living memory.
+
+This adventure is for four characters of 3rd level. It takes one session to play.
+
+\section{Adventure Hook}
+
+The villagers of Marrowby hire the characters to find out who rings the bell. Two fishers who went to look have not come back.
+
+\begin{DndReadAloud}
+  The fog parts as you reach the rise. Black water fills the chapel to the sills of its tall windows, and a lychgate leans in the mud before it. Somewhere above you, slow and patient, the bell tolls once.
+\end{DndReadAloud}
+
+% A full-width stat block floats to the top of the next page
+\begin{DndMonster}[float*=t,width=\textwidth]{Drowned Acolyte}
+  \begin{multicols}{2}
+    \DndMonsterType{Medium undead, lawful evil}
+
+    \DndMonsterBasics[
+        armor-class = {11},
+        hit-points  = {\DndDice{4d8 + 4}},
+        speed       = {30 ft., swim 30 ft.},
+      ]
+
+    \DndMonsterAbilityScores[
+        str = 13, dex = 12, con = 13,
+        int = 8, wis = 12, cha = 10,
+      ]
+
+    \DndMonsterDetails[
+        damage-immunities = {poison},
+        condition-immunities = {poisoned},
+        senses = {darkvision 60 ft., passive Perception 11},
+        languages = {understands Common but can't speak},
+        challenge = 1,
+      ]
+
+    \DndMonsterAction{Waterlogged}
+    The acolyte has advantage on Strength checks and saving throws while it is in water.
+
+    \DndMonsterSection{Actions}
+    \DndMonsterMelee[
+      name=Grasping Hands,
+      mod=+3,
+      dmg=\DndDice{1d8+1},
+      dmg-type=bludgeoning,
+      extra={, and the target is grappled (escape DC 11)}
+    ]
+  \end{multicols}
+\end{DndMonster}
+
+\section{Locations}
+
+The areas below are numbered on \DndMapRef{chapel}.
+
+\begin{DndMap}[caption=The Drowned Chapel, label=chapel,
+    scale={1 square = 5 feet}, compass]{img/example-map}
+  \DndMapArea{0.225,0.27}{Chapel Grounds}
+  \DndMapSubArea{0.375,0.27}{Lychgate}
+  \DndMapSubArea{0.84,0.23}{Sexton's Hut}
+  \DndMapArea{0.55,0.63}{The Chapel}
+  \DndMapSubArea{0.54,0.38}{Flooded Nave}
+  \DndMapSubArea{0.55,0.78}{Bell Tower}
+  \DndMapText*{0.4,0.12}{Drowned path}
+\end{DndMap}
+
+\DndArea{Chapel Grounds}
+Reeds and sunken gravestones cover the rise. The water is knee-deep everywhere except on the path to the lychgate.
+
+\DndSubArea{Lychgate}
+The gate's roof has fallen in. A character who succeeds on a \DndSkillCheck{Wisdom}{Perception}{12} spots fresh bootprints in the mud, leading toward the chapel.
+
+\DndSubArea{Sexton's Hut}
+The missing fishers hide here, cold and frightened. They saw pale figures in the nave and will not go back.
+
+\DndArea{The Chapel}
+The chapel's doors stand open. Inside, the water is waist-deep and still.
+
+\DndSubArea{Flooded Nave}
+Three \emph{drowned acolytes} (see their stat block) wait under the water between the pews. They rise when a living creature reaches the middle of the nave.
+
+\begin{DndSidebar}[float=!b]{Running the Acolytes}
+  The acolytes want the bell to keep ringing. If the characters promise to ring it themselves, a successful \DndSkillCheck{Charisma}{Persuasion}{15} ends the fight.
+  \DndIfPrinterFriendly{}{ The candles on the altar show where the acolytes will surface.}
+\end{DndSidebar}
+
+\DndSubArea{Bell Tower}
+A rotten ladder climbs to the bell. The rope is wet, and fresh.
+
+\section{Conclusion}
+
+If the characters ring the bell at dawn, the acolytes sink back under the water and the fog lifts from the fens for good.
+
+\DndIfEdition{screen, printer-friendly}{%
+  \DndBackCover[blurb={The bell of the drowned chapel rings every foggy night. Who is ringing it, and why? A short adventure for four characters of 3rd level.}]{../art/back}%
+}{}
+
+\end{document}

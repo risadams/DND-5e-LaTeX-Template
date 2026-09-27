@@ -57,6 +57,13 @@
     that~holds~them.
   }
 
+% Typeset the character with code #1 as #2 (XeTeX with 8-bit fonts)
+\cs_new_protected:Npn \__dnd_xetex_t1_char:nN #1#2
+  {
+    \char_set_active_eq:nN {#1} #2
+    \char_set_catcode_active:n {#1}
+  }
+
 % #1 - family variable, #2 - base file name, #3 - extra fontspec options
 \cs_new_protected:Npn \__dnd_solbera_family:Nnn #1#2#3
   {
@@ -66,7 +73,13 @@
 
 \cs_new_protected:Npn \__dnd_load_solbera_fonts:
   {
-    \file_if_exist:nF { \l__dnd_font_path_tl Bookinsanity.otf }
+    % Look the folder up like any input file, so a book in a subfolder finds
+    % the template's fonts/solbera/ through \input@path or TEXINPUTS
+    \file_get_full_name:nNTF { \l__dnd_font_path_tl Bookinsanity.otf } \l_tmpa_str
+      {
+        \tl_set:NV \l__dnd_font_path_tl \l_tmpa_str
+        \regex_replace_once:nnN { Bookinsanity\.otf \Z } { } \l__dnd_font_path_tl
+      }
       { \msg_fatal:nnV { dnd } { fonts / solbera_missing } \l__dnd_font_path_tl }
     \setmainfont {Bookinsanity}
       [
@@ -157,6 +170,23 @@
         % (U+00DF) prints the "SS" glyph that T1 keeps at that position.
         \sys_if_engine_luatex:T
           { \RequirePackage[utf8]{luainputenc} }
+        % XeTeX does the same. Latin-1 letters happen to match their T1
+        % slots, so map the characters that do not: "ß" and the punctuation
+        % above U+00FF, which T1 has in other slots.
+        \sys_if_engine_xetex:T
+          {
+            \clist_map_inline:nn
+              {
+                { "00DF } \ss, { "0152 } \OE, { "0153 } \oe,
+                { "2018 } \textquoteleft, { "2019 } \textquoteright,
+                { "201A } \quotesinglbase, { "201C } \textquotedblleft,
+                { "201D } \textquotedblright, { "201E } \quotedblbase,
+                { "00AB } \guillemotleft, { "00BB } \guillemotright,
+                { "2013 } \textendash, { "2014 } \textemdash,
+                { "2026 } \textellipsis
+              }
+              { \__dnd_xetex_t1_char:nN #1 }
+          }
         \renewcommand{\sfdefault}{jkpss}
         \newcommand{\booktitlefont}{\normalfont}
         \newcommand{\sctitlefont}{\normalfont}

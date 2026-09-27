@@ -1,0 +1,301 @@
+#!/usr/bin/env texlua
+-- Build the editions of a book from one source: screen, print,
+-- printer-friendly and cover. Each edition is a separate PDF next to the book
+-- (<book>-screen.pdf, <book>-print.pdf, ...), with its own auxiliary files.
+--
+-- texlua ships with every TeX distribution, so this runs anywhere LaTeX does,
+-- including Windows without make:
+--
+--   texlua bin/build [options] <edition>... <book.tex>
+--
+-- Editions:
+--   screen            for reading on screen: no bleed, links and bookmarks
+--   print             print interior: bleed (and CMYK with --cmyk)
+--   printer-friendly  for home printing: the printerfriendly class option
+--   cover             print cover spread from the cover document
+--   all               every edition above (cover only if there is a cover)
+--
+-- Options:
+--   --engine=<name>      pdflatex (default), xelatex or lualatex
+--   --bleed=<dim>        bleed for print and cover (default 0.125in)
+--   --spine=<dim>        spine width for the cover (default 0.25in)
+--   --cover=<file.tex>   cover document (default: cover.tex next to the book)
+--   --cmyk               convert print and cover colors to CMYK
+--   --options=<list>     class options added to every edition
+--   --suffix=<text>      added to the output names, e.g. -srd5.1 for
+--                        book-screen-srd5.1.pdf
+--   --preflight          check each PDF with bin/preflight after building
+--   --page-multiple=<n>  page count multiple required by preflight for print
+--   --verbose            show the full LaTeX output
+--
+-- The class options are passed with \DndBuildOptions and override the
+-- document's own. Each edition also sets edition=<name> for \DndIfEdition.
+-- A book outside the template folder finds the template through
+-- \input@path, so it needs no installation.
+
+local lfs = require("lfs")
+
+local usage = [[
+Usage: texlua bin/build [options] <edition>... <book.tex>
+Editions: screen, print, printer-friendly, cover, all
+Options: --engine=, --bleed=, --spine=, --cover=, --cmyk, --options=,
+         --suffix=, --preflight, --page-multiple=, --verbose
+See the comments at the top of bin/build for details.]]
+
+local function fail(message)
+  io.stderr:write("build: " .. message .. "\n")
+  os.exit(2)
+end
+
+--------------------------------------------------------------------------------
+-- Paths
+--------------------------------------------------------------------------------
+
+local is_windows = package.config:sub(1, 1) == "\\"
+
+-- Forward slashes and no trailing slash
+local function normalize(path)
+  path = path:gsub("\\", "/")
+  if #path > 1 then path = path:gsub("/$", "") end
+  return path
+end
+
+local function is_absolute(path)
+  return path:match("^/") or path:match("^%a:/")
+end
+
+local function absolute(path)
+  path = normalize(path)
+  if not is_absolute(path) then
+    path = normalize(lfs.currentdir()) .. "/" .. path
+  end
+  -- Resolve "." and ".."
+  local parts = {}
+  for part in path:gmatch("[^/]+") do
+    if part == ".." then
+      table.remove(parts)
+    elseif part ~= "." then
+      table.insert(parts, part)
+    end
+  end
+  local result = table.concat(parts, "/")
+  return path:match("^/") and "/" .. result or result
+end
+
+local function split(path)
+  local parts = {}
+  for part in path:gmatch("[^/]+") do table.insert(parts, part) end
+  return parts
+end
+
+-- Path of `to` relative to the folder `from`, ending in "/", or "" if they
+-- are the same folder. Falls back to the absolute path across drives.
+local function relative(from, to)
+  local a, b = split(from), split(to)
+  local same = function(x, y)
+    return is_windows and x:lower() == y:lower() or x == y
+  end
+  if not same(a[1] or "", b[1] or "") then return to .. "/" end
+  local common = 0
+  while a[common + 1] and b[common + 1] and same(a[common + 1], b[common + 1]) do
+    common = common + 1
+  end
+  local result = string.rep("../", #a - common)
+  for i = common + 1, #b do result = result .. b[i] .. "/" end
+  return result
+end
+
+local function dirname(path)
+  return path:match("^(.*)/[^/]*$") or "."
+end
+
+local function basename(path)
+  return path:match("([^/]*)$")
+end
+
+local function file_exists(path)
+  return lfs.attributes(path, "mode") == "file"
+end
+
+local function quote(arg)
+  if arg:match('^[%w%./:=_%-]+$') then return arg end
+  return '"' .. arg:gsub('"', '\\"') .. '"'
+end
+
+-- The template root is the folder above bin/
+local script = absolute(arg[0])
+local template = dirname(dirname(script))
+
+--------------------------------------------------------------------------------
+-- Options
+--------------------------------------------------------------------------------
+
+local settings = {
+  engine = "pdflatex",
+  bleed = "0.125in",
+  spine = "0.25in",
+  cover = nil,
+  cmyk = false,
+  options = "",
+  suffix = "",
+  preflight = false,
+  page_multiple = nil,
+  verbose = false,
+}
+local editions, book = {}, nil
+local known = {
+  screen = true, print = true, ["printer-friendly"] = true,
+  cover = true, all = true,
+}
+
+for _, a in ipairs(arg) do
+  local key, value = a:match("^%-%-([%w%-]+)=(.*)$")
+  local flag = a:match("^%-%-([%w%-]+)$")
+  if key then
+    key = key:gsub("%-", "_")
+    if settings[key] == nil and key ~= "cover" and key ~= "page_multiple" then
+      fail("unknown option --" .. key .. "\n" .. usage)
+    end
+    settings[key] = value
+  elseif flag == "help" then
+    print(usage)
+    os.exit(0)
+  elseif flag then
+    flag = flag:gsub("%-", "_")
+    if type(settings[flag]) ~= "boolean" then
+      fail("unknown option --" .. flag .. "\n" .. usage)
+    end
+    settings[flag] = true
+  elseif known[a] then
+    table.insert(editions, a)
+  elseif book then
+    fail("unknown edition '" .. book .. "' or '" .. a .. "'\n" .. usage)
+  else
+    book = a
+  end
+end
+
+if not book or #editions == 0 then fail("give an edition and a book\n" .. usage) end
+
+local engine_flags = {
+  pdflatex = "-pdf", xelatex = "-xelatex", lualatex = "-lualatex",
+}
+local engine_flag = engine_flags[settings.engine]
+if not engine_flag then fail("unknown engine '" .. settings.engine .. "'") end
+
+book = absolute(book:match("%.tex$") and book or book .. ".tex")
+if not file_exists(book) then fail("no such file: " .. book) end
+local book_dir, book_name = dirname(book), basename(book):gsub("%.tex$", "")
+
+local cover = settings.cover and absolute(settings.cover)
+  or (file_exists(book_dir .. "/cover.tex") and book_dir .. "/cover.tex")
+if cover and not file_exists(cover) then fail("no such file: " .. cover) end
+
+-- Expand `all`
+local wanted = {}
+for _, e in ipairs(editions) do
+  if e == "all" then
+    for _, x in ipairs({ "screen", "print", "printer-friendly" }) do
+      table.insert(wanted, x)
+    end
+    if cover then table.insert(wanted, "cover") end
+  else
+    table.insert(wanted, e)
+  end
+end
+
+--------------------------------------------------------------------------------
+-- Editions
+--------------------------------------------------------------------------------
+
+local function join_options(...)
+  local list = {}
+  for _, o in ipairs({ ... }) do
+    if o and o ~= "" then table.insert(list, o) end
+  end
+  return table.concat(list, ",")
+end
+
+local cmyk = settings.cmyk and "colormodel=cmyk" or nil
+
+local recipes = {
+  screen = { options = "edition=screen" },
+  print = {
+    options = join_options("edition=print", "bleed=" .. settings.bleed, cmyk),
+    print = true,
+  },
+  ["printer-friendly"] = { options = "edition=printer-friendly,printerfriendly" },
+  cover = {
+    source = cover,
+    options = join_options("edition=cover", "cover", "spine=" .. settings.spine,
+      "bleed=" .. settings.bleed, cmyk),
+    print = true,
+  },
+}
+
+-- Build one edition; returns the PDF path or nil
+local function build(edition)
+  local recipe = recipes[edition]
+  local source = recipe.source or book
+  if not source then
+    io.stderr:write("build: no cover document; give --cover=<file.tex> "
+      .. "or put cover.tex next to the book\n")
+    return nil
+  end
+  local dir = dirname(source)
+  local name = basename(source):gsub("%.tex$", "")
+  local job = book_name .. "-" .. edition .. settings.suffix
+  local wrapper = job .. ".build.tex"
+  local options = join_options(recipe.options, settings.options)
+  local path = relative(dir, template)
+
+  local lines = {}
+  if path ~= "" then
+    table.insert(lines, "\\makeatletter\\def\\input@path{{" .. path .. "}}\\makeatother")
+  end
+  table.insert(lines, "\\def\\DndBuildOptions{" .. options .. "}")
+  table.insert(lines, "\\input{" .. name .. "}")
+
+  local previous = lfs.currentdir()
+  assert(lfs.chdir(dir))
+  local file = assert(io.open(wrapper, "w"))
+  file:write(table.concat(lines, "\n"), "\n")
+  file:close()
+
+  print(("build: %s -> %s.pdf [%s]"):format(edition, job, options))
+  local command = table.concat({
+    "latexmk", engine_flag, "-interaction=nonstopmode",
+    settings.verbose and "" or "-silent",
+    "-jobname=" .. quote(job), quote(wrapper),
+  }, " ")
+  local ok = os.execute(command)
+  os.remove(wrapper)
+  assert(lfs.chdir(previous))
+  if not ok then
+    io.stderr:write(("build: %s failed; see %s/%s.log\n"):format(edition, dir, job))
+    return nil
+  end
+  return dir .. "/" .. job .. ".pdf", recipe.print
+end
+
+local failures = 0
+for _, edition in ipairs(wanted) do
+  local pdf, is_print = build(edition)
+  if not pdf then
+    failures = failures + 1
+  elseif settings.preflight then
+    local command = { "texlua", quote(template .. "/bin/preflight") }
+    if is_print then
+      table.insert(command, "--print")
+      table.insert(command, "--bleed=" .. settings.bleed)
+      if settings.page_multiple and edition ~= "cover" then
+        table.insert(command, "--page-multiple=" .. settings.page_multiple)
+      end
+      if settings.cmyk then table.insert(command, "--cmyk") end
+    end
+    table.insert(command, quote(pdf))
+    if not os.execute(table.concat(command, " ")) then failures = failures + 1 end
+  end
+end
+
+os.exit(failures == 0 and 0 or 1)

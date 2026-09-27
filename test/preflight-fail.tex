@@ -1,0 +1,19 @@
+% A document with problems bin/preflight must catch; CI checks that it fails.
+% Build with pdflatex: `texlua bin/build print test/preflight-fail.tex`,
+% then `texlua bin/preflight --print test/preflight-fail-print.pdf`.
+\documentclass[letterpaper,nodeprecatedcode]{dndbook}
+\usepackage[english]{babel}
+
+% Times without its font file, so the PDF refers to a font it does not embed
+\pdfmapline{=ptmr8r Times-Roman "TeXBase1Encoding ReEncodeFont" <8r.enc}
+
+\begin{document}
+
+An undefined reference: see page~\pageref{no-such-label}.
+
+{\fontfamily{ptm}\selectfont This line is set in Times, which is not embedded.}
+
+% 300 x 300 pixels printed 2 inches wide: 150 ppi
+\includegraphics[width=2in]{low-res}
+
+\end{document}
