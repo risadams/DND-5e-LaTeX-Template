@@ -80,12 +80,12 @@
     \skip_horizontal:N \l__dnd_footer_inset_skip \DndFontFooter \leftmark
     \begin{tikzpicture}[remember~picture,overlay]
       \bool_if:NT \l__dnd_show_footer_scroll_bool {
-        \node[xscale=-1,inner~sep=0pt,anchor=south,nearly~opaque] at (current~page.south) {\includegraphics[width=\paperwidth,height=.6in]{img/footerscroll}};
+        \node[xscale=-1,inner~sep=0pt,anchor=south,nearly~opaque,yshift=\l__dnd_bleed_dim] at (current~page.south) {\includegraphics[width=\paperwidth,height=.6in]{img/footerscroll}};
       }
       \bool_if:NTF \l__dnd_eberron_mode_bool {
-        \node[inner~sep=0pt,anchor=south,xshift=.51in,yshift=.33in] at (current~page.south~west) {\DndFontPageNumber \thepage};
+        \node[inner~sep=0pt,anchor=south,xshift=.51in+\l__dnd_bleed_dim,yshift=.33in+\l__dnd_bleed_dim] at (current~page.south~west) {\DndFontPageNumber \thepage};
       }{
-        \node[inner~sep=0pt,anchor=south,xshift=.28in,yshift=.39in] at (current~page.south~west) {\DndFontPageNumber \thepage};
+        \node[inner~sep=0pt,anchor=south,xshift=.28in+\l__dnd_bleed_dim,yshift=.39in+\l__dnd_bleed_dim] at (current~page.south~west) {\DndFontPageNumber \thepage};
       }
     \end{tikzpicture}
   }
@@ -95,12 +95,12 @@
     \DndFontFooter \leftmark \skip_horizontal:N \l__dnd_footer_inset_skip
     \begin{tikzpicture}[remember~picture,overlay]
       \bool_if:NT \l__dnd_show_footer_scroll_bool {
-        \node[inner~sep=0pt,anchor=south,nearly~opaque] at (current~page.south) {\includegraphics[width=\paperwidth,height=.6in]{img/footerscroll}};
+        \node[inner~sep=0pt,anchor=south,nearly~opaque,yshift=\l__dnd_bleed_dim] at (current~page.south) {\includegraphics[width=\paperwidth,height=.6in]{img/footerscroll}};
       }
       \bool_if:NTF \l__dnd_eberron_mode_bool {
-        \node[inner~sep=0pt,anchor=south,xshift=-.51in,yshift=.33in] at (current~page.south~east) {\DndFontPageNumber \thepage};
+        \node[inner~sep=0pt,anchor=south,xshift=-.51in-\l__dnd_bleed_dim,yshift=.33in+\l__dnd_bleed_dim] at (current~page.south~east) {\DndFontPageNumber \thepage};
       }{
-        \node[inner~sep=0pt,anchor=south,xshift=-.28in,yshift=.39in] at (current~page.south~east) {\DndFontPageNumber \thepage};
+        \node[inner~sep=0pt,anchor=south,xshift=-.28in-\l__dnd_bleed_dim,yshift=.39in+\l__dnd_bleed_dim] at (current~page.south~east) {\DndFontPageNumber \thepage};
       }
     \end{tikzpicture}
   }

@@ -119,6 +119,9 @@ Note that the package has only been tested with the `book` class.
 | `fontpath`     | ✓               | ✓                 |
 | `img`          | ✓               | ✓                 |
 | `stats`        | ✓               | ✓                 |
+| `bleed`        | ✓               | ✓                 |
+| `cropmarks`    | ✓               | ✓                 |
+| `colormodel`   | ✓               | ✓                 |
 | `justified`    | ✓               | ✓                 |
 | `layout`       | ✓               |                   |
 | `nomultitoc`   | ✓               | ✓                 |
@@ -159,6 +162,19 @@ Folder that holds font files for `fonts=solbera`, relative to the document. Defa
 
 * `classic`: 2014 Monster Manual stat blocks. (**default**)
 * `modern`: 2024 Monster Manual stat blocks.
+
+#### `bleed`
+
+Extra paper added to every side of the page for printing, e.g. `bleed=0.125in`. The paper size you choose (`letterpaper`, `a4paper`, ...) becomes the trim size, the text layout stays on the trimmed page, and backgrounds and full-page art extend into the bleed. Each PDF page gets a TrimBox and BleedBox. Defaults to `0pt`.
+
+#### `cropmarks`
+
+Draw crop marks at the trim size. Most print-on-demand services do not want them.
+
+#### `colormodel`
+
+* `rgb`: Colors are RGB, best for screen PDFs. (**default**)
+* `cmyk`: Convert the template's colors to CMYK for print. Convert your images to CMYK separately.
 
 #### `justified`
 

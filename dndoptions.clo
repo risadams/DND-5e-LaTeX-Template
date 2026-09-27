@@ -35,6 +35,8 @@
 \bool_new:N \l__dnd_img_draft_bool
 \bool_new:N \l__dnd_modern_stats_bool
 \tl_new:N \l__dnd_background_name_tl
+\dim_new:N \l__dnd_bleed_dim
+\bool_new:N \l__dnd_cropmarks_bool
 \tl_new:N \l__dnd_fontset_tl
 
 \tl_const:Nn \l__dnd_fontset_plain_tl {plain}
@@ -128,6 +130,20 @@
         \bool_set_true:N \l__dnd_modern_stats_bool
       },
     stats .initial:n = classic,
+
+    % Print production: bleed added to every side of the trimmed page,
+    % optional crop marks, and CMYK output colors
+    bleed .dim_set:N = \l__dnd_bleed_dim,
+    bleed .initial:n = 0pt,
+    cropmarks .bool_set:N = \l__dnd_cropmarks_bool,
+    cropmarks .default:n  = true,
+    colormodel .choice:,
+    colormodel / rgb .code:n = {},
+    colormodel / cmyk .code:n =
+      {
+        \PassOptionsToPackage {cmyk} {xcolor}
+      },
+    colormodel .initial:n = rgb,
 
     % Justified text
     justified .code:n =

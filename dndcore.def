@@ -86,6 +86,7 @@
 \RequirePackage {lib/dndheader}     % fancy headers and footers
 \RequirePackage {lib/dndimage}      % image display
 \RequirePackage {lib/dndmonster}    % stat blocks
+\RequirePackage {lib/dndprint}      % bleed, crop marks and full-page images
 \RequirePackage {lib/dndquote}      % quotation/aside blocks
 \RequirePackage {lib/dndreadaloud}  % read-aloud text
 \RequirePackage {lib/dndsections}   % section styling and special section headers

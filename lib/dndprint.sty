@@ -1,0 +1,158 @@
+\ExplSyntaxOn
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Print production
+%
+% With bleed=<dim>, the paper size set by the class (letterpaper, a4paper,
+% ...) becomes the trim size: the physical page grows by the bleed on every
+% side and the text layout stays on the trimmed page. Backgrounds and
+% full-bleed images fill the whole physical page. Each PDF page gets a
+% TrimBox and BleedBox so print services know where to cut.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\RequirePackage {eso-pic}
+
+\dim_new:N \l__dnd_trim_width_dim
+\dim_new:N \l__dnd_trim_height_dim
+\dim_set:Nn \l__dnd_trim_width_dim  { \paperwidth }
+\dim_set:Nn \l__dnd_trim_height_dim { \paperheight }
+
+% Lower-left corner of the trimmed page, for positioning page furniture
+\NewExpandableDocumentCommand {\DndBleed} {} { \dim_use:N \l__dnd_bleed_dim }
+
+\bool_if:NT \l__dnd_layout_bool
+  {
+    \dim_compare:nNnT { \l__dnd_bleed_dim } > { 0pt }
+      {
+        \geometry
+          {
+            paperwidth    = \dim_eval:n { \l__dnd_trim_width_dim  + 2 \l__dnd_bleed_dim },
+            paperheight   = \dim_eval:n { \l__dnd_trim_height_dim + 2 \l__dnd_bleed_dim },
+            layoutwidth   = \l__dnd_trim_width_dim,
+            layoutheight  = \l__dnd_trim_height_dim,
+            layouthoffset = \l__dnd_bleed_dim,
+            layoutvoffset = \l__dnd_bleed_dim,
+          }
+      }
+
+    \bool_if:NT \l__dnd_cropmarks_bool
+      { \geometry { showcrop } }
+  }
+
+% PDF page boxes, in big points
+\tl_new:N \l__dnd_trim_box_tl
+\tl_new:N \l__dnd_bleed_box_tl
+\tl_new:N \l__dnd_page_boxes_tl
+\tl_set:Ne \l__dnd_trim_box_tl
+  {
+    [
+      \dim_to_decimal_in_bp:n { \l__dnd_bleed_dim } ~
+      \dim_to_decimal_in_bp:n { \l__dnd_bleed_dim } ~
+      \dim_to_decimal_in_bp:n { \l__dnd_trim_width_dim  + \l__dnd_bleed_dim } ~
+      \dim_to_decimal_in_bp:n { \l__dnd_trim_height_dim + \l__dnd_bleed_dim }
+    ]
+  }
+\tl_set:Ne \l__dnd_bleed_box_tl
+  {
+    [ 0 ~ 0 ~
+      \dim_to_decimal_in_bp:n { \l__dnd_trim_width_dim  + 2 \l__dnd_bleed_dim } ~
+      \dim_to_decimal_in_bp:n { \l__dnd_trim_height_dim + 2 \l__dnd_bleed_dim }
+    ]
+  }
+\tl_set:Ne \l__dnd_page_boxes_tl
+  { /TrimBox ~ \l__dnd_trim_box_tl \c_space_tl /BleedBox ~ \l__dnd_bleed_box_tl }
+
+\dim_compare:nNnT { \l__dnd_bleed_dim } > { 0pt }
+  {
+    \AddToHook { begindocument / end }
+      {
+        \IfPDFManagementActiveTF
+          {
+            \AddToHook { shipout / before }
+              {
+                \exp_args:NnnV \pdfmanagement_add:nnn { ThisPage } { TrimBox }
+                  \l__dnd_trim_box_tl
+                \exp_args:NnnV \pdfmanagement_add:nnn { ThisPage } { BleedBox }
+                  \l__dnd_bleed_box_tl
+              }
+          }
+          {
+            \sys_if_engine_xetex:TF
+              {
+                \AddToShipoutPictureFG
+                  { \special { pdf:put ~ @thispage ~ << \l__dnd_page_boxes_tl >> } }
+              }
+              {
+                \sys_if_engine_luatex:TF
+                  {
+                    \use:e
+                      {
+                        \exp_not:N \tex_pdfvariable:D pageattr
+                          {
+                            \tex_the:D \tex_pdfvariable:D pageattr
+                            \c_space_tl \l__dnd_page_boxes_tl
+                          }
+                      }
+                  }
+                  {
+                    \use:e
+                      {
+                        \exp_not:N \tex_pdfpageattr:D
+                          {
+                            \tex_the:D \tex_pdfpageattr:D
+                            \c_space_tl \l__dnd_page_boxes_tl
+                          }
+                      }
+                  }
+              }
+          }
+      }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Full-page images (covers, chapter art, maps). They fill the physical page,
+% including bleed, and sit behind the text.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% #1 - includegraphics options (e.g. trim, viewport)
+% #2 - image file
+\cs_new_protected:Npn \__dnd_full_page_image:nn #1#2
+  {
+    \AtPageLowerLeft
+      {
+        \bool_if:NTF \l__dnd_img_draft_bool
+          {
+            \includegraphics
+              [ width = \paperwidth , height = \paperheight , draft , #1 ] {#2}
+          }
+          {
+            \includegraphics
+              [ width = \paperwidth , height = \paperheight , #1 ] {#2}
+          }
+      }
+  }
+
+% Put a full-page image behind the current page.
+% \DndPageBackground[<includegraphics options>]{<file>}
+\NewDocumentCommand {\DndPageBackground} { O{} m }
+  {
+    \AddToShipoutPictureBG* { \__dnd_full_page_image:nn {#1} {#2} }
+  }
+
+% A page that holds only an image, such as a map or a piece of art.
+% \DndFullPageImage[<includegraphics options>]{<file>}
+\NewDocumentCommand {\DndFullPageImage} { O{} m }
+  {
+    \clearpage
+    \group_begin:
+      \thispagestyle {dndart}
+      \DndPageBackground [#1] {#2}
+      \null
+    \group_end:
+    \clearpage
+  }
+
+% Page style with no header or footer, so the page background is left off
+\cs_if_exist:NTF \fancypagestyle
+  { \fancypagestyle {dndart} { \fancyhf {} } }
+  { \cs_new_eq:NN \ps@dndart \ps@empty }
