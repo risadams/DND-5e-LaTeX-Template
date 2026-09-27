@@ -55,3 +55,32 @@ jobs:
         with:
           name: example-${{ matrix.engine }}
           path: example.pdf
+  editions:
+    runs-on: ubuntu-latest
+    container:
+      image: texlive/texlive:TL2023-historic
+    name: "Build and preflight every edition"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install make, curl and Poppler
+        run: apt-get update && apt-get install -y --no-install-recommends make curl poppler-utils
+      - name: Download Solbera's fonts
+        run: make fonts
+      - name: Build and check every edition of the example document
+        run: make preflight
+      - name: Build and check every edition of the example books
+        run: make examples
+      - name: Check that preflight rejects a broken PDF
+        run: make test
+      - name: Upload the editions
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: editions
+          path: |
+            example-*.pdf
+            examples/**/*-screen.pdf
+            examples/**/*-print.pdf
+            examples/**/*-printer-friendly.pdf
+            examples/**/*-cover.pdf

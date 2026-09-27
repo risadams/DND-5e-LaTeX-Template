@@ -1,0 +1,390 @@
+#!/usr/bin/env texlua
+-- Check a built PDF and its LaTeX log for problems that get files rejected
+-- by printers or look unprofessional.
+--
+--   texlua bin/preflight [options] <book.pdf> [<book.log>]
+--
+-- The log defaults to the PDF's name with .log. Failures make the exit
+-- status 1; warnings are printed but do not fail.
+--
+-- From the log:
+--   FAIL  errors, undefined references and citations, missing characters
+--   WARN  overfull boxes wider than --overfull, font substitutions, reruns
+-- From the PDF (needs pdfinfo, pdffonts and pdfimages from Poppler):
+--   FAIL  fonts that are not embedded
+--   WARN  Type 3 (bitmap) fonts
+--   With --print:
+--   FAIL  pages without bleed, or with a different bleed from --bleed
+--   FAIL  pages whose trim size differs from the first page's
+--   FAIL  page counts that are not a multiple of --page-multiple
+--   FAIL  images below --min-ppi; WARN below --warn-ppi
+--   FAIL  RGB images with --cmyk
+--   Without --print:
+--   WARN  bleed in a file that is not meant for print
+--
+-- Options:
+--   --print              check a file for a print service
+--   --bleed=<dim>        expected bleed (default 0.125in; in, mm, cm, pt or bp)
+--   --min-ppi=<n>        lowest image resolution for print (default 200)
+--   --warn-ppi=<n>       recommended image resolution (default 300)
+--   --overfull=<pt>      overfull boxes up to this width are ignored (default 1)
+--   --page-multiple=<n>  required page count multiple for print, e.g. 2 or 4
+--                        (default 1: no check; ask your printer)
+--   --cmyk               require CMYK images for print
+
+local usage = [[
+Usage: texlua bin/preflight [options] <book.pdf> [<book.log>]
+Options: --print, --bleed=<dim>, --min-ppi=<n>, --warn-ppi=<n>,
+         --overfull=<pt>, --page-multiple=<n>, --cmyk
+See the comments at the top of bin/preflight for details.]]
+
+local settings = {
+  print = false,
+  bleed = "0.125in",
+  min_ppi = "200",
+  warn_ppi = "300",
+  overfull = "1",
+  page_multiple = "1",
+  cmyk = false,
+}
+local files = {}
+
+for _, a in ipairs(arg) do
+  local key, value = a:match("^%-%-([%w%-]+)=(.*)$")
+  local flag = a:match("^%-%-([%w%-]+)$")
+  if key then
+    key = key:gsub("%-", "_")
+    if type(settings[key]) ~= "string" then
+      io.stderr:write("preflight: unknown option --" .. key .. "\n" .. usage .. "\n")
+      os.exit(2)
+    end
+    settings[key] = value
+  elseif flag == "help" then
+    print(usage)
+    os.exit(0)
+  elseif flag then
+    flag = flag:gsub("%-", "_")
+    if type(settings[flag]) ~= "boolean" then
+      io.stderr:write("preflight: unknown option --" .. flag .. "\n" .. usage .. "\n")
+      os.exit(2)
+    end
+    settings[flag] = true
+  else
+    table.insert(files, a)
+  end
+end
+
+local pdf = files[1]
+if not pdf then
+  io.stderr:write(usage .. "\n")
+  os.exit(2)
+end
+local log = files[2] or pdf:gsub("%.pdf$", "") .. ".log"
+
+-- Length in big points
+local units = { bp = 1, pt = 72 / 72.27, ["in"] = 72, mm = 72 / 25.4, cm = 72 / 2.54 }
+local function to_bp(dim)
+  local number, unit = dim:match("^%s*([%d%.]+)%s*(%a*)%s*$")
+  if not number or not units[unit ~= "" and unit or "bp"] then
+    io.stderr:write("preflight: cannot read the length '" .. dim .. "'\n")
+    os.exit(2)
+  end
+  return tonumber(number) * units[unit ~= "" and unit or "bp"]
+end
+
+local bleed_bp = to_bp(settings.bleed)
+local min_ppi = tonumber(settings.min_ppi)
+local warn_ppi = tonumber(settings.warn_ppi)
+local overfull_limit = tonumber(settings.overfull)
+local page_multiple = settings.print and tonumber(settings.page_multiple) or 1
+
+--------------------------------------------------------------------------------
+-- Report
+--------------------------------------------------------------------------------
+
+local failures, warnings = 0, 0
+
+local function fail(message)
+  failures = failures + 1
+  print("  FAIL  " .. message)
+end
+
+local function warn(message)
+  warnings = warnings + 1
+  print("  WARN  " .. message)
+end
+
+local function ok(message)
+  print("  ok    " .. message)
+end
+
+local function inches(bp)
+  return ("%.3fin"):format(bp / 72)
+end
+
+-- "1, 2, 3, 7" from a list of page numbers, shortened if long
+local function page_list(pages)
+  table.sort(pages)
+  local shown = {}
+  for i = 1, math.min(#pages, 8) do shown[i] = tostring(pages[i]) end
+  local text = table.concat(shown, ", ")
+  if #pages > 8 then text = text .. (" and %d more"):format(#pages - 8) end
+  return (#pages == 1 and "page " or "pages ") .. text
+end
+
+local function run(command)
+  local handle = io.popen(command .. " 2>&1")
+  local output = handle:read("*a")
+  local ok = handle:close()
+  return output, ok
+end
+
+local function read_file(path)
+  local file = io.open(path, "rb")
+  if not file then return nil end
+  local text = file:read("*a")
+  file:close()
+  return text
+end
+
+print(("Preflight: %s%s"):format(pdf, settings.print and " (print)" or ""))
+
+if not read_file(pdf) then
+  fail("cannot read " .. pdf)
+  os.exit(1)
+end
+
+--------------------------------------------------------------------------------
+-- Log
+--------------------------------------------------------------------------------
+
+local log_text = read_file(log)
+if not log_text then
+  warn("no log file " .. log .. "; log checks skipped")
+else
+  -- TeX wraps log lines at 79 characters; join them again
+  local lines, current = {}, ""
+  for line in (log_text:gsub("\r", "") .. "\n"):gmatch("(.-)\n") do
+    current = current .. line
+    if #line ~= 79 then
+      table.insert(lines, current)
+      current = ""
+    end
+  end
+
+  -- PDF page of each line: TeX writes [<page number> when it ships a page
+  -- out, so a warning belongs to the page after the last one shipped
+  local shipped = 0
+  local seen = {}
+  local function once(key)
+    if seen[key] then return false end
+    seen[key] = true
+    return true
+  end
+  local overfull, shapes = {}, {}
+
+  for i, line in ipairs(lines) do
+    local here = shipped + 1
+
+    local message = line:match("^! (.*)")
+    if message and once("error " .. message) then
+      fail(("LaTeX error near PDF page %d: %s"):format(here, message))
+    end
+
+    for _, kind in ipairs({ "Reference", "Citation" }) do
+      local label, page = line:match(kind .. " `(.-)' on page (%S+) undefined")
+      if label then
+        seen.any_reference = true
+        fail(("undefined %s '%s' on page %s (PDF page %d)"):format(
+          kind:lower(), label, page, here))
+      end
+    end
+    -- The summary at the end, in case the individual warnings were missed
+    if line:match("There were undefined references") and not seen.any_reference
+        and once("undefined") then
+      fail("there were undefined references")
+    end
+
+    local char, font = line:match("^Missing character: There is no (.-) in font (.-)!")
+    if char and once("missing " .. char .. font .. here) then
+      fail(("missing character '%s' in font %s near PDF page %d"):format(char, font, here))
+    end
+
+    local width, where = line:match("^Overfull \\hbox %(([%d%.]+)pt too wide%) (.*)")
+    if width and tonumber(width) > overfull_limit then
+      table.insert(overfull, ("%.1fpt %s near PDF page %d"):format(tonumber(width), where, here))
+    end
+
+    -- A font shape replaced by another. Only a change of shape (italic set
+    -- as slanted, small caps as upright) shows on the page; font files
+    -- rename weights (m to l, b to db) by design.
+    local wanted = line:match("Font shape `(.-)' undefined")
+      or line:match("Font shape `(.-)' in size %S+ not available")
+    local used = wanted and lines[i + 1]
+      and (lines[i + 1]:match("using `(.-)' instead")
+        or lines[i + 1]:match("Font shape `(.-)' tried instead"))
+    if used then
+      local from, to = wanted:match("([^/]+)$"), used:match("([^/]+)$")
+      if from ~= to and once("shape " .. wanted) then
+        table.insert(shapes, wanted .. " as " .. to)
+      end
+    end
+
+    if line:match("Rerun to get") or line:match("Label%(s%) may have changed") then
+      if once("rerun") then warn("the log asks for another LaTeX run") end
+    end
+
+    -- Count shipped pages last: [12] or [12{...}] or [12 <...>]
+    for _ in line:gmatch("%f[%w%[]%[%-?%d+[%]%s{<]") do shipped = shipped + 1 end
+    if line:match("%[%-?%d+$") then shipped = shipped + 1 end
+  end
+
+  for _, o in ipairs(overfull) do warn("overfull box " .. o) end
+  if #shapes > 0 then
+    warn(("%d font shapes are not in the font and were replaced: %s")
+      :format(#shapes, table.concat(shapes, ", ")))
+  end
+  if failures == 0 then ok("log: no errors, undefined references or missing characters") end
+end
+
+--------------------------------------------------------------------------------
+-- PDF
+--------------------------------------------------------------------------------
+
+local info, info_ok = run(('pdfinfo "%s"'):format(pdf))
+if not info_ok or not info:match("Pages:") then
+  fail("pdfinfo did not run. Install Poppler: it ships with MiKTeX, and "
+    .. "with the poppler-utils package on Linux and poppler on Homebrew.")
+  print(("Result: %d failure(s), %d warning(s)"):format(failures, warnings))
+  os.exit(1)
+end
+local pages = tonumber(info:match("Pages:%s*(%d+)"))
+
+-- Fonts
+local fonts_output = run(('pdffonts "%s"'):format(pdf))
+local font_count, unembedded, type3 = 0, {}, {}
+for line in fonts_output:gmatch("[^\r\n]+") do
+  local emb = line:match("%s(%a+)%s+%a+%s+%a+%s+%d+%s+%d+%s*$")
+  if emb and not line:match("^name") then
+    font_count = font_count + 1
+    local name = line:sub(1, 36):gsub("%s+$", "")
+    if emb == "no" then table.insert(unembedded, name) end
+    if line:match("Type 3") then table.insert(type3, name) end
+  end
+end
+for _, name in ipairs(unembedded) do fail("font not embedded: " .. name) end
+for _, name in ipairs(type3) do
+  warn("Type 3 (bitmap) font: " .. name .. "; it may print blurred")
+end
+if #unembedded == 0 then ok(("%d fonts, all embedded"):format(font_count)) end
+
+-- Page boxes
+local boxes = run(('pdfinfo -box -f 1 -l %d "%s"'):format(pages, pdf))
+local page_boxes = {}
+for page, box, x0, y0, x1, y1 in boxes:gmatch(
+    "Page%s+(%d+) (%a+)Box:%s+([%d%.%-]+)%s+([%d%.%-]+)%s+([%d%.%-]+)%s+([%d%.%-]+)") do
+  page = tonumber(page)
+  page_boxes[page] = page_boxes[page] or {}
+  page_boxes[page][box] = { tonumber(x0), tonumber(y0), tonumber(x1), tonumber(y1) }
+end
+
+local function near(a, b) return math.abs(a - b) < 0.5 end
+
+local no_bleed, wrong_bleed, wrong_size = {}, {}, {}
+local trim_w, trim_h
+for page = 1, pages do
+  local b = page_boxes[page] or {}
+  local media, trim = b.Media, b.Trim or b.Media
+  if media and trim then
+    local sides = { trim[1] - media[1], trim[2] - media[2], media[3] - trim[3], media[4] - trim[4] }
+    local has_bleed = sides[1] > 0.5 and sides[2] > 0.5 and sides[3] > 0.5 and sides[4] > 0.5
+    local w, h = trim[3] - trim[1], trim[4] - trim[2]
+    trim_w, trim_h = trim_w or w, trim_h or h
+    if not (near(w, trim_w) and near(h, trim_h)) then table.insert(wrong_size, page) end
+    if not has_bleed then
+      table.insert(no_bleed, page)
+    elseif not (near(sides[1], bleed_bp) and near(sides[2], bleed_bp)
+        and near(sides[3], bleed_bp) and near(sides[4], bleed_bp)) then
+      table.insert(wrong_bleed, page)
+    end
+  end
+end
+
+if settings.print then
+  if #no_bleed > 0 then
+    fail("no bleed (TrimBox is the whole page) on " .. page_list(no_bleed)
+      .. "; build with the bleed option")
+  end
+  if #wrong_bleed > 0 then
+    fail(("bleed is not %s on %s"):format(settings.bleed, page_list(wrong_bleed)))
+  end
+  if #wrong_size > 0 then
+    fail(("trim size differs from page 1 (%s x %s) on %s"):format(
+      inches(trim_w), inches(trim_h), page_list(wrong_size)))
+  end
+  if #no_bleed == 0 and #wrong_bleed == 0 and #wrong_size == 0 then
+    ok(("trim %s x %s with %s bleed on every page"):format(
+      inches(trim_w), inches(trim_h), settings.bleed))
+  end
+  if pages % page_multiple ~= 0 then
+    fail(("%d pages; the printer needs a multiple of %d"):format(pages, page_multiple))
+  else
+    ok(("%d page%s"):format(pages, pages == 1 and "" or "s"))
+  end
+elseif #no_bleed < pages then
+  warn("this file has bleed; is it meant for print? Check with --print")
+end
+
+-- Images
+local images_output = run(('pdfimages -list "%s"'):format(pdf))
+local images, colors = {}, {}
+for line in images_output:gmatch("[^\r\n]+") do
+  local f = {}
+  for field in line:gmatch("%S+") do table.insert(f, field) end
+  if #f >= 14 and f[1]:match("^%d+$") and f[3] == "image" then
+    local id = f[11] .. " " .. f[12]
+    local ppi = math.min(tonumber(f[13]) or 0, tonumber(f[14]) or 0)
+    local image = images[id]
+    if not image then
+      image = { ppi = ppi, pages = {}, width = f[4], height = f[5], color = f[6] }
+      images[id] = image
+      table.insert(images, image)
+      colors[f[6]] = (colors[f[6]] or 0) + 1
+    end
+    image.ppi = math.min(image.ppi, ppi)
+    table.insert(image.pages, tonumber(f[1]))
+  end
+end
+
+local color_summary = {}
+for color, count in pairs(colors) do table.insert(color_summary, count .. " " .. color) end
+table.sort(color_summary)
+
+if #images == 0 then
+  ok("no images")
+else
+  ok(("%d images: %s"):format(#images, table.concat(color_summary, ", ")))
+end
+
+if settings.print then
+  local low = 0
+  for _, image in ipairs(images) do
+    local text = ("%sx%s image on %s is %d ppi"):format(
+      image.width, image.height, page_list(image.pages), image.ppi)
+    if image.ppi < min_ppi then
+      fail(("%s; print needs at least %d (%d recommended)"):format(text, min_ppi, warn_ppi))
+      low = low + 1
+    elseif image.ppi < warn_ppi then
+      warn(("%s; %d is recommended"):format(text, warn_ppi))
+      low = low + 1
+    end
+    if settings.cmyk and image.color ~= "cmyk" and image.color ~= "gray" then
+      fail(("%sx%s %s image on %s; the printer needs CMYK"):format(
+        image.width, image.height, image.color, page_list(image.pages)))
+    end
+  end
+  if low == 0 and #images > 0 then ok(("every image at least %d ppi"):format(warn_ppi)) end
+end
+
+print(("Result: %d failure(s), %d warning(s)"):format(failures, warnings))
+os.exit(failures == 0 and 0 or 1)

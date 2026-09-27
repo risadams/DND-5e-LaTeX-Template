@@ -42,6 +42,8 @@
 \tl_new:N \l__dnd_links_tl
 \tl_new:N \l__dnd_bookmarks_depth_tl
 \tl_new:N \l__dnd_srd_tl
+\bool_new:N \l__dnd_printer_friendly_bool
+\tl_new:N \l__dnd_edition_tl
 
 \tl_const:Nn \l__dnd_fontset_plain_tl {plain}
 \tl_const:Nn \l__dnd_fontset_wotc_tl {wotc}
@@ -177,6 +179,16 @@
       { \tl_set_eq:NN \l__dnd_srd_tl \l_keys_choice_tl },
     srd .initial:n = none,
 
+    % Edition for home printing: no page backgrounds or decorative art, and
+    % lighter box fills
+    printerfriendly .bool_set:N = \l__dnd_printer_friendly_bool,
+    printerfriendly .default:n  = true,
+
+    % Name of the edition being built (bin/build sets it: screen, print,
+    % printer-friendly or cover), for \DndIfEdition
+    edition .tl_set:N = \l__dnd_edition_tl,
+    edition .initial:n = screen,
+
     % Justified text
     justified .code:n =
       {
@@ -250,6 +262,14 @@
 %   latexmk -usepretex="\def\DndBuildOptions{srd=5.2.1}" book.tex
 \cs_if_exist:NT \DndBuildOptions
   { \keys_set:nV { dnd / options } \DndBuildOptions }
+
+% The printer-friendly edition keeps the chosen header style but drops the
+% page background and footer scroll, whatever `bg` says
+\bool_if:NT \l__dnd_printer_friendly_bool
+  {
+    \bool_set_false:N \l__dnd_show_background_bool
+    \bool_set_false:N \l__dnd_show_footer_scroll_bool
+  }
 
 \bool_if:NTF \l__dnd_eberron_mode_bool
   {

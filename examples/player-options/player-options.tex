@@ -1,0 +1,136 @@
+% Paths of the Wild: player options in the style of the 2024 core books.
+%
+% Shows: SRD 5.2.1 attribution, text that changes with the SRD version
+% (\DndIfSRD), modern stat blocks, the print background (footer scroll, no
+% parchment), justified text, colored links, a theme color, a class table, a
+% spell list and an index.
+%
+% Build from the template folder (pdfLaTeX, free fonts):
+%   make all-editions BOOK=examples/player-options/player-options.tex
+% and for the 2014 rules, from the same source:
+%   make all-editions BOOK=examples/player-options/player-options.tex SRD=5.1
+\documentclass[letterpaper,twoside,twocolumn,openany,nodeprecatedcode,
+  srd=5.2.1,stats=modern,bg=print,justified,links=color,index]{dndbook}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\title{Paths of the Wild}
+\author{A. Writer}
+\DndSetMetadata{
+  subject  = {Player options for rangers and druids},
+  keywords = {D\&D, 5e, player options},
+}
+
+% The word the rules use for a character's people
+\newcommand{\species}{\DndIfSRD{5.2}{species}{race}}
+
+\begin{document}
+
+\frontmatter
+
+\DndCreditsPage[columns=1]{
+  \DndCredit{design}{A. Writer}
+  \DndCredit{development}{B. Developer}
+  \DndCredit{layout}{The dndbook class}
+  \DndCredit{Rules}{\DndIfSRD{5.2}{2024}{2014} rules, from SRD~\DndSRDVersion}
+}
+
+\tableofcontents
+
+\mainmatter
+
+\DndSetThemeColor[DmgCoral]
+
+\chapter{The Warden}
+
+Wardens\index{Warden} guard the wild places between settlements. Any \species{} can take up the path; most wardens learn it from an older warden\index{Warden!training} who has outlived their own patch of forest.
+
+\begin{DndClassTable}[title=The Warden, header-rows=2]{ccXccc}
+  \DndClassTableGroup{3}{3}{Spell Slots per Spell Level}
+  \DndClassTableHeader{Level & Proficiency Bonus & Features & 1st & 2nd & 3rd}
+  1st & +2 & Spellcasting, Wild Ward      & 2 & --- & --- \\
+  2nd & +2 & Pathfinder                   & 2 & --- & --- \\
+  3rd & +2 & Warden Oath                  & 3 & ---  & --- \\
+  4th & +2 & Ability Score Improvement    & 3 & ---  & --- \\
+  5th & +3 & Extra Attack                 & 4 & 2   & --- \\
+  6th & +3 & Oath Feature                 & 4 & 2   & --- \\
+  7th & +3 & Roots of the World           & 4 & 3   & --- \\
+  8th & +3 & Ability Score Improvement    & 4 & 3   & --- \\
+  9th & +4 & ---                          & 4 & 3   & 2   \\
+\end{DndClassTable}
+
+\section{Class Features}
+
+\subsection{Wild Ward}
+You can use a bonus action to mark a creature you can see within 60 feet of you. For the next minute, the marked creature has disadvantage on attack rolls against anyone but you.\index{Wild Ward}
+
+\subsection{Pathfinder}
+You and your companions cannot become lost except by magical means, and difficult terrain made of plants does not slow you.\index{Pathfinder}
+
+\begin{DndComment}{Choosing a \DndIfSRD{5.2}{Species}{Race}}
+  Wardens work best with a \species{} that has good Wisdom. \DndIfSRD{5.2}{In the 2024 rules your background, not your species, raises your ability scores.}{In the 2014 rules your race raises your ability scores.}
+\end{DndComment}
+
+\begin{DndSpellList}{Warden Spells}
+  \DndSpellListLevel{0}{Druidcraft, Guidance, Thorn Whip}
+  \DndSpellListLevel{1}{Entangle, Goodberry, Speak with Animals, Hunter's Mark}
+  \DndSpellListLevel{2}{Barkskin, Pass without Trace, Spike Growth}
+  \DndSpellListLevel{3}{Plant Growth, Wind Wall}
+\end{DndSpellList}
+
+\DndSpellHeader%
+  {Warden's Bramble}
+  {Level 1 Conjuration (Warden)}
+  {Bonus action}
+  {30 feet}
+  {V, S}
+  {Concentration, up to 1 minute}
+Thorny vines burst from the ground in a 10-foot square you can see. The area is difficult terrain, and a creature that enters it for the first time on a turn takes \DndDice{1d6} piercing damage.\index{spells!Warden's Bramble}
+
+\chapter{Companions}
+
+A warden may bond with a beast of the wild, which fights at the warden's side.\index{companions}
+
+\begin{DndMonster}{Ridge Elk}
+  \DndMonsterType{Large Beast, Unaligned}
+
+  \DndMonsterBasics[
+      armor-class = {12},
+      initiative  = {+2 (12)},
+      hit-points  = {\DndDice{3d10 + 6}},
+      speed       = {50 ft.},
+    ]
+
+  \DndMonsterAbilityScores[
+      str = 16, dex = 14, con = 14,
+      int = 2, wis = 12, cha = 5,
+    ]
+
+  \DndMonsterDetails[
+      senses    = {Passive Perception 11},
+      languages = {None},
+      challenge = {1/2},
+    ]
+
+  \DndMonsterSection{Traits}
+  \DndMonsterAction{Charge}
+  If the elk moves at least 20 feet straight toward a target and then hits it with a Ram attack on the same turn, the target takes an extra \DndDice{2d6} bludgeoning damage.
+
+  \DndMonsterSection{Actions}
+  \DndMonsterMelee[
+    name=Ram,
+    mod=+5,
+    dmg=\DndDice{1d6+3},
+    dmg-type=bludgeoning,
+  ]
+\end{DndMonster}
+
+Your companion acts on your initiative, right after you.\index{companions!initiative} See the \nameref{sec:bond} rules below.
+
+\section{The Bond}\label{sec:bond}
+If your companion drops to 0 hit points, you can spend a Hit Die and touch it to return it to 1 hit point.\index{companions!reviving}
+
+\DndPrintIndex
+
+\end{document}

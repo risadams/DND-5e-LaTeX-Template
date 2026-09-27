@@ -31,10 +31,7 @@
 % If called without the optional color, resets the color of all themed elements to the current themecolor
 \newcommand{\setthemecolor}[1][themecolor]{%
   \DndDeprecate{\noexpand\setthemecolor}{1.0.0}{Use \noexpand\DndSetThemeColor to set the theme color.}%
-  \colorlet{themecolor}{#1}
-  \colorlet{commentcolor}{#1}
-  \colorlet{sidebarcolor}{#1}
-  \colorlet{tablecolor}{#1}
+  \DndSetThemeColor[#1]%
 }
 
 % Backwards-compatible aliases and colours

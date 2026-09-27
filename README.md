@@ -128,6 +128,7 @@ Note that the package has only been tested with the `book` class.
 | `links`        | ✓               | ✓                 |
 | `bookmarksdepth` | ✓             | ✓                 |
 | `srd`          | ✓               | ✓                 |
+| `printerfriendly`, `edition` | ✓ | ✓                 |
 | `justified`    | ✓               | ✓                 |
 | `layout`       | ✓               |                   |
 | `nomultitoc`   | ✓               | ✓                 |
@@ -210,6 +211,14 @@ The System Reference Document your book takes material from. It sets the attribu
 * `5.2`: SRD 5.2, the 2024 rules.
 * `5.2.1`: SRD 5.2.1, the 2024 rules with errata. This is the current release of SRD 5.2.
 
+#### `printerfriendly`
+
+An edition for printing at home. It leaves out the page background and footer scroll (whatever `bg` says), `\DndPageBackground`, `\DndPartArt` and `\DndChapterArt`, and lightens the fills of boxes, tables and stat blocks. Images in the text, maps, full-page images and covers stay, since they carry content. Use `\DndIfPrinterFriendly{<printer-friendly>}{<other editions>}` to change anything else.
+
+#### `edition`
+
+The name of the edition being built. `bin/build` sets it to `screen`, `print`, `printer-friendly` or `cover`; the default is `screen`. `\DndIfEdition{screen, printer-friendly}{<true>}{<false>}` tests it, for example to leave the cover pages out of the print interior.
+
 #### `justified`
 
 Justify column copy.
@@ -287,10 +296,11 @@ Options: `\DndCreditsPage[title=Credits, columns=2, fonts=auto, srd-language=aut
 
 ### One book, two editions
 
-The SRD version is a build option, so the same source can produce a 2014 (SRD 5.1) and a 2024 (SRD 5.2) edition. Build one PDF per version:
+The SRD version is a build option, so the same source can produce a 2014 (SRD 5.1) and a 2024 (SRD 5.2) edition. Build each with `SRD` (see [Publishing your book](#publishing-your-book)):
 
 ```sh
-make book-srd5.1.pdf book-srd5.2.1.pdf
+make all-editions BOOK=book.tex SRD=5.1     # book-screen-srd5.1.pdf, ...
+make all-editions BOOK=book.tex SRD=5.2.1   # book-screen-srd5.2.1.pdf, ...
 ```
 
 This works without editing `book.tex`, and overrides any `srd` option in its `\documentclass`. To build by hand, define `\DndBuildOptions` before the document is read; it takes any class options and overrides the document's:
@@ -319,6 +329,87 @@ This is not legal advice. The template copies the statements as published, but w
 * Artists, cartographers and asset packs often ask for specific wording. Add it with `\DndCredit` or `\DndLegalText`.
 
 Each statement's source and the date it was checked are recorded next to it in `lib/dndcredits.sty`.
+
+## Publishing your book
+
+A product for sale usually ships several files built from the same source. Each one is a build command, and each writes its own PDF next to the book, so they never overwrite each other:
+
+| Command | File | What it is |
+| ------- | ---- | ---------- |
+| `make screen` | `book-screen.pdf` | For reading on screen: no bleed, with bookmarks and links |
+| `make print` | `book-print.pdf` | Print interior: bleed and TrimBox for the print service |
+| `make printer-friendly` | `book-printer-friendly.pdf` | For home printing: the [`printerfriendly`](#printerfriendly) option |
+| `make cover` | `book-cover.pdf` | Print cover spread, built from `cover.tex` next to the book |
+| `make all-editions` | all of the above | |
+| `make preflight` | all of the above | Builds every edition and checks each one |
+
+Set the book and the print settings with variables:
+
+```sh
+make all-editions BOOK=mybook/book.tex ENGINE=xelatex BLEED=0.125in SPINE=0.42in
+```
+
+| Variable | Default | Meaning |
+| -------- | ------- | ------- |
+| `BOOK` | `example.tex` | The book. It can be in any folder; it finds the template without installing it. |
+| `COVER` | `cover.tex` next to the book | The cover document for `make cover` |
+| `ENGINE` | `pdflatex` | `pdflatex`, `xelatex` or `lualatex` |
+| `BLEED` | `0.125in` | Bleed for the print interior and cover; check your printer |
+| `SPINE` | `0.25in` | Spine width, from your printer's cover calculator |
+| `CMYK` | off | `CMYK=1` converts print and cover colors to CMYK |
+| `PAGE_MULTIPLE` | `1` | Page count the printer needs a multiple of, checked by preflight |
+| `SRD` | the document's | Build for another SRD version; adds `-srd<version>` to the file names |
+| `OPTIONS` | none | More class options for every edition, e.g. `OPTIONS=img=draft` |
+
+The screen edition includes the covers, but the print service wants them as a separate file. Leave them out of the print interior with `\DndIfEdition`:
+
+```latex
+\DndIfEdition{screen, printer-friendly}{\DndFrontCover[title=...]{art/cover}}{}
+```
+
+### Without make
+
+The Makefile runs `bin/build`, a `texlua` script. `texlua` comes with every TeX distribution, so on Windows (or anywhere without `make`) run it directly:
+
+```sh
+texlua bin/build --engine=xelatex all mybook/book.tex
+texlua bin/build --bleed=3mm --cmyk print cover mybook/book.tex
+texlua bin/build --help
+```
+
+### Preflight checks
+
+`bin/preflight` checks a PDF and its log for problems that get files rejected by print services or look unprofessional. `make preflight` (or `bin/build --preflight`) runs it on every edition, with the print checks for the print interior and cover:
+
+```sh
+texlua bin/preflight book-screen.pdf
+texlua bin/preflight --print --bleed=0.125in --page-multiple=2 book-print.pdf
+```
+
+It exits with an error if anything fails, and prints warnings for things worth a look:
+
+| Check | Result | How to fix it |
+| ----- | ------ | ------------- |
+| LaTeX errors | fail | Read the log; the message names the input line |
+| Undefined references and citations | fail | Fix the label, or rebuild so references resolve |
+| Missing characters | fail | The font lacks a glyph (e.g. the en dash in Scaly Sans); use another character |
+| Fonts not embedded | fail | Use fonts that can be embedded; all the template's font sets can |
+| No bleed, or a bleed other than `--bleed` (print) | fail | Build with the `bleed` option (`make print` does) |
+| Pages of different trim sizes (print) | fail | Keep every page the same paper size |
+| Page count not a multiple of `--page-multiple` (print) | fail | Add or remove pages; many printers need an even count or a multiple of 4 |
+| Images below `--min-ppi` (default 200) at their printed size (print) | fail | Use a larger image, or print it smaller |
+| RGB images with `--cmyk` (print) | fail | Convert them with `bin/prepare-images --cmyk` |
+| Images below `--warn-ppi` (default 300) (print) | warn | 300 ppi is the usual recommendation |
+| Overfull boxes wider than `--overfull` (default 1pt) | warn | Reword, or allow a break (e.g. in long `\texttt` or URLs) |
+| Font shapes the font does not have | warn | Usually harmless, e.g. slanted set as italic |
+| Type 3 (bitmap) fonts | warn | Use a vector font |
+| Bleed in a file that is not checked for print | warn | Upload the print edition to the printer, and the screen edition to stores |
+
+The PDF checks need `pdfinfo`, `pdffonts` and `pdfimages` from Poppler. MiKTeX includes them; on Linux install `poppler-utils`, and on macOS `brew install poppler`.
+
+### Example books
+
+The [`examples`](examples) folder has three short books that show different options together, and how to build every edition of each. `make examples` builds and checks them all.
 
 ## Artwork
 

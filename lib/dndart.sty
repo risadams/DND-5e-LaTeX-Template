@@ -120,7 +120,10 @@
 % Art behind the current page's text.
 % \DndPageBackground[fade=..., graphics={<includegraphics options>}]{<file>}
 \NewDocumentCommand {\DndPageBackground} { O{} m }
-  { \__dnd_page_background:nn {#1} {#2} }
+  {
+    \bool_if:NF \l__dnd_printer_friendly_bool
+      { \__dnd_page_background:nn {#1} {#2} }
+  }
 
 % A page that holds only an image, such as a map or a piece of art.
 % \DndFullPageImage[fade=..., graphics={...}]{<file>}
@@ -158,6 +161,12 @@
 % height is measured from the top of the paper (default .4\paperheight),
 % and fade defaults to bottom so the art blends into the page.
 \NewDocumentCommand {\DndChapterArt} { O{} m }
+  {
+    \bool_if:NF \l__dnd_printer_friendly_bool
+      { \__dnd_chapter_art:nn {#1} {#2} }
+  }
+
+\cs_new_protected:Npn \__dnd_chapter_art:nn #1#2
   {
     \group_begin:
       \keys_set:nn { dnd / art }
@@ -208,7 +217,10 @@
 % Full-page art behind the next part's title page.
 % \DndPartArt[fade=<edge>, graphics={...}]{<file>}
 \NewDocumentCommand {\DndPartArt} { O{} m }
-  { \tl_gset:Nn \g__dnd_part_art_tl { \__dnd_page_background:nn {#1} {#2} } }
+  {
+    \bool_if:NF \l__dnd_printer_friendly_bool
+      { \tl_gset:Nn \g__dnd_part_art_tl { \__dnd_page_background:nn {#1} {#2} } }
+  }
 
 \cs_new_protected:Npn \__dnd_part_art_apply:
   {

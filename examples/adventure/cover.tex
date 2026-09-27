@@ -1,0 +1,15 @@
+% Print cover spread for The Drowned Chapel: back cover, spine and front
+% cover on one sheet. `make cover` (or `bin/build cover`) sets the cover,
+% spine and bleed options; take the spine width from your printer's
+% calculator, e.g. make cover BOOK=... SPINE=0.3in
+\documentclass[letterpaper,nodeprecatedcode,fonts=solbera]{dndbook}
+
+\begin{document}
+
+\DndCoverSpread[title=The Drowned Chapel,
+                subtitle=An Adventure for Characters of 3rd Level,
+                author=A. Writer,
+                blurb={The bell of the drowned chapel rings every foggy night. Who is ringing it, and why? A short adventure for four characters of 3rd level.},
+                art=../art/cover, back-art=../art/back]
+
+\end{document}

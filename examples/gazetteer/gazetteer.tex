@@ -1,0 +1,91 @@
+% Die Nebelküste: a short German-language gazetteer on A4 paper.
+%
+% Shows: another language (German captions and the German SRD 5.2.1
+% attribution), A4 paper, LuaLaTeX, part art, faded and spanning images,
+% tables, comments and quotations, colored links and a one-column contents.
+%
+% Build from the template folder:
+%   make all-editions BOOK=examples/gazetteer/gazetteer.tex ENGINE=lualatex
+\documentclass[a4paper,twoside,twocolumn,openany,nodeprecatedcode,
+  srd=5.2.1,links=color,nomultitoc,bookmarksdepth=subsection]{dndbook}
+
+\usepackage[ngerman]{babel}
+
+\title{Die Nebelküste}
+\author{A. Autorin}
+\DndSetMetadata{
+  subject  = {Ein Ortsband für Abenteuer an der Küste},
+  keywords = {D\&D, 5e, Ortsband},
+  pdflang  = {de-DE},
+}
+
+\begin{document}
+
+\DndIfEdition{screen, printer-friendly}{%
+  \DndFrontCover[title=Die Nebelküste, subtitle=Ein Ortsband,
+    author=A. Autorin, title-position=bottom]{../art/cover}%
+}{}
+
+\frontmatter
+
+\DndCreditsPage{
+  \DndCredit{writing}{A. Autorin}
+  \DndCredit{editing}{B. Lektor}
+  \DndCredit{interior-art}{Platzhalterbilder, erzeugt mit ImageMagick}
+  \DndCredit{layout}{Die Klasse dndbook}
+}
+
+\tableofcontents
+
+\mainmatter
+
+\DndPartArt{../art/part}
+\part{Die Küste}
+
+\chapter{Land und Leute}
+
+An der Nebelküste steigt jeden Morgen der Dunst aus dem Meer und legt sich über Dünen, Salzwiesen und Fischerdörfer. Erst am Mittag reißt er auf, und oft kehrt er schon am Nachmittag zurück.
+
+\DndFadedImage[fade=bottom]{../art/landscape}
+
+\section{Orte}
+
+\subsection{Salzhafen}
+Salzhafen ist das größte Dorf der Küste. Hier legen die Kutter an, und hier wird der Fang gesalzen und verkauft.
+
+\subsection{Der Graue Turm}
+Auf einer Klippe nördlich von Salzhafen steht ein verlassener Leuchtturm. Die Fischer sagen, sein Licht brenne in manchen Nächten noch immer.
+
+\begin{DndQuotation}{Hanne, Fischerin aus Salzhafen}
+  Wer dem Licht im Grauen Turm folgt, kommt nicht nach Hause. Das weiß hier jedes Kind.
+\end{DndQuotation}
+
+\section{Begegnungen}
+
+\begin{DndTable}[header=Begegnungen im Nebel]{cX}
+  \textbf{W6} & \textbf{Begegnung} \\
+  1 & Ein Kutter ohne Besatzung treibt an den Strand \\
+  2 & Zwei Schmuggler mit einem Karren voller Salz \\
+  3 & Eine Möwe, die mit menschlicher Stimme spricht \\
+  4 & Ein Licht über dem Wasser, das sich nähert \\
+  5 & Eine Gruppe Pilger auf dem Weg zum Grauen Turm \\
+  6 & Nichts als Nebel und das Rauschen der Brandung
+\end{DndTable}
+
+\begin{DndComment}{Hinweis für die Spielleitung}
+  Würfelt einmal pro Stunde, die die Gruppe im Nebel unterwegs ist. Ein Wurf von 5 oder 6 führt die Gruppe zum Grauen Turm.
+\end{DndComment}
+
+\section{Regeln}
+
+Wer im Nebel reist, muss eine \DndSkillCheck{Weisheit}{Überlebenskunst}{12} bestehen, um nicht vom Weg abzukommen. Mehr dazu steht in \nameref{sec:reisen}.
+
+\section{Reisen im Nebel}\label{sec:reisen}
+
+Im dichten Nebel ist die Sicht auf 30 Fuß begrenzt. Kreaturen, die weiter entfernt sind, gelten als verborgen.
+
+\DndIfEdition{screen, printer-friendly}{%
+  \DndBackCover[blurb={Nebel, Salz und ein Licht, das nicht erlöschen will: ein Ortsband für Abenteuer an der Küste.}]{../art/back}%
+}{}
+
+\end{document}
