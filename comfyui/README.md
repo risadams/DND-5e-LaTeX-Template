@@ -75,12 +75,14 @@ A jobs file lists the images:
 
 - `preset` is one of `full-page`, `chapter`, `span`, `column` or `square` (see [Sizes](#sizes)). `gen` and `print_size` override the sizes, e.g. `"gen": [1024, 1024]`.
 - `count` is the number of images, each with a random seed. `seed` fixes the seed, for example to reproduce a draft.
+- `draft: true` is for trying out ideas quickly: the Turbo schedule at 0.7 × the generate size (about half the pixels, roughly a minute per image). Use the same seed without `draft` to get the finished image, which will differ in detail.
+- `schedule` is `turbo`, `default` or `quality` (12, 20 or 48 steps). Without it, the job uses the workflow's own setting.
 - `print: true` also runs the print stage.
 - `out` is the output folder, relative to the jobs file.
 
 The script reads the workflow (`workflows/dnd_art_t2i.json`, or `--workflow`) each time it runs. To change the house style, models or sampler settings, edit them in ComfyUI and save the workflow over that file. The script finds the nodes it fills in by their titles: SUBJECT, HOUSE_STYLE, GEN_WIDTH, GEN_HEIGHT, SEED and "Scale to print size". Keep those titles.
 
-Each image is written as `<name>_<seed>_draft.png` (and `_print.png`), with `<name>_<seed>.json` beside it. The JSON records the subject, house style, seed, sizes, LoRAs and a hash of the workflow file: the image's provenance. `comfyui/jobs/example.json` has three sample jobs; its output goes to `comfyui/jobs/generated/`, which git ignores.
+Each image is written as `<name>_<seed>_draft.png` (and `_print.png`), with `<name>_<seed>.json` beside it. The JSON records the subject, house style, seed, sizes, LoRAs and a hash of the workflow file: the image's provenance. `comfyui/jobs/example.json` has three sample jobs, and `comfyui/jobs/house-style-test.json` has 12 drafts for judging the house style across characters, scenes, SRD creatures, items and every preset. Their output goes to `comfyui/jobs/generated/`, which git ignores.
 
 ## Sizes
 

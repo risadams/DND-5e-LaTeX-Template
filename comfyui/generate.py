@@ -42,6 +42,13 @@ PRESETS = {
     "square":    {"gen": (1344, 1344), "print": (1000, 1000)},
 }
 
+# Ideogram4Scheduler settings: steps, mu, std.
+SCHEDULES = {
+    "turbo":   (12, 0.5, 1.75),
+    "default": (20, 0.0, 1.75),
+    "quality": (48, 0.0, 1.5),
+}
+
 # Node titles the script looks for in the workflow.
 T_SUBJECT, T_STYLE = "SUBJECT", "HOUSE_STYLE"
 T_WIDTH, T_HEIGHT, T_SEED = "GEN_WIDTH", "GEN_HEIGHT", "SEED"
@@ -150,6 +157,10 @@ def is_blocked(png):
 def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
     preset = PRESETS[job.get("preset", "full-page")]
     gen_w, gen_h = job.get("gen", preset["gen"])
+    draft = bool(job.get("draft", False))
+    schedule = job.get("schedule", "turbo" if draft else None)
+    if draft and "gen" not in job:
+        gen_w, gen_h = round(gen_w * .7 / 16) * 16, round(gen_h * .7 / 16) * 16  # about half the pixels
     print_w, print_h = job.get("print_size", preset["print"])
     do_print = bool(job.get("print", False))
     fixed_seed = job.get("seed")
@@ -165,6 +176,11 @@ def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
             node_by_title(wf, T_SEED)["widgets_values"][:2] = [seed, "fixed"]
             scale = node_by_title(wf, T_PRINT_SCALE, prefix=True)
             scale["widgets_values"][1:3] = [print_w, print_h]
+            if schedule:
+                sched = next(n for n in wf["nodes"] if n["type"] == "Ideogram4Scheduler")
+                steps, mu, std = SCHEDULES[schedule]
+                sched["widgets_values"][0] = steps
+                sched["widgets_values"][3:5] = [mu, std]
 
             api = to_api(wf, info, include_muted=do_print)
             t0 = time.time()
@@ -205,7 +221,7 @@ def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
         sidecar = {
             "name": job["name"], "subject": job["subject"], "house_style": style,
             "seed": seed, "preset": job.get("preset", "full-page"),
-            "generate_size": [gen_w, gen_h], "print_size": [print_w, print_h] if do_print else None,
+            "generate_size": [gen_w, gen_h], "schedule": schedule or "workflow", "print_size": [print_w, print_h] if do_print else None,
             "loras": loras, "workflow": os.path.relpath(job["_workflow"], HERE).replace(os.sep, "/"),
             "workflow_sha256": wf_hash, "files": written,
             "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -238,6 +254,9 @@ def main():
 
     terms, bad = load_banned(), False
     for j in jobs:
+        if j.get("schedule", "turbo") not in SCHEDULES:
+            print(f"{j['name']}: unknown schedule {j['schedule']!r} (use {', '.join(SCHEDULES)})")
+            bad = True
         if j.get("preset", "full-page") not in PRESETS:
             print(f"{j['name']}: unknown preset {j['preset']!r} (use {', '.join(PRESETS)})")
             bad = True
@@ -258,7 +277,7 @@ def main():
     for j in jobs:
         j["_workflow"] = os.path.abspath(args.workflow)
         print(f"{j['name']} ({j.get('preset', 'full-page')}, {j.get('count', 1)} image(s)"
-              f"{', print' if j.get('print') else ''})", flush=True)
+              f"{', draft' if j.get('draft') else ''}{', print' if j.get('print') else ''})", flush=True)
         run_job(comfy, info, json.loads(raw), wf_hash, j, out_dir, args.retries)
 
 
