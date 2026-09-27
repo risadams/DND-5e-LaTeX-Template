@@ -487,6 +487,38 @@
     \keys_set:nn { dnd / fonts } { #1 }
   }
 
+% style=2024: bold sans-serif headings in upper and lower case, sized from
+% WotC's SRD 5.2.1 (see docs/style-2024.md). Gillius stands in for Gill Sans
+% with the default fonts; other font sets use their sans-serif face.
+\cs_new_protected:Npn \__dnd_heading_sans:
+  {
+    \str_if_eq:VnTF \l__dnd_fontset_tl { plain }
+      { \cs_if_exist:NTF \gilliustwo { \gilliustwo } { \sffamily } }
+      { \sffamily }
+    \bfseries
+  }
+
+\str_if_eq:VnT \l__dnd_style_tl { 2024 }
+  {
+    \keys_set:nn { dnd / fonts }
+      {
+        part-family          = \__dnd_heading_sans: ,
+        part-style           = \color{titlered} \Huge ,
+        chapter-family       = \__dnd_heading_sans: ,
+        chapter-style        = \linespread{.9} \color{titlered} \DndRelativeSize{2.6} ,
+        section-family       = \__dnd_heading_sans: ,
+        section-style        = \linespread{.9} \color{titlered} \DndRelativeSize{1.8} \RaggedRight ,
+        subsection-family    = \__dnd_heading_sans: ,
+        subsection-style     = \linespread{.9} \color{titlered} \DndRelativeSize{1.5} \RaggedRight ,
+        subsubsection-family = \__dnd_heading_sans: ,
+        subsubsection-style  = \linespread{.9} \DndRelativeSize{1.2} \RaggedRight ,
+        toc-part-family      = \__dnd_heading_sans: ,
+        toc-part-style       = \Large \color{titlered} ,
+        toc-chapter-family   = \__dnd_heading_sans: ,
+        toc-chapter-style    = \large \color{titlered} ,
+      }
+  }
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Font access functions combine the selected family and style
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

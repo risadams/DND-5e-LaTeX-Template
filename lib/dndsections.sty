@@ -21,20 +21,26 @@
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Section formatting
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Part and chapter titles have a gray outline in the 2014 books, none in
+  % the 2024 books
+  \str_if_eq:VnTF \l__dnd_style_tl { 2024 }
+    { \cs_new_eq:NN \__dnd_title_outline:n \use:n }
+    { \cs_new_protected:Npn \__dnd_title_outline:n #1 { \DndContour {#1} } }
+
   % Part
   \titleformat {\part}
     [display]
     { \__dnd_part_art_apply: \centering \DndFontPart } % format
-    { \DndContour{\partname\ \thepart} } % label
+    { \__dnd_title_outline:n {\partname\ \thepart} } % label
     { 2ex } % sep
-    { \DndContour } % before-code
+    { \__dnd_title_outline:n } % before-code
 
   % Chapter
   \titleformat {\chapter}
     { \__dnd_chapter_art_apply: \DndFontChapter } % format
-    { \DndContour{\chaptertitlename\ \thechapter :} } % label
+    { \__dnd_title_outline:n {\chaptertitlename\ \thechapter :} } % label
     { \wordsep } % sep
-    { \DndContour } % before-code
+    { \__dnd_title_outline:n } % before-code
 
   \titlespacing* {\chapter}
     { 0pt }  % left

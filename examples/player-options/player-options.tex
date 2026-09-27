@@ -1,16 +1,16 @@
 % Paths of the Wild: player options in the style of the 2024 core books.
 %
-% Shows: SRD 5.2.1 attribution, text that changes with the SRD version
-% (\DndIfSRD), modern stat blocks, the print background (footer scroll, no
-% parchment), justified text, colored links, a theme color, a class table, a
-% spell list and an index.
+% Shows: the 2024 style (style=2024: white pages, sans-serif headings,
+% modern stat blocks), SRD 5.2.1 attribution, text that changes with the SRD
+% version (\DndIfSRD), justified text, colored links, a class table, a spell
+% list and an index.
 %
 % Build from the template folder (pdfLaTeX, free fonts):
 %   make all-editions BOOK=examples/player-options/player-options.tex
 % and for the 2014 rules, from the same source:
 %   make all-editions BOOK=examples/player-options/player-options.tex SRD=5.1
 \documentclass[letterpaper,twoside,twocolumn,openany,nodeprecatedcode,
-  srd=5.2.1,stats=modern,bg=print,justified,links=color,index]{dndbook}
+  style=2024,srd=5.2.1,justified,links=color,index]{dndbook}
 
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
@@ -39,8 +39,6 @@
 \tableofcontents
 
 \mainmatter
-
-\DndSetThemeColor[DmgCoral]
 
 \chapter{The Warden}
 

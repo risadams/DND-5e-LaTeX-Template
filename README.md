@@ -119,6 +119,7 @@ Note that the package has only been tested with the `book` class.
 | `fontpath`     | ✓               | ✓                 |
 | `img`          | ✓               | ✓                 |
 | `stats`        | ✓               | ✓                 |
+| `style`        | ✓               | ✓                 |
 | `bleed`        | ✓               | ✓                 |
 | `cropmarks`    | ✓               | ✓                 |
 | `colormodel`   | ✓               | ✓                 |
@@ -174,6 +175,19 @@ Folder that holds font files for `fonts=solbera`, relative to the document. Defa
 
 * `classic`: 2014 Monster Manual stat blocks. (**default**)
 * `modern`: 2024 Monster Manual stat blocks.
+
+#### `style`
+
+The look of the core books to follow:
+
+| | `style=2014` (**default**) | `style=2024` (provisional) |
+| - | ------------------------- | -------------------------- |
+| Pages | parchment (`bg=full`) | white (`bg=none`) |
+| Headings | small caps in the title font, parts and chapters outlined | bold sans serif in upper and lower case |
+| Colors | dark red headings, gold rules, green sidebars | brighter red headings, gold rules, gray sidebars and table stripes |
+| Stat blocks | `stats=classic` | `stats=modern` |
+
+`style=2024` only changes defaults: `bg`, `stats`, `\DndSetThemeColor` and `\DndSetFonts` still override it. It is based on WotC's SRD 5.2.1, not the books themselves, and is marked provisional until checked against them; see [docs/style-2024.md](docs/style-2024.md) for the sources and what is still missing.
 
 #### `bleed`
 
