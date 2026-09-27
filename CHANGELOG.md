@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 * Moved devops from CircleCI to GitHub Actions
+* Page backgrounds are drawn with `eso-pic` behind all page content, so they no longer cover pages inserted with `\includepdf`. A page style that clears the header still suppresses the background (#314, #367)
 
 ### Fixed
 * `DndReadAloud`, `DndSidebar`, `DndComment`, `DndQuotation` and `DndAside` no longer fail on TeX Live 2026 when the optional argument is omitted (#391)

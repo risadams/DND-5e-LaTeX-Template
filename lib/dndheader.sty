@@ -41,23 +41,39 @@
 
 \fancyhf {} % clear all headers and footers
 
-% Header is used to include the page background
-\fancyhead[CO]{
-  \bool_if:NT \l__dnd_show_background_bool
-    {
-      \begin{tikzpicture}[remember~picture,overlay]
-        \node[inner~sep=0pt] at (current~page.center) {\includegraphics[width=\paperwidth,height=\paperheight]{\l__dnd_background_name_tl - recto}};
-      \end{tikzpicture}
-    }
-}
-\fancyhead[CE]{
-  \bool_if:NT \l__dnd_show_background_bool
-    {
-      \begin{tikzpicture}[remember~picture,overlay]
-        \node[inner~sep=0pt] at (current~page.center) {\includegraphics[width=\paperwidth,height=\paperheight]{\l__dnd_background_name_tl - verso}};
-      \end{tikzpicture}
-    }
-}
+% Page background. The header requests it, so a page style that clears the
+% header (e.g. for a cover) still has no background, but eso-pic draws it
+% behind everything else on the page, including pages from \includepdf.
+\RequirePackage {eso-pic}
+
+\bool_new:N \g__dnd_page_background_bool
+\tl_new:N \g__dnd_page_background_side_tl
+
+% #1 - recto or verso
+\cs_new_protected:Npn \__dnd_request_background:n #1
+  {
+    \bool_if:NT \l__dnd_show_background_bool
+      {
+        \bool_gset_true:N \g__dnd_page_background_bool
+        \tl_gset:Nn \g__dnd_page_background_side_tl {#1}
+      }
+  }
+
+\AddToShipoutPictureBG
+  {
+    \bool_if:NT \g__dnd_page_background_bool
+      {
+        \AtPageLowerLeft
+          {
+            \includegraphics[width=\paperwidth,height=\paperheight]
+              {\l__dnd_background_name_tl - \g__dnd_page_background_side_tl}
+          }
+        \bool_gset_false:N \g__dnd_page_background_bool
+      }
+  }
+
+\fancyhead[CO]{ \__dnd_request_background:n {recto} }
+\fancyhead[CE]{ \__dnd_request_background:n {verso} }
 
 % Left-even page footer
 \fancyfoot[LE]{%
