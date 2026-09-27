@@ -46,8 +46,9 @@
 
     \AddToHook { begindocument / before }
       {
-        \IfPackageLoadedF { hyperref } { \RequirePackage { hyperref } }
-        \IfPackageLoadedF { bookmark } { \RequirePackage { bookmark } }
+        % \@ifpackageloaded, not \IfPackageLoadedF, which needs LaTeX 2024
+        \@ifpackageloaded { hyperref } { } { \RequirePackage { hyperref } }
+        \@ifpackageloaded { bookmark } { } { \RequirePackage { bookmark } }
       }
   }
 
@@ -100,7 +101,9 @@
 \NewDocumentCommand {\DndSetMetadata} { m }
   {
     \keys_set:nn { dnd / metadata } {#1}
-    \IfPackageLoadedT { hyperref } { \__dnd_pdf_metadata_apply: }
+    % hyperref is loaded if \hypersetup exists (this also works after the
+    % preamble, where \@ifpackageloaded is not allowed)
+    \cs_if_exist:NT \hypersetup { \__dnd_pdf_metadata_apply: }
   }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
