@@ -71,6 +71,11 @@
         \RequirePackage[type1]{gillius2}
         \RequirePackage[notext,nomath,nott]{kpfonts}
         \RequirePackage[T1]{fontenc}
+        % The default fonts are 8-bit Type 1 fonts. LuaTeX would otherwise
+        % send Unicode code points straight to T1 slots, so that e.g. "ß"
+        % (U+00DF) prints the "SS" glyph that T1 keeps at that position.
+        \sys_if_engine_luatex:T
+          { \RequirePackage[utf8]{luainputenc} }
         \renewcommand{\sfdefault}{jkpss}
         \newcommand{\booktitlefont}{\normalfont}
         \newcommand{\sctitlefont}{\normalfont}
