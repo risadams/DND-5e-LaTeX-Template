@@ -46,6 +46,17 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Monster environments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Give every stat block a link target and its name for \nameref, so that
+% \begin{DndMonster}[label=monster:wolf]{Wolf} can be referenced.
+\tcbset
+  {
+    dnd~monster~ref/.style =
+      {
+        phantom = { \cs_if_exist_use:N \phantomsection },
+        nameref = {#1},
+      },
+  }
+
 % Stat block made to look like the Monster Manual NPC definitions
 \DeclareTColorBox {DndMonsterClassicNoBg} { O{} m }
   {
@@ -65,6 +76,7 @@
     fontupper   = \DndFontStatBlockBody,
     fontlower   = \DndFontStatBlockBody,
     title       = {#2},
+    dnd~monster~ref = {#2},
     coltitle    = titlered,
     #1
   }
@@ -98,6 +110,7 @@
     fontupper        = \DndFontStatBlockBody,
     fontlower        = \DndFontStatBlockBody,
     title            = {#2},
+    dnd~monster~ref  = {#2},
     #1
   }
 
@@ -120,6 +133,7 @@
     fontupper   = \DndFontStatBlockBody,
     fontlower   = \DndFontStatBlockBody,
     title       = {#2},
+    dnd~monster~ref = {#2},
     coltitle    = stattitle24,
     #1
 }
@@ -150,6 +164,7 @@
     fontlower        = \DndFontStatBlockBody,
     fuzzy~shadow     = {0pt}{-3pt}{0pt}{1.5pt}{white!63!black},
     title            = {#2},
+    dnd~monster~ref  = {#2},
     before~upper*    = \textcolor{stattitle24}{\rule{\linewidth}{0.75pt}}\vspace{-2pt},
     #1
 }
