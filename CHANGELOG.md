@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * `\damagetypename` caption sets the word order of monster attack damage, e.g. "de daño veneno" in Spanish; Spanish, Portuguese and French now put the damage type after the noun (#324, #190)
 * `DndMonster` stat blocks can be referenced: `\begin{DndMonster}[label=monster:wolf]{Wolf}` works with `\pageref`, `\nameref` and hyperref links (#337)
 * `area-reset` option for `\DndSetAreaOptions` restarts area numbering at each part, chapter or section (#313)
+* PDF navigation: `hyperref` and `bookmark` load automatically, so the PDF has a bookmarks panel, a clickable table of contents, and linked map and area references. The `hyperref`, `links=hidden|color` and `bookmarksdepth` options control it, and `\DndSetMetadata` sets the PDF title, author, subject and keywords. Covers, the contents page, the list of maps and the index get bookmarks, and cover pages are no longer counted in the page numbers (risadams/DND-5e-LaTeX-Template#1)
 * Portuguese translation
 * French translation
 * Automatically bolds the first row of tables

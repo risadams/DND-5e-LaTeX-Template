@@ -38,6 +38,9 @@
 \dim_new:N \l__dnd_bleed_dim
 \bool_new:N \l__dnd_cropmarks_bool
 \tl_new:N \l__dnd_fontset_tl
+\tl_new:N \l__dnd_hyperref_tl
+\tl_new:N \l__dnd_links_tl
+\tl_new:N \l__dnd_bookmarks_depth_tl
 
 \tl_const:Nn \l__dnd_fontset_plain_tl {plain}
 \tl_const:Nn \l__dnd_fontset_wotc_tl {wotc}
@@ -154,6 +157,18 @@
     cover .default:n  = true,
     spine .dim_set:N  = \l__dnd_spine_dim,
     spine .initial:n  = 0pt,
+
+    % PDF navigation: load hyperref and bookmark (auto: whenever layout is
+    % on), link style, and how deep the bookmark panel goes
+    hyperref .choices:nn = { true, false, auto }
+      { \tl_set_eq:NN \l__dnd_hyperref_tl \l_keys_choice_tl },
+    hyperref .default:n = true,
+    hyperref .initial:n = auto,
+    links .choices:nn = { hidden, color }
+      { \tl_set_eq:NN \l__dnd_links_tl \l_keys_choice_tl },
+    links .initial:n = hidden,
+    bookmarksdepth .tl_set:N = \l__dnd_bookmarks_depth_tl,
+    bookmarksdepth .initial:n = section,
 
     % Justified text
     justified .code:n =

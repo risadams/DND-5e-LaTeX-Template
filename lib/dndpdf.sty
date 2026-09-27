@@ -1,0 +1,149 @@
+\ExplSyntaxOn
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDF navigation (class option `hyperref`)
+%
+% hyperref and bookmark are loaded at the end of the preamble, after the
+% user's own packages, so the contents, map references and area references
+% become links and the PDF gets a bookmark panel. Load hyperref yourself in
+% the preamble to give it other options (e.g. for cleveref, which must come
+% after it); the template's defaults still apply unless you override them.
+%
+% \DndSetMetadata{title=..., author=..., subject=..., keywords=...}
+% sets the PDF properties. Title and author default to \title and \author.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bool_new:N \l__dnd_hyperref_bool
+\exp_args:NV \str_case:nnF \l__dnd_hyperref_tl
+  {
+    { true }  { \bool_set_true:N \l__dnd_hyperref_bool }
+    { false } { \bool_set_false:N \l__dnd_hyperref_bool }
+  }
+  { \bool_set_eq:NN \l__dnd_hyperref_bool \l__dnd_layout_bool }
+
+\bool_if:NT \l__dnd_hyperref_bool
+  {
+    % Passed as package options so that options the user gives when loading
+    % hyperref themselves still win
+    \use:e
+      {
+        \exp_not:N \PassOptionsToPackage
+          {
+            pdfusetitle ,
+            pdfdisplaydoctitle ,
+            bookmarksopen ,
+            bookmarksopenlevel = -1 ,
+            bookmarksdepth = \l__dnd_bookmarks_depth_tl ,
+            \str_if_eq:VnTF \l__dnd_links_tl { color }
+              { colorlinks , allcolors = titlered }
+              { hidelinks }
+          }
+          { hyperref }
+        \exp_not:N \PassOptionsToPackage
+          { depth = \l__dnd_bookmarks_depth_tl }
+          { bookmark }
+      }
+
+    \AddToHook { begindocument / before }
+      {
+        \IfPackageLoadedF { hyperref } { \RequirePackage { hyperref } }
+        \IfPackageLoadedF { bookmark } { \RequirePackage { bookmark } }
+      }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bookmark text: drop the outline and the line breaks from headings
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\NewExpandableDocumentCommand \__dnd_pdfstring_contour { o m } {#2}
+
+\AddToHook { package / hyperref / after }
+  {
+    \pdfstringdefDisableCommands
+      {
+        \cs_set_eq:NN \DndContour \__dnd_pdfstring_contour
+        \cs_set:Npn \newline { ~ }
+        \cs_set:Npn \\ { ~ }
+      }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Metadata
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% hyperref keys waiting for hyperref to be loaded
+\tl_new:N \g__dnd_pdf_metadata_tl
+
+% #1 - hyperref key, #2 - value
+\cs_new_protected:Npn \__dnd_pdf_metadata:nn #1#2
+  { \tl_gput_right:Nn \g__dnd_pdf_metadata_tl { #1 = {#2} , } }
+
+\keys_define:nn { dnd / metadata }
+  {
+    title .code:n    = \__dnd_pdf_metadata:nn { pdftitle } {#1},
+    author .code:n   = \__dnd_pdf_metadata:nn { pdfauthor } {#1},
+    subject .code:n  = \__dnd_pdf_metadata:nn { pdfsubject } {#1},
+    keywords .code:n = \__dnd_pdf_metadata:nn { pdfkeywords } {#1},
+    % Any other hyperref key, e.g. pdflang or pdfcopyright
+    unknown .code:n  = \__dnd_pdf_metadata:Vn \l_keys_key_str {#1},
+  }
+\cs_generate_variant:Nn \__dnd_pdf_metadata:nn { V }
+
+\cs_new_protected:Npn \__dnd_pdf_metadata_apply:
+  {
+    \exp_args:NV \hypersetup \g__dnd_pdf_metadata_tl
+    \tl_gclear:N \g__dnd_pdf_metadata_tl
+  }
+
+\AddToHook { package / hyperref / after } { \__dnd_pdf_metadata_apply: }
+
+\NewDocumentCommand {\DndSetMetadata} { m }
+  {
+    \keys_set:nn { dnd / metadata } {#1}
+    \IfPackageLoadedT { hyperref } { \__dnd_pdf_metadata_apply: }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bookmarks for pages without a heading
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\int_new:N \g__dnd_pdf_bookmark_int
+
+% A bookmark at the current point; does nothing without hyperref.
+% #1 - level (-1 part, 0 chapter, 1 section, ...), #2 - text
+\cs_new_protected:Npn \__dnd_pdf_bookmark:nn #1#2
+  {
+    \cs_if_exist:NT \pdfbookmark
+      {
+        \int_gincr:N \g__dnd_pdf_bookmark_int
+        \use:e
+          {
+            \exp_not:N \pdfbookmark [#1] { \exp_not:n {#2} }
+              { dnd . bookmark . \int_use:N \g__dnd_pdf_bookmark_int }
+          }
+      }
+  }
+
+% A top-level bookmark that nothing nests under, for covers
+% #1 - text
+\cs_new_protected:Npn \__dnd_pdf_bookmark_root:n #1
+  {
+    \cs_if_exist:NT \bookmarksetup { \bookmarksetup { startatroot } }
+    \__dnd_pdf_bookmark:nn { 0 } {#1}
+    \cs_if_exist:NT \bookmarksetup { \bookmarksetup { startatroot } }
+  }
+
+% The contents page is a \chapter* and has no bookmark of its own. Start its
+% page here, as \chapter* would, so the bookmark points at it.
+\AddToHook { cmd / tableofcontents / before }
+  {
+    \cs_if_exist:NT \pdfbookmark
+      {
+        \cs_if_exist:NTF \chapter
+          {
+            \legacy_if:nTF { @openright } { \cleardoublepage } { \clearpage }
+            \__dnd_pdf_bookmark:nn { 0 } { \contentsname }
+          }
+          { \__dnd_pdf_bookmark:nn { 1 } { \contentsname } }
+      }
+  }

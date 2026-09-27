@@ -178,16 +178,12 @@
     \end {tikzpicture}
   }
 
-% Caption below the map. Numbered maps step the counter, get a label and a
-% list-of-maps entry; player maps are unnumbered.
-\cs_new_protected:Npn \__dnd_map_caption:
+% Numbered maps step the counter, get a label and a list-of-maps entry; player
+% maps are unnumbered. Used in vertical mode above the picture, so that links
+% to the map show the map rather than its caption.
+\cs_new_protected:Npn \__dnd_map_number:
   {
-    \par \nopagebreak \vspace { 3pt } \noindent
-    \bool_if:NTF \l__dnd_map_player_bool
-      {
-        { \DndFontTableTitle \playermapname
-          \tl_if_empty:NF \l__dnd_map_caption_tl { : ~ \l__dnd_map_caption_tl } }
-      }
+    \bool_if:NF \l__dnd_map_player_bool
       {
         \refstepcounter {DndMap}
         \tl_if_empty:NF \l__dnd_map_label_tl
@@ -197,6 +193,19 @@
             \protect \numberline { \theDndMap }
             \exp_not:V \l__dnd_map_caption_tl
           }
+      }
+  }
+
+% Caption below the map
+\cs_new_protected:Npn \__dnd_map_caption:
+  {
+    \par \nopagebreak \vspace { 3pt } \noindent
+    \bool_if:NTF \l__dnd_map_player_bool
+      {
+        { \DndFontTableTitle \playermapname
+          \tl_if_empty:NF \l__dnd_map_caption_tl { : ~ \l__dnd_map_caption_tl } }
+      }
+      {
         { \DndFontTableTitle \mapname \nobreakspace \theDndMap
           \tl_if_empty:NF \l__dnd_map_caption_tl { : ~ \l__dnd_map_caption_tl } }
       }
@@ -212,14 +221,15 @@
           {
             \tl_if_empty:NTF \l__dnd_map_float_tl
               {
-                \par \addvspace { 9pt plus 3pt minus 3pt } \noindent
+                \par \addvspace { 9pt plus 3pt minus 3pt }
+                \__dnd_map_number: \noindent
                 \__dnd_map_picture:nnn {#1} {#2} { width = \linewidth }
                 \__dnd_map_caption:
                 \addvspace { 9pt plus 3pt minus 3pt }
               }
               {
                 \use:e { \exp_not:N \begin {figure} [ \l__dnd_map_float_tl ] }
-                  \noindent
+                  \__dnd_map_number: \noindent
                   \__dnd_map_picture:nnn {#1} {#2} { width = \linewidth }
                   \__dnd_map_caption:
                 \end {figure}
@@ -232,7 +242,7 @@
                 \exp_not:N \begin {figure*}
                   [ \tl_if_empty:NTF \l__dnd_map_float_tl { t } { \l__dnd_map_float_tl } ]
               }
-              \noindent
+              \__dnd_map_number: \noindent
               \__dnd_map_picture:nnn {#1} {#2} { width = \textwidth }
               \__dnd_map_caption:
             \end {figure*}
@@ -241,6 +251,7 @@
           {
             \begin {figure*} [p]
               \centering
+              \__dnd_map_number:
               \__dnd_map_picture:nnn {#1} {#2}
                 {
                   width = \textwidth ,
@@ -308,5 +319,17 @@
 \NewDocumentCommand {\DndListOfMaps} { O{\section*} }
   {
     #1 { \listmapsname }
+    % Starred headings have no bookmark; add one at the heading's level
+    \__dnd_pdf_bookmark:nn
+      {
+        \str_case:nnF {#1}
+          {
+            { \part* }       { -1 }
+            { \chapter* }    { 0 }
+            { \subsection* } { 2 }
+          }
+          { 1 }
+      }
+      { \listmapsname }
     \@starttoc {lom}
   }

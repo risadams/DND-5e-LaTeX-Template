@@ -198,30 +198,37 @@
   }
 
 % Typeset a cover page now (so the keys are still set) and put it behind an
-% otherwise empty page.
-% #1 - key-values, #2 - drawing code
-\cs_new_protected:Npn \__dnd_cover_page:nn #1#2
+% otherwise empty page. Covers are not numbered pages: the page is labelled
+% with its name and the page counter is not advanced, so the first page after
+% the cover is still page 1 and its PDF link target differs from the cover's.
+% #1 - key-values, #2 - name, #3 - drawing code
+\cs_new_protected:Npn \__dnd_cover_page:nnn #1#2#3
   {
     \clearpage
+    \group_begin:
+    \cs_set:Npn \thepage {#2}
+    \__dnd_pdf_bookmark_root:n {#2}
     \group_begin:
       \keys_set:nn { dnd / cover } {#1}
       \hbox_gset:Nn \g__dnd_cover_box
         {
           \setlength { \unitlength } { 1pt }
-          \begin {picture} (0,0) #2 \end {picture}
+          \begin {picture} (0,0) #3 \end {picture}
         }
     \group_end:
     \thispagestyle {dndart}
     \AddToShipoutPictureBG* { \AtPageLowerLeft { \box_use_drop:N \g__dnd_cover_box } }
     \null
     \clearpage
+    \addtocounter {page} {-1}
+    \group_end:
   }
 
 % \DndFrontCover[title=..., subtitle=..., author=..., title-position=top|bottom,
 %                title-color=..., outline-color=..., title-size=...]{<art>}
 \NewDocumentCommand {\DndFrontCover} { O{} m }
   {
-    \__dnd_cover_page:nn {#1}
+    \__dnd_cover_page:nnn {#1} { \frontcovername }
       {
         \__dnd_cover_art:nnnnn { 0pt } { 0pt } { \paperwidth } { \paperheight } {#2}
         \__dnd_cover_front_text:n { \l__dnd_bleed_dim }
@@ -232,7 +239,7 @@
 % \DndBackCover[blurb={...}]{<art>}
 \NewDocumentCommand {\DndBackCover} { O{} m }
   {
-    \__dnd_cover_page:nn {#1}
+    \__dnd_cover_page:nnn {#1} { \backcovername }
       {
         \__dnd_cover_art:nnnnn { 0pt } { 0pt } { \paperwidth } { \paperheight } {#2}
         \__dnd_cover_back_text:n { \l__dnd_bleed_dim }
@@ -266,7 +273,7 @@
   {
     \bool_if:NF \l__dnd_cover_bool
       { \msg_error:nn { dnd } { cover / needs_option } }
-    \__dnd_cover_page:nn {#1}
+    \__dnd_cover_page:nnn {#1} { \frontcovername }
       {
         % Whole spread, or back / spine / front separately
         \tl_if_empty:NTF \l__dnd_cover_wrap_art_tl

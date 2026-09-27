@@ -124,6 +124,9 @@ Note that the package has only been tested with the `book` class.
 | `colormodel`   | ✓               | ✓                 |
 | `cover`, `spine` | ✓             | ✓                 |
 | `index`        | ✓               | ✓                 |
+| `hyperref`     | ✓               | ✓                 |
+| `links`        | ✓               | ✓                 |
+| `bookmarksdepth` | ✓             | ✓                 |
 | `justified`    | ✓               | ✓                 |
 | `layout`       | ✓               |                   |
 | `nomultitoc`   | ✓               | ✓                 |
@@ -180,6 +183,23 @@ Draw crop marks at the trim size. Most print-on-demand services do not want them
 * `rgb`: Colors are RGB, best for screen PDFs. (**default**)
 * `cmyk`: Convert the template's colors to CMYK for print. Convert your images to CMYK separately.
 
+#### `hyperref`
+
+Load `hyperref` and `bookmark` for links, PDF bookmarks and metadata; see [PDF navigation](#pdf-navigation).
+
+* `auto`: Load them with the class, and with the package when `layout=true`. (**default**)
+* `true`: Always load them.
+* `false`: Never load them.
+
+#### `links`
+
+* `hidden`: Links look like normal text, as in the printed books. (**default**)
+* `color`: Links are colored dark red, for screen editions.
+
+#### `bookmarksdepth`
+
+The deepest heading level shown in the PDF bookmarks panel: `part`, `chapter`, `section` (**default**, the same as the table of contents), `subsection`, ... Area headings are subsections by default, so use `bookmarksdepth=subsection` to list every area.
+
 #### `justified`
 
 Justify column copy.
@@ -202,6 +222,27 @@ Disable multi-column table of contents.
 #### `nodeprecatedcode`
 
 Excludes all deprecated code from the build process.
+
+## PDF navigation
+
+The class loads `hyperref` and `bookmark` at `\begin{document}`, after your own packages, so you do not have to load them. The PDF opens with a bookmarks panel that mirrors the table of contents, plus bookmarks for the covers, the contents page, `\DndListOfMaps` and the index. The contents, `\DndMapRef`, map area numbers, `\DndAreaRef` and page references are links.
+
+The PDF title and author come from `\title` and `\author`. Set the rest with `\DndSetMetadata` anywhere in the preamble or document:
+
+```latex
+\DndSetMetadata{
+  subject  = {An adventure for four to six characters of 1st level},
+  keywords = {D\&D, 5e, adventure},
+  % title and author override \title and \author; any other hyperref key
+  % such as pdflang or pdfcopyright is passed on
+}
+```
+
+To give `hyperref` options of your own, or to use a package that must be loaded after it (such as `cleveref`), load `hyperref` yourself in the preamble. The template's defaults still apply unless you set those options yourself.
+
+Headings that contain `\\` or `\newline` break the table of contents. Give them a short title for the contents and bookmarks: `\section[Short title]{Long\\title}`.
+
+Cover pages made with `\DndFrontCover` and `\DndBackCover` are not counted in the page numbers, and are labelled "Cover" and "Back Cover" in the PDF reader's page box.
 
 ## Artwork
 

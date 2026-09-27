@@ -76,6 +76,7 @@
 \RequirePackage {lib/dndcolors}     % color definitions
 \RequirePackage {lib/dndfonts}      % font definitions
 \RequirePackage {lib/dndstrings}    % Load document strings
+\RequirePackage {lib/dndpdf}        % links, bookmarks and PDF metadata
 
 % Conditionally load deprecated code for backwards compatibility
 \bool_if:NF \l__dnd_no_deprecated_code_bool
