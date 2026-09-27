@@ -2,8 +2,9 @@
 %
 % Shows: Solbera's fonts, the full page background, SRD 5.1 attribution,
 % covers that appear only in the screen editions, chapter art, a drop cap,
-% read-aloud text, numbered areas with a map, a classic stat block and a
-% sidebar that changes in the printer-friendly edition.
+% read-aloud text, numbered areas with a map, a classic stat block, a
+% sidebar that changes in the printer-friendly edition, and player handouts
+% (a torn note and the player map) collected in an appendix.
 %
 % Build from the template folder (XeLaTeX, because of Solbera's fonts; run
 % `make fonts` once to download them):
@@ -121,7 +122,15 @@ Reeds and sunken gravestones cover the rise. The water is knee-deep everywhere e
 The gate's roof has fallen in. A character who succeeds on a \DndSkillCheck{Wisdom}{Perception}{12} spots fresh bootprints in the mud, leading toward the chapel.
 
 \DndSubArea{Sexton's Hut}
-The missing fishers hide here, cold and frightened. They saw pale figures in the nave and will not go back.
+The missing fishers hide here, cold and frightened. They saw pale figures in the nave and will not go back. One of them clutches a note torn from the chapel's register (\DndHandoutRef{register}):
+
+\begin{DndHandout}[style=note, title={The Register Page}, label=register, appendix]
+  Rang the bell at dusk as Father bid. Rang it again at midnight. It rang a third time and I was not holding the rope.
+\end{DndHandout}
+
+Show the players the chapel on \DndHandoutRef{chapel} when they reach the lychgate.
+
+\DndPlayerMap[appendix]{chapel}
 
 \DndArea{The Chapel}
 The chapel's doors stand open. Inside, the water is waist-deep and still.
@@ -140,6 +149,10 @@ A rotten ladder climbs to the bell. The rope is wet, and fresh.
 \section{Conclusion}
 
 If the characters ring the bell at dawn, the acolytes sink back under the water and the fog lifts from the fens for good.
+
+% Every handout and player map marked `appendix`, one per page
+\appendix
+\DndHandoutAppendix
 
 \DndIfEdition{screen, printer-friendly}{%
   \DndBackCover[blurb={The bell of the drowned chapel rings every foggy night. Who is ringing it, and why? A short adventure for four characters of 3rd level.}]{../art/back}%

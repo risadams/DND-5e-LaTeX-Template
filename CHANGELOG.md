@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `\DndAbilityCheck` (DC 11 Strength) and `\DndSkillCheck` (DC 11 Strength (Athletics))
   - Ability check macros built on those, e.g. `\DndStrSave{12}` gets 'DC 12 Strength'
   - Skill check macros also built on those, e.g. `\DndAthletics{12}` gets 'DC 12 Strength (Athletics)', or `\DndAthletics[\conname]{12}` gets 'DC 12 Constitution (Athletics)'.
+* `style=2024` (provisional): white pages, bold sans-serif headings, the 2024 colors and modern stat blocks, based on WotC's SRD 5.2.1 (see [docs/style-2024.md](docs/style-2024.md)). The player-options example uses it, and `make test` builds the example document in both styles.
+* Player handouts: `DndHandout` in `letter`, `note` and `poster` styles, numbered through the book, with `\DndHandoutRef` and `\DndListOfHandouts`. Handouts marked `appendix`, and player maps added with `\DndPlayerMap[appendix]`, are printed again one per page by `\DndHandoutAppendix`. Maps take `placement=sideways` for a landscape map on its own page, shown upright in PDF viewers.
+* Printed-book structure: with `twoside,openright`, the page left blank before a chapter or part has no footer, and the `blankpages=empty` option also drops its background. `\DndFacingArt` puts full-page art on the left-hand page facing a chapter, `\DndSectionBreak` and `\DndOrnament` draw a section-break ornament, and `\maketitle` sets a title page in the book's fonts with an optional `\DndSubtitle`.
 * Print production options: `bleed=<length>` adds bleed on every side and writes PDF TrimBox/BleedBox, `cropmarks` draws trim marks, and `colormodel=cmyk` converts colors for print
 * Artwork commands: `\DndChapterArt` (edge-to-edge art at the top of a chapter's first page), `\DndPartArt` (art behind a part title), `\DndFullPageImage` (image-only pages), `\DndPageBackground` (art behind a page's text), `\DndFadedImage` (images that fade into the page) and `\DndSpanImage` (art across both columns). Art fills its space without distortion and extends into the bleed.
 * Covers: `\DndFrontCover` and `\DndBackCover` for full-bleed cover pages, and `\DndCoverSpread` with the `cover` and `spine` options for print-on-demand cover spreads (#235)
@@ -53,6 +56,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Page backgrounds are drawn with `eso-pic` behind all page content, so they no longer cover pages inserted with `\includepdf`. A page style that clears the header still suppresses the background (#314, #367)
 * Floats on pages holding only floats sit at the top of the page instead of the middle, as in the core books
 * Negative modifiers use a true minus sign when the font has one; `\DndMinus` gives the same sign in documents
+* **Visible change:** body typography follows measurements of the 2014 core books (see [docs/typography.md](docs/typography.md)). Text is hyphenated (`hyphenate=false` restores the old line breaking); a single line of a paragraph is no longer left alone at the top or bottom of a column; columns end where their text ends (`\raggedbottom`); the columns on the last page of each chapter, part and the document are balanced (`balance=false` turns this off); subsections are 16.4pt and subsubsections 13pt (from 14.4pt and 12pt), and the space around headings matches the books. Existing documents will break lines and pages differently.
 
 ### Fixed
 * `DndReadAloud` no longer typesets a stray `;` (a "Missing character" warning in the log)

@@ -5,7 +5,7 @@ Three short books, each showing a different set of options. Build them from the 
 | Book | Look | Shows |
 | ---- | ---- | ----- |
 | [`adventure`](adventure/adventure.tex) | 2014 core books | Solbera's fonts, the full parchment background, SRD 5.1, covers in the screen editions and a print cover spread ([`cover.tex`](adventure/cover.tex)), chapter art, a drop cap, read-aloud text, numbered areas on a map, a classic stat block |
-| [`player-options`](player-options/player-options.tex) | 2024 core books | SRD 5.2.1, text that follows the SRD version (`\DndIfSRD`), modern stat blocks, the `print` background, justified text, colored links, a theme color, a class table, a spell list, an index |
+| [`player-options`](player-options/player-options.tex) | 2024 core books | `style=2024` (white pages, sans-serif headings, modern stat blocks), SRD 5.2.1, text that follows the SRD version (`\DndIfSRD`), justified text, colored links, a class table, a spell list, an index |
 | [`gazetteer`](gazetteer/gazetteer.tex) | German, A4 | German captions and SRD attribution, A4 paper, LuaLaTeX, part art, faded images, tables, comments and quotations |
 
 Build every edition of a book, and check each one:

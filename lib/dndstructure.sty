@@ -1,0 +1,219 @@
+\ExplSyntaxOn
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Book structure: blank pages before right-hand chapter starts, art facing
+% a chapter, section-break ornaments and the title page.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Blank pages
+%
+% With openright, chapters and parts start on a right-hand page, and the
+% page before them may be left blank. That page gets no footer or page
+% number, and keeps the paper background unless blankpages=empty.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Defined at \begin{document} because fancyhdr is loaded by lib/dndheader
+\AddToHook { begindocument / before }
+  {
+    \cs_if_exist:NTF \fancypagestyle
+      {
+        \fancypagestyle { dndblank }
+          {
+            \fancyhf { }
+            \str_if_eq:VnT \l__dnd_blank_pages_tl { background }
+              {
+                \fancyhead [CE] { \__dnd_request_background:n { verso } }
+                \fancyhead [CO] { \__dnd_request_background:n { recto } }
+              }
+          }
+      }
+      { \cs_gset_eq:NN \ps@dndblank \ps@empty }
+  }
+
+% End the current page and add a blank one
+\cs_new_protected:Npn \__dnd_blank_page:
+  {
+    \clearpage
+    \thispagestyle { dndblank }
+    \hbox:n { }
+    \newpage
+    \legacy_if:nT { @twocolumn } { \hbox:n { } \newpage }
+  }
+
+% Go to the next right-hand page, with a blank page in between if needed
+\cs_new_protected:Npn \__dnd_clear_to_recto:
+  {
+    \clearpage
+    \legacy_if:nT { @twoside }
+      { \int_if_odd:nF { \value { page } } { \__dnd_blank_page: } }
+  }
+
+% Go to the next left-hand page (the next page in one-sided documents)
+\cs_new_protected:Npn \__dnd_clear_to_verso:
+  {
+    \clearpage
+    \legacy_if:nT { @twoside }
+      { \int_if_odd:nT { \value { page } } { \__dnd_blank_page: } }
+  }
+
+\bool_if:NT \l__dnd_layout_bool
+  { \RenewDocumentCommand \cleardoublepage { } { \__dnd_clear_to_recto: } }
+
+% titlesec adds the blank page after a part page itself, in the empty page
+% style; give it the blank page style too (patched below with normal
+% catcodes, as \patchcmd retokenizes the macro)
+\msg_new:nnn { dnd } { structure / part_patch }
+  { Could~not~patch~titlesec;~the~page~after~a~part~keeps~its~background. }
+\cs_new_protected:Npn \__dnd_part_patch_failed:
+  { \msg_warning:nn { dnd } { structure / part_patch } }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Balanced columns
+%
+% With the balance option (default), the two columns on the last page of a
+% chapter or part end at the same height, instead of a full left column
+% and a short right one. flushend does the balancing, and also balances the
+% last page of the document.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% End the current page with balanced columns
+\cs_new_protected:Npn \__dnd_balance_columns:
+  {
+    \bool_lazy_and:nnT
+      { \l__dnd_balance_bool } { \legacy_if_p:n { @twocolumn } }
+      { \flushcolsend \clearpage \raggedcolsend }
+  }
+
+\bool_if:NT \l__dnd_layout_bool
+  {
+    \AddToHook { cmd / chapter / before } { \__dnd_balance_columns: }
+    \AddToHook { cmd / part / before }    { \__dnd_balance_columns: }
+    \AddToHook { include / before }       { \__dnd_balance_columns: }
+    \AddToHook { enddocument }            { \par \__dnd_balance_columns: }
+    % flushend's own balancing at the end of the document comes too late
+    % for the page style and background; the enddocument hook above does it
+    \AddToHook { begindocument / end }
+      { \bool_if:NT \l__dnd_balance_bool { \raggedend } }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Facing art
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% A full-page image on the left-hand page facing the next chapter or part,
+% instead of a blank page. Put it just before \chapter or \part. If the
+% text ends on a left-hand page, a blank right-hand page comes first so the
+% art still faces the chapter. Left out of the printer-friendly edition.
+% \DndFacingArt[fade=..., graphics={...}]{<file>}
+\NewDocumentCommand {\DndFacingArt} { O{} m }
+  {
+    \bool_if:NF \l__dnd_printer_friendly_bool
+      {
+        \__dnd_balance_columns:
+        \__dnd_clear_to_verso:
+        \DndFullPageImage [#1] {#2}
+      }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Ornaments
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% A rule that tapers to points at both ends, with a diamond in the middle
+% and a smaller one on each side.
+% \DndOrnament[<width>][<color>] (default 1.5in, titlered)
+\NewDocumentCommand {\DndOrnament} { O{1.5in} O{titlered} }
+  {
+    % x in half-widths, y in points; the diamonds are sized in points
+    \begin {tikzpicture} [ baseline = -.5ex , x = \dim_eval:n { (#1) / 2 } , y = 1pt ]
+      \fill [#2] (-1, 0) -- (-14pt, .7) -- (-14pt, -.7) -- cycle;
+      \fill [#2] (1, 0) -- (14pt, .7) -- (14pt, -.7) -- cycle;
+      \fill [#2] (0, 4.5) -- (4.5pt, 0) -- (0, -4.5) -- (-4.5pt, 0) -- cycle;
+      \fill [#2] (-9pt, 2) -- (-7pt, 0) -- (-9pt, -2) -- (-11pt, 0) -- cycle;
+      \fill [#2] (9pt, 2) -- (11pt, 0) -- (9pt, -2) -- (7pt, 0) -- cycle;
+    \end {tikzpicture}
+  }
+
+% A centered ornament between two passages of text in the same section
+% \DndSectionBreak[<color>]
+\NewDocumentCommand {\DndSectionBreak} { O{titlered} }
+  {
+    \par
+    \addvspace { \bigskipamount }
+    \nopagebreak
+    \group_begin:
+      \centering
+      \DndOrnament [ .6\linewidth ] [#1]
+      \par
+    \group_end:
+    \nopagebreak
+    \addvspace { \bigskipamount }
+    \legacy_if_set_false:n { @afterindent }
+    \@afterheading
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tl_new:N \g__dnd_subtitle_tl
+
+% A line under the title on the title page, e.g. "An Adventure for
+% Characters of 3rd Level"
+\NewDocumentCommand {\DndSubtitle} { m }
+  { \tl_gset:Nn \g__dnd_subtitle_tl {#1} }
+
+\tl_new:N \l__dnd_title_default_date_tl
+\tl_set:Nn \l__dnd_title_default_date_tl { \today }
+
+% \maketitle: a title page in the book's fonts, on the paper background
+% with no footer. The date appears only if \date is set.
+\bool_if:NT \l__dnd_layout_bool
+  {
+    \RenewDocumentCommand \maketitle { }
+      {
+        \begin {titlepage}
+          \centering
+          \vspace* { .2\textheight }
+          {
+            \color { titlered }
+            \booktitlefont
+            \fontsize { 44pt } { 48pt } \selectfont
+            \@title
+            \par
+          }
+          \vspace { 1.5em }
+          \DndOrnament [ 3in ]
+          \par
+          \tl_if_empty:NF \g__dnd_subtitle_tl
+            {
+              \vspace { 1.2em }
+              { \sctitlefont \fontsize { 20pt } { 24pt } \selectfont \g__dnd_subtitle_tl \par }
+            }
+          \vfill
+          { \sctitlefont \fontsize { 18pt } { 22pt } \selectfont \@author \par }
+          \tl_if_eq:NNF \@date \l__dnd_title_default_date_tl
+            {
+              \vspace { .8em }
+              { \sctitlefont \large \@date \par }
+            }
+          \vspace* { .08\textheight }
+          \@thanks
+        \end {titlepage}
+        \setcounter { footnote } { 0 }
+        \cs_gset_eq:NN \thanks \use_none:n
+        \cs_gset_eq:NN \maketitle \prg_do_nothing:
+      }
+  }
+
+\ExplSyntaxOff
+
+% The blank page after a part (see "Blank pages" above)
+\ifdefined\ttl@page@ii
+  \patchcmd\ttl@page@ii
+    {{\thispagestyle{empty}}}
+    {{\thispagestyle{dndblank}}}
+    {}
+    {\csname __dnd_part_patch_failed:\endcsname}
+\fi

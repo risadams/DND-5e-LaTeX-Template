@@ -191,12 +191,22 @@
         \newcommand{\booktitlefont}{\normalfont}
         \newcommand{\sctitlefont}{\normalfont}
         \newcommand{\quotefont}{\sffamily}
+        % URW Chancery, a Zapf Chancery clone in every TeX distribution
+        \newcommand{\handwritingfont}{\fontfamily{pzc}\selectfont}
       }
   }
 
 % Font sets without their own drop cap face use Royal
 \cs_if_exist:NF \dropcapfont
   { \cs_new_protected:Npn \dropcapfont { \Royal } }
+
+% Handwriting for letters and notes: the font set's quotation face
+% (Zatanna Misdirection with Solbera's fonts)
+\cs_if_exist:NF \handwritingfont
+  {
+    \cs_new_protected:Npn \handwritingfont
+      { \cs_if_exist:NTF \quotefont { \quotefont } { \itshape } }
+  }
 
 \cs_new_protected:Npn \__dnd_sf_initial_family:
   {
@@ -226,6 +236,17 @@
     \bool_if:NTF \l__dnd_eberron_mode_bool
       {\scriptsize \textcolor{titlered}}
       {\scriptsize \textcolor{pagegold}}
+  }
+
+% A font size as a multiple of the current size, e.g. \DndRelativeSize{1.3}
+% for 13pt headings in a 10pt book. Heading sizes are measured from the
+% 2014 core books; see docs/typography.md.
+\NewDocumentCommand {\DndRelativeSize} { m }
+  {
+    \fontsize
+      { \fp_eval:n { round ( #1 * \f@size , 2 ) } pt }
+      { \fp_eval:n { round ( #1 * \f@size , 2 ) } pt }
+    \selectfont
   }
 
 \keys_define:nn { dnd / fonts }
@@ -259,14 +280,14 @@
     subsection-family .initial:n        = \sctitlefont,
     subsection-family .value_required:n = true,
     subsection-style .tl_set:N         = \l__dnd_subsection_style_tl,
-    subsection-style .initial:n        = \linespread{.9} \color{titlered} \Large \scshape \RaggedRight,
+    subsection-style .initial:n        = \linespread{.9} \color{titlered} \DndRelativeSize{1.64} \scshape \RaggedRight,
     subsection-style .value_required:n = true,
     % subsubsection
     subsubsection-family .tl_set:N         = \l__dnd_subsubsection_family_tl,
     subsubsection-family .initial:n        = \sctitlefont,
     subsubsection-family .value_required:n = true,
     subsubsection-style .tl_set:N         = \l__dnd_subsubsection_style_tl,
-    subsubsection-style .initial:n        = \linespread{.9} \color{titlered} \large \scshape \RaggedRight,
+    subsubsection-style .initial:n        = \linespread{.9} \color{titlered} \DndRelativeSize{1.3} \scshape \RaggedRight,
     subsubsection-style .value_required:n = true,
     % paragraph
     paragraph-family .tl_set:N         = \l__dnd_paragraph_family_tl,
@@ -365,6 +386,23 @@
     quotation-body-style .initial:n        = \small,
     quotation-body-style .value_required:n = true,
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Player handouts
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Letters and notes
+    handout-family .tl_set:N         = \l__dnd_handout_family_tl,
+    handout-family .initial:n        = \handwritingfont,
+    handout-family .value_required:n = true,
+    handout-style .tl_set:N         = \l__dnd_handout_style_tl,
+    handout-style .initial:n        = \large,
+    handout-style .value_required:n = true,
+    % Poster titles
+    handout-title-family .tl_set:N         = \l__dnd_handout_title_family_tl,
+    handout-title-family .initial:n        = \booktitlefont,
+    handout-title-family .value_required:n = true,
+    handout-title-style .tl_set:N         = \l__dnd_handout_title_style_tl,
+    handout-title-style .initial:n        = \color{black} \Huge,
+    handout-title-style .value_required:n = true,
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Table of Contents
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Part
@@ -449,6 +487,38 @@
     \keys_set:nn { dnd / fonts } { #1 }
   }
 
+% style=2024: bold sans-serif headings in upper and lower case, sized from
+% WotC's SRD 5.2.1 (see docs/style-2024.md). Gillius stands in for Gill Sans
+% with the default fonts; other font sets use their sans-serif face.
+\cs_new_protected:Npn \__dnd_heading_sans:
+  {
+    \str_if_eq:VnTF \l__dnd_fontset_tl { plain }
+      { \cs_if_exist:NTF \gilliustwo { \gilliustwo } { \sffamily } }
+      { \sffamily }
+    \bfseries
+  }
+
+\str_if_eq:VnT \l__dnd_style_tl { 2024 }
+  {
+    \keys_set:nn { dnd / fonts }
+      {
+        part-family          = \__dnd_heading_sans: ,
+        part-style           = \color{titlered} \Huge ,
+        chapter-family       = \__dnd_heading_sans: ,
+        chapter-style        = \linespread{.9} \color{titlered} \DndRelativeSize{2.6} ,
+        section-family       = \__dnd_heading_sans: ,
+        section-style        = \linespread{.9} \color{titlered} \DndRelativeSize{1.8} \RaggedRight ,
+        subsection-family    = \__dnd_heading_sans: ,
+        subsection-style     = \linespread{.9} \color{titlered} \DndRelativeSize{1.5} \RaggedRight ,
+        subsubsection-family = \__dnd_heading_sans: ,
+        subsubsection-style  = \linespread{.9} \DndRelativeSize{1.2} \RaggedRight ,
+        toc-part-family      = \__dnd_heading_sans: ,
+        toc-part-style       = \Large \color{titlered} ,
+        toc-chapter-family   = \__dnd_heading_sans: ,
+        toc-chapter-style    = \large \color{titlered} ,
+      }
+  }
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Font access functions combine the selected family and style
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -508,6 +578,13 @@
 
 \NewDocumentCommand{\DndFontQuoteAttribution}{}
   { \l__dnd_quote_attr_family_tl \l__dnd_quote_attr_style_tl }
+
+% Player handouts
+\NewDocumentCommand{\DndFontHandout}{}
+  { \l__dnd_handout_family_tl \l__dnd_handout_style_tl }
+
+\NewDocumentCommand{\DndFontHandoutTitle}{}
+  { \l__dnd_handout_title_family_tl \l__dnd_handout_title_style_tl }
 
 % Table of Contents
 \NewDocumentCommand{\DndFontTocPart}{}

@@ -37,6 +37,18 @@
 % The color used in \DndSetThemeColor when a new color is not set
 \colorlet {themecolor} {PhbLightGreen} % Set the default theme to Part 1 of the PHB.
 
+% style=2024: colors sampled from WotC's SRD 5.2.1, which is laid out like
+% the 2024 books (see docs/style-2024.md)
+\definecolor {titlered24}  {HTML} {881A20} % headings
+\definecolor {titlegold24} {HTML} {CBA95C} % rules under headings
+\definecolor {boxgray24}   {HTML} {E9E9E9} % sidebars and table stripes
+\str_if_eq:VnT \l__dnd_style_tl { 2024 }
+  {
+    \colorlet {titlered}   {titlered24}
+    \colorlet {titlegold}  {titlegold24}
+    \colorlet {themecolor} {boxgray24}
+  }
+
 % Element colors that change when \DndSetThemeColor is used, set below:
 % commentcolor (DndComment background), sidebarcolor (DndSidebar background)
 % and tablecolor (DndTable even row background)
@@ -55,6 +67,8 @@
 \definecolor {physicalattrmod}   {HTML} {DED4CC}
 \definecolor {mentalattrscore}   {HTML} {D8DAD1}
 \definecolor {mentalattrmod}     {HTML} {D0CACA}
+\definecolor {handoutpaper}      {HTML} {EEDFBB} % player handout paper
+\definecolor {handoutink}        {HTML} {2B2118} % player handout text
 
 % Box and stat block fills, as a percentage of their color mixed with white.
 % The printer-friendly edition uses lighter fills to save ink.
@@ -71,7 +85,7 @@
       {
         readaloudcolor, quotecolor, statblockbg14, statblockbg24,
         vehiclestatbg, physicalattrscore, physicalattrmod, mentalattrscore,
-        mentalattrmod
+        mentalattrmod, handoutpaper
       }
       { \__dnd_fill_color:nn {#1} {#1} }
   }

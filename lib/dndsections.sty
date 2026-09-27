@@ -21,20 +21,26 @@
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Section formatting
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Part and chapter titles have a gray outline in the 2014 books, none in
+  % the 2024 books
+  \str_if_eq:VnTF \l__dnd_style_tl { 2024 }
+    { \cs_new_eq:NN \__dnd_title_outline:n \use:n }
+    { \cs_new_protected:Npn \__dnd_title_outline:n #1 { \DndContour {#1} } }
+
   % Part
   \titleformat {\part}
     [display]
     { \__dnd_part_art_apply: \centering \DndFontPart } % format
-    { \DndContour{\partname\ \thepart} } % label
+    { \__dnd_title_outline:n {\partname\ \thepart} } % label
     { 2ex } % sep
-    { \DndContour } % before-code
+    { \__dnd_title_outline:n } % before-code
 
   % Chapter
   \titleformat {\chapter}
     { \__dnd_chapter_art_apply: \DndFontChapter } % format
-    { \DndContour{\chaptertitlename\ \thechapter :} } % label
+    { \__dnd_title_outline:n {\chaptertitlename\ \thechapter :} } % label
     { \wordsep } % sep
-    { \DndContour } % before-code
+    { \__dnd_title_outline:n } % before-code
 
   \titlespacing* {\chapter}
     { 0pt }  % left
@@ -48,9 +54,12 @@
     { 1em } % sep
     { \nopagebreak } % before-code
 
+  % Space around headings, measured from the 2014 core books (see
+  % docs/typography.md): 9.2pt above every heading level, and 4.8pt and
+  % 2.6pt below subsections and subsubsections
   \titlespacing* { \section }
     { 0pt } % left
-    { 1.3ex plus .43ex minus .43ex } % before-sep
+    { 9.2pt plus 3pt minus 2pt } % before-sep
     { 0pt } % after-sep
 
   % Subsection
@@ -63,8 +72,8 @@
 
   \titlespacing*{ \subsection }
     { 0pt } % left
-    { 1.4ex plus .47ex minus .47ex } % before-sep
-    { 1.2ex } % after-sep
+    { 9.2pt plus 3pt minus 2pt } % before-sep
+    { 4.8pt } % after-sep
 
   % Subsubsection
   \titleformat {\subsubsection}
@@ -75,8 +84,8 @@
 
   \titlespacing* { \subsubsection }
     { 0pt } % left
-  { 2ex plus .67ex minus .67ex } % before-sep
-    { .2ex } % after-sep
+    { 9.2pt plus 3pt minus 2pt } % before-sep
+    { 2.6pt } % after-sep
 
   % Paragraph
   \titleformat {\paragraph} [runin]

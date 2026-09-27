@@ -18,6 +18,9 @@
 % labels, and \DndMapRef{cragmaw} gives "Map 1.1".
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Sideways maps: pdflscape also turns the page upright in PDF viewers
+\RequirePackage {pdflscape}
+
 % Maps are numbered within chapters when there are chapters
 \newcounter {DndMap}
 \cs_if_exist:cT { c@chapter } { \counterwithin {DndMap} {chapter} }
@@ -31,6 +34,10 @@
 \bool_new:N \l__dnd_map_labels_bool
 \bool_new:N \l__dnd_map_coordinates_bool
 \bool_new:N \l__dnd_map_player_bool
+\bool_new:N \l__dnd_map_appendix_bool
+\bool_new:N \l__dnd_map_twocolumn_bool
+\tl_new:N \l__dnd_map_file_tl
+\tl_new:N \l__dnd_map_body_tl
 
 \prop_new:N \g__dnd_map_file_prop
 \prop_new:N \g__dnd_map_body_prop
@@ -43,7 +50,7 @@
   {
     caption .tl_set:N = \l__dnd_map_caption_tl,
     label .tl_set:N   = \l__dnd_map_label_tl,
-    placement .choices:nn = { column, wide, page }
+    placement .choices:nn = { column, wide, page, sideways }
       { \tl_set_eq:NN \l__dnd_map_placement_tl \l_keys_choice_tl },
     placement .initial:n  = column,
     float .choices:nn = { t, b, h, p }
@@ -55,6 +62,9 @@
     labels .initial:n  = true,
     coordinates .bool_set:N = \l__dnd_map_coordinates_bool,
     coordinates .default:n  = true,
+    % \DndPlayerMap only: add the map to the handout appendix instead
+    appendix .bool_set:N = \l__dnd_map_appendix_bool,
+    appendix .default:n  = true,
   }
 
 % Document-wide defaults, e.g. \DndSetMapOptions[labels=false] for a
@@ -178,6 +188,8 @@
     \end {tikzpicture}
   }
 
+\cs_generate_variant:Nn \__dnd_map_picture:nnn { VVe }
+
 % Numbered maps step the counter, get a label and a list-of-maps entry; player
 % maps are unnumbered. Used in vertical mode above the picture, so that links
 % to the map show the map rather than its caption.
@@ -261,7 +273,35 @@
               \__dnd_map_caption:
             \end {figure*}
           }
+        { sideways }
+          {
+            \__dnd_map_sideways:n
+              {
+                \centering
+                \__dnd_map_number:
+                \__dnd_map_picture:nnn {#1} {#2}
+                  {
+                    width = \linewidth ,
+                    height = \dim_eval:n { \textheight - 4 \baselineskip } ,
+                    keepaspectratio
+                  }
+                \__dnd_map_caption:
+              }
+          }
       }
+  }
+
+% A page of its own, turned sideways; the text stops at the end of the
+% current page. #1 - content
+\cs_new_protected:Npn \__dnd_map_sideways:n #1
+  {
+    \bool_set:Nn \l__dnd_map_twocolumn_bool { \legacy_if_p:n { @twocolumn } }
+    \__dnd_balance_columns:
+    \bool_if:NTF \l__dnd_map_twocolumn_bool { \onecolumn } { \clearpage }
+    \begin {landscape}
+      #1
+    \end {landscape}
+    \bool_if:NT \l__dnd_map_twocolumn_bool { \twocolumn }
   }
 \cs_generate_variant:Nn \str_case:nn { V }
 
@@ -282,23 +322,83 @@
   }
   {}
 
+% Set up the player version of map #1 with extra options #2: the map's own
+% options, no DM labels, unnumbered. Its image and labels go in
+% \l__dnd_map_file_tl and \l__dnd_map_body_tl.
+\cs_new_protected:Npn \__dnd_player_map_setup:nn #1#2
+  {
+    \prop_get:NnN \g__dnd_map_options_prop {#1} \l_tmpa_tl
+    \exp_args:Nno \keys_set:nn { dnd / map } { \l_tmpa_tl }
+    \keys_set:nn { dnd / map }
+      { label = {} , labels = false , appendix = false , #2 }
+    \bool_set_true:N \l__dnd_map_player_bool
+    \prop_get:NnN \g__dnd_map_file_prop {#1} \l__dnd_map_file_tl
+    \prop_get:NnN \g__dnd_map_body_prop {#1} \l__dnd_map_body_tl
+  }
+
 % The same map for players: no area numbers or DM-only text, unnumbered.
-% \DndPlayerMap[<options, e.g. placement=page>]{<map label>}
+% With `appendix`, it becomes a numbered handout in \DndHandoutAppendix
+% instead, referred to as \DndHandoutRef{<map label>}.
+% \DndPlayerMap[<options, e.g. placement=page or appendix>]{<map label>}
 \NewDocumentCommand {\DndPlayerMap} { O{} m }
   {
     \prop_if_in:NnTF \g__dnd_map_file_prop {#2}
       {
         \group_begin:
-          \prop_get:NnN \g__dnd_map_options_prop {#2} \l_tmpa_tl
-          \exp_args:Nno \keys_set:nn { dnd / map } { \l_tmpa_tl }
-          \keys_set:nn { dnd / map } { label = {} , labels = false , #1 }
-          \bool_set_true:N \l__dnd_map_player_bool
-          \prop_get:NnN \g__dnd_map_file_prop {#2} \l_tmpa_tl
-          \prop_get:NnN \g__dnd_map_body_prop {#2} \l_tmpb_tl
-          \exp_args:NVV \__dnd_map_place:nn \l_tmpa_tl \l_tmpb_tl
+          \__dnd_player_map_setup:nn {#2} {#1}
+          \bool_if:NTF \l__dnd_map_appendix_bool
+            {
+              \__dnd_handout_next_number:
+              \__dnd_handout_list_entry:VV
+                \l__dnd_handout_number_tl \l__dnd_map_caption_tl
+              \use:e
+                {
+                  \__dnd_handout_queue:n
+                    {
+                      \exp_not:N \__dnd_map_handout_page:nnn
+                        { \l__dnd_handout_number_tl }
+                        { \exp_not:n {#2} }
+                        { \exp_not:n {#1} }
+                    }
+                }
+            }
+            { \exp_args:NVV \__dnd_map_place:nn \l__dnd_map_file_tl \l__dnd_map_body_tl }
         \group_end:
       }
       { \msg_error:nnn { dnd } { map / unknown } {#2} }
+  }
+
+% A player map as a page of the handout appendix, turned sideways if its
+% placement is sideways. #1 - handout number, #2 - map label, #3 - options
+\cs_new_protected:Npn \__dnd_map_handout_page:nnn #1#2#3
+  {
+    \group_begin:
+      \__dnd_player_map_setup:nn {#2} {#3}
+      \str_if_eq:VnTF \l__dnd_map_placement_tl { sideways }
+        {
+          \bool_gset_false:N \g__dnd_handout_first_page_bool
+          \begin {landscape}
+            \__dnd_map_handout_content:nn {#1} {#2}
+          \end {landscape}
+        }
+        { \__dnd_map_handout_content:nn {#1} {#2} }
+    \group_end:
+  }
+
+% Heading and map, filling the rest of the page
+\cs_new_protected:Npn \__dnd_map_handout_content:nn #1#2
+  {
+    \__dnd_handout_heading:nnV {#1} {#2} \l__dnd_map_caption_tl
+    \vfill
+    \centering
+    \__dnd_map_picture:VVe \l__dnd_map_file_tl \l__dnd_map_body_tl
+      {
+        width = \dim_use:N \linewidth ,
+        height = \dim_eval:n { \textheight - 5 \baselineskip } ,
+        keepaspectratio
+      }
+    \par
+    \vfill
   }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

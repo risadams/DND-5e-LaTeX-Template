@@ -119,6 +119,7 @@ Note that the package has only been tested with the `book` class.
 | `fontpath`     | ✓               | ✓                 |
 | `img`          | ✓               | ✓                 |
 | `stats`        | ✓               | ✓                 |
+| `style`        | ✓               | ✓                 |
 | `bleed`        | ✓               | ✓                 |
 | `cropmarks`    | ✓               | ✓                 |
 | `colormodel`   | ✓               | ✓                 |
@@ -130,6 +131,9 @@ Note that the package has only been tested with the `book` class.
 | `srd`          | ✓               | ✓                 |
 | `printerfriendly`, `edition` | ✓ | ✓                 |
 | `justified`    | ✓               | ✓                 |
+| `blankpages`   | ✓               | ✓                 |
+| `hyphenate`    | ✓               | ✓                 |
+| `balance`      | ✓               | ✓                 |
 | `layout`       | ✓               |                   |
 | `nomultitoc`   | ✓               | ✓                 |
 | `nodeprecatedcode`   | ✓               | ✓                 |
@@ -171,6 +175,19 @@ Folder that holds font files for `fonts=solbera`, relative to the document. Defa
 
 * `classic`: 2014 Monster Manual stat blocks. (**default**)
 * `modern`: 2024 Monster Manual stat blocks.
+
+#### `style`
+
+The look of the core books to follow:
+
+| | `style=2014` (**default**) | `style=2024` (provisional) |
+| - | ------------------------- | -------------------------- |
+| Pages | parchment (`bg=full`) | white (`bg=none`) |
+| Headings | small caps in the title font, parts and chapters outlined | bold sans serif in upper and lower case |
+| Colors | dark red headings, gold rules, green sidebars | brighter red headings, gold rules, gray sidebars and table stripes |
+| Stat blocks | `stats=classic` | `stats=modern` |
+
+`style=2024` only changes defaults: `bg`, `stats`, `\DndSetThemeColor` and `\DndSetFonts` still override it. It is based on WotC's SRD 5.2.1, not the books themselves, and is marked provisional until checked against them; see [docs/style-2024.md](docs/style-2024.md) for the sources and what is still missing.
 
 #### `bleed`
 
@@ -222,6 +239,18 @@ The name of the edition being built. `bin/build` sets it to `screen`, `print`, `
 #### `justified`
 
 Justify column copy.
+
+#### `hyphenate`
+
+Hyphenate words at line ends, as the core books do (default). `hyphenate=false` never hyphenates, as the template did before; lines are then more ragged and justified text gets wider gaps. The body typography follows measurements of the 2014 books; see [docs/typography.md](docs/typography.md).
+
+#### `balance`
+
+End the two columns at the same height on the last page of each chapter and part, and of the document (default). `balance=false` fills the left column first, as before.
+
+#### `blankpages`
+
+How to fill the page left blank before a chapter or part that starts on a right-hand page (with `twoside,openright`): `background` (default) keeps the paper background, `empty` leaves the page white. Either way the page has no footer or page number. See [Book structure](#book-structure).
 
 #### `layout`
 
@@ -411,6 +440,37 @@ The PDF checks need `pdfinfo`, `pdffonts` and `pdfimages` from Poppler. MiKTeX i
 
 The [`examples`](examples) folder has three short books that show different options together, and how to build every edition of each. `make examples` builds and checks them all.
 
+## Book structure
+
+A printed book is read in spreads: chapters start on a right-hand (odd) page, and the left-hand page before a chapter holds art or is left blank on purpose. Use the `twoside` and `openright` class options for print:
+
+```latex
+\documentclass[letterpaper,twoside,twocolumn,openright,nodeprecatedcode]{dndbook}
+```
+
+A page left blank before a chapter or part has no footer or page number, so it doesn't look like a mistake. It keeps the paper background, or is white with `blankpages=empty`.
+
+| Command | Result |
+| ------- | ------ |
+| `\maketitle` | A title page in the book's fonts, from `\title`, `\author` and, if you set it, `\date`. |
+| `\DndSubtitle{text}` | A line under the title on the title page. |
+| `\DndFacingArt[fade=..., graphics={...}]{file}` | Put before `\chapter` or `\part`: full-page art on the left-hand page facing it, instead of a blank page. If the text ends on a left-hand page, a blank right-hand page comes first so the art still faces the chapter. Left out of the printer-friendly edition. |
+| `\DndSectionBreak[color]` | A centered ornament between two passages of the same section; the text after it starts without an indent. |
+| `\DndOrnament[width][color]` | The ornament on its own, e.g. on a title or credits page. |
+
+The core books put the front and back matter in this order; each item starts on a right-hand page unless noted:
+
+1. Front cover (`\DndFrontCover`, screen editions only; print services take the cover as its own file)
+2. Title page (`\maketitle`)
+3. Credits and legal page (`\DndCreditsPage`), on the back of the title page
+4. Contents (`\tableofcontents`) and list of maps (`\DndListOfMaps`)
+5. Introduction and chapters (`\mainmatter`)
+6. Appendices (`\appendix`), then player handouts
+7. Index (`\DndPrintIndex`, with the `index` class option)
+8. Back cover (`\DndBackCover`, screen editions only)
+
+The [book starter](https://github.com/risadams/DND-5e-LaTeX-starter) follows this order.
+
 ## Artwork
 
 Art is scaled to fill its space and cropped at the centre, so it is never stretched. `fade` blends an edge into the page: `none`, `bottom`, `top`, `left`, `right`, `sides` or `all`. `graphics={...}` passes options to `\includegraphics`, e.g. `graphics={trim=0 0 0 2in, clip}`.
@@ -475,13 +535,45 @@ Positions are fractions of the image, from `0,0` at the bottom left to `1,1` at 
 | Option | Meaning |
 | ------ | ------- |
 | `caption`, `label` | Caption text, and the name for `\DndMapRef` and `\DndPlayerMap` |
-| `placement` | `column` (default, in place), `wide` (across both columns, floated) or `page` (a page of its own) |
+| `placement` | `column` (default, in place), `wide` (across both columns, floated), `page` (a page of its own) or `sideways` (a page of its own, turned sideways for a landscape map; PDF viewers show it upright). The text stops at the end of the page before a sideways map, so put one where a page break is fine, such as the end of a section. |
 | `float` | Float position: `t`, `b`, `h` or `p` |
 | `scale` | Scale note in the bottom-left corner |
 | `compass` | Compass rose; give an angle (`compass=30`) if north is not up |
 | `labels` | `false` hides area numbers and DM-only text |
 
 `\DndMapRef{cragmaw}` prints "Map 1.1" (`\DndMapRef*` prints just "1.1"), `\DndListOfMaps` lists every map, and `\DndPlayerMap[placement=page]{cragmaw}` reprints a map without area numbers or DM-only text, for a handout. `\DndSetMapOptions{labels=false}` turns labels off in the whole document. Restyle the labels with `\tikzset{dnd map label/.append style={...}}` (also `dnd map text` and `dnd map scale`).
+
+`\DndPlayerMap[appendix]{cragmaw}` puts the player map in the handout appendix instead (see [Player handouts](#player-handouts)).
+
+## Player handouts
+
+Letters, notes and posters for the players. A handout appears in the text and, with `appendix`, again at full page size in a handout appendix that the DM can print and cut out.
+
+```latex
+\begin{DndHandout}[style=letter, title={The Mayor's Letter}, label=mayor, appendix]
+  To whoever finds this, ...
+\end{DndHandout}
+
+Give the players \DndHandoutRef{mayor}.      % "Handout 1"
+
+\appendix
+\DndHandoutAppendix                           % "Appendix A: Handouts"
+```
+
+| Option | Meaning |
+| ------ | ------- |
+| `style` | `letter` (paper and handwriting, default), `note` (a torn scrap, handwriting) or `poster` (a bordered sheet with a large title) |
+| `title` | Caption ("Handout 1: The Mayor's Letter") and poster title |
+| `label` | Name for `\DndHandoutRef` |
+| `art` | Poster only: image under the title |
+| `appendix` | Also print the handout full page in `\DndHandoutAppendix` |
+| `inline=false` | Leave the handout out of the text (use with `appendix`) |
+
+- Handouts are numbered through the book. `\DndHandoutRef{mayor}` prints "Handout 1" (`\DndHandoutRef*` prints "1"), and `\DndListOfHandouts` lists them with the page of the full-page copy.
+- `\DndPlayerMap[appendix]{<map label>}` adds a player map to the appendix as a numbered handout; refer to it with `\DndHandoutRef{<map label>}`. A map with `placement=sideways` gets a sideways page there too.
+- `\DndHandoutAppendix` prints every handout marked `appendix`, one per page, in one column, under `\chapter{Handouts}`. Give another heading command with `\DndHandoutAppendix[\section*]`, or none with `\DndHandoutAppendix*`.
+- `\DndSetHandoutOptions{appendix}` sets options for every handout.
+- Handwriting uses the font set's handwritten face: Zatanna Misdirection with `fonts=solbera` and `fonts=dmsguild`, DaiVernon Misdirect with `fonts=wotc`, and URW Chancery with the default fonts. Change it with `\DndSetFonts[handout-family=..., handout-style=...]`, and restyle the boxes with `\tcbset{dnd handout letter/.append style={...}}` (also `note` and `poster`).
 
 ## Class tables, spell lists and the index
 

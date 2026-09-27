@@ -1,0 +1,24 @@
+% A long document for the body typography (#6): hyphenation, no widows or
+% orphans, balanced columns on the last page of each chapter
+\documentclass[letterpaper,twoside,twocolumn,openany,nodeprecatedcode]{dndbook}
+\usepackage{lipsum}
+\begin{document}
+
+\chapter{Long Chapter}
+\lipsum[1-4]
+\section{Section}
+\lipsum[5-8]
+\subsection{Subsection}
+\lipsum[9-11]
+\begin{DndSidebar}{A Sidebar}
+  \lipsum[12]
+\end{DndSidebar}
+\subsubsection{Subsubsection}
+\lipsum[13-17]
+
+\chapter{Short Chapter}
+\lipsum[18-20]
+
+\chapter{Last Chapter}
+\lipsum[21-26]
+\end{document}

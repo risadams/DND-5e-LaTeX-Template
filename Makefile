@@ -37,7 +37,7 @@ all: example.pdf
 
 # Edition outputs of BOOK, by extension (never .tex)
 EDITIONS = screen print printer-friendly cover
-OUTPUTS = pdf log aux toc out fls fdb_latexmk idx ind ilg lom
+OUTPUTS = pdf log aux toc out fls fdb_latexmk idx ind ilg lom loh
 BOOK_BASE = $(basename $(BOOK))
 
 clean:
@@ -72,7 +72,8 @@ examples:
 
 # bin/preflight must reject a PDF with known problems
 # and the documents in test/ must build
-TESTS = deprecated-code package-mode toc-line-breaks appendix-include
+TESTS = deprecated-code package-mode toc-line-breaks appendix-include \
+	book-structure handouts typography
 
 test:
 	if texlua bin/build --preflight print test/preflight-fail.tex; then \
@@ -86,3 +87,4 @@ test:
 	done; exit $$status
 	@grep -B1 'Monsters' test/appendix-include-screen.toc | head -1 | grep -q tocchapapp || \
 	  { echo "the appendix is not labeled Appendix in the contents"; exit 1; }
+	texlua bin/build --engine=$(ENGINE) --options=style=2024 --suffix=-2024 screen example.tex
