@@ -26,7 +26,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `\DndAbilityCheck` (DC 11 Strength) and `\DndSkillCheck` (DC 11 Strength (Athletics))
   - Ability check macros built on those, e.g. `\DndStrSave{12}` gets 'DC 12 Strength'
   - Skill check macros also built on those, e.g. `\DndAthletics{12}` gets 'DC 12 Strength (Athletics)', or `\DndAthletics[\conname]{12}` gets 'DC 12 Constitution (Athletics)'.
-* `area-reset` option for `DndSetAreaOptions` restarts area numbering at each part, chapter or section (#313)
+* `\damagetypename` caption sets the word order of monster attack damage, e.g. "de daño veneno" in Spanish; Spanish, Portuguese and French now put the damage type after the noun (#324, #190)
+* `area-reset` option for `\DndSetAreaOptions` restarts area numbering at each part, chapter or section (#313)
 * Portuguese translation
 * French translation
 * Automatically bolds the first row of tables

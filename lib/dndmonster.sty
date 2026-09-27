@@ -780,14 +780,14 @@
 \cs_new_protected:Npn \__dnd_if_plus_dmg:
   {
     \tl_if_empty:NF {\l__plus_dmg_tl}
-    { ~ \plusname\ \l__plus_dmg_tl\ \l__plus_dmg_type_tl\ \damagename }
+    { ~ \plusname\ \l__plus_dmg_tl\ \__dnd_caption:nn {\damagetypename} {\l__plus_dmg_type_tl} }
   }
 
 \cs_new_protected_nopar:Npn \__dnd_if_or_dmg:
   {
     \tl_if_empty:NF {\l__or_dmg_tl}
     {
-      , ~ \orname\ \l__or_dmg_tl\ \l__dmg_type_tl\ \damagename\ \l__or_dmg_when_tl
+      , ~ \orname\ \l__or_dmg_tl\ \__dnd_caption:nn {\damagetypename} {\l__dmg_type_tl}\ \l__or_dmg_when_tl
 
       \tl_if_empty:NF {\l__plus_dmg_tl}
         {,}
@@ -815,7 +815,7 @@
 
     \str_if_empty:NF {\l__dmg_tl} % Don't show any damage if `dmg' is not set.
       {
-        \l__dmg_tl\ \l__dmg_type_tl\ \damagename
+        \l__dmg_tl\ \__dnd_caption:nn {\damagetypename} {\l__dmg_type_tl}
         \__dnd_if_or_dmg:
         \__dnd_if_plus_dmg:
       }
