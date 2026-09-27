@@ -9,22 +9,24 @@ Generated images belong in the book's repository (see the starter repo, which ke
 1. Install [ComfyUI](https://www.comfy.org/) 0.37 or later. The base workflow uses only core nodes, so no custom node packs are needed.
 2. Put these models in ComfyUI's `models` folder:
 
-| Folder | File | Used for |
-|---|---|---|
-| `diffusion_models` | `ideogram4_fp8_scaled.safetensors` | Ideogram 4, conditional |
-| `diffusion_models` | `ideogram4_unconditional_fp8_scaled.safetensors` | Ideogram 4, unconditional (guidance) |
-| `text_encoders` | `qwen_3_8b.safetensors` | Text encoder (CLIP type `ideogram4`) |
-| `vae` | `flux2-vae.safetensors` | VAE |
-| `loras` | `Realism_Engine_Ideogram4_V1.safetensors` | Guard LoRA on both models, strength 1.0 (see below) |
-| `upscale_models` | `RealESRGAN_x4plus.pth` | 4x upscale for print ([Real-ESRGAN v0.1.0](https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.1.0), BSD-3) |
+   | Folder | File | Used for |
+   | --- | --- | --- |
+   | `diffusion_models` | `ideogram4_fp8_scaled.safetensors` | Ideogram 4, conditional |
+   | `diffusion_models` | `ideogram4_unconditional_fp8_scaled.safetensors` | Ideogram 4, unconditional (guidance) |
+   | `text_encoders` | `qwen_3_8b.safetensors` | Text encoder (CLIP type `ideogram4`) |
+   | `vae` | `flux2-vae.safetensors` | VAE |
+   | `loras` | `Realism_Engine_Ideogram4_V1.safetensors` | Guard LoRA on both models, strength 1.0 (see below) |
+   | `upscale_models` | `RealESRGAN_x4plus.pth` | 4x upscale for print ([Real-ESRGAN v0.1.0](https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.1.0), BSD-3) |
 
 3. Drag a workflow from `workflows/` onto the ComfyUI canvas.
 
 ## Workflows
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | `workflows/dnd_art_t2i.json` | Base text-to-image workflow: house style, draft, then print-size output |
+| `generate.py` | Runs a jobs file through the workflow (see [Generating from a jobs file](#generating-from-a-jobs-file)) |
+| `banned-terms.txt` | Terms `generate.py` refuses in prompts |
 
 The cover, NPC portrait and interior art workflows (issues #16, #17 and #18) build on the base workflow.
 
@@ -34,7 +36,7 @@ Every workflow joins the scene (**SUBJECT**) and the shared **HOUSE_STYLE** text
 
 Rules for prompts:
 
-- No WotC logos, the D&D ampersand, trade dress or product identity (beholders, mind flayers, displacer beasts, Forgotten Realms names and so on). Use SRD creatures and your own setting.
+- No WotC logos, the D&D ampersand, trade dress or product identity (beholders, mind flayers, displacer beasts, Forgotten Realms names and so on). Use SRD creatures and your own setting. `generate.py` refuses prompts that contain any term in `banned-terms.txt`.
 - No living artists' names.
 - No person-likeness LoRAs.
 - No text in images. LaTeX sets titles, captions and labels.
@@ -47,14 +49,51 @@ Without a LoRA on **both** the conditional and the unconditional model, the base
 
 The workflows show results in Preview nodes and do not write files. Drafts are generated at Ideogram's native size, and **Seed used** shows the seed of the last run. When you like a draft, copy its seed into **SEED**, set it to `fixed`, unmute the **Print** group (select it, then press Ctrl+M) and queue again. The print stage upscales 4x with Real-ESRGAN and then scales to the print size with Lanczos. Right-click the print preview and choose **Save Image** to keep it.
 
-Write down the seed and the SUBJECT of every image you keep. Together with the workflow, they are enough to regenerate the image.
+Write down the seed and the SUBJECT of every image you keep. Together with the workflow, they are enough to regenerate the image. `generate.py` does this for you.
+
+## Generating from a jobs file
+
+`generate.py` runs a list of images through the running ComfyUI server. It needs only Python 3; with Pillow installed, it also spots the grey blocked card and retries with a new seed.
+
+```
+python comfyui/generate.py mybook/art/jobs.json
+python comfyui/generate.py mybook/art/jobs.json --only cover-hero
+python comfyui/generate.py mybook/art/jobs.json --check     # banned-terms check only
+```
+
+A jobs file lists the images:
+
+```json
+{
+  "out": "generated",
+  "jobs": [
+    { "name": "keep-at-dusk", "preset": "chapter", "subject": "A ruined hilltop keep at dusk ...", "count": 4 },
+    { "name": "dwarf-cleric", "preset": "column", "subject": "...", "seed": 81762, "print": true }
+  ]
+}
+```
+
+- `preset` is one of `full-page`, `chapter`, `span`, `column` or `square` (see [Sizes](#sizes)). `gen` and `print_size` override the sizes, e.g. `"gen": [1024, 1024]`.
+- `count` is the number of images, each with a random seed. `seed` fixes the seed, for example to reproduce a draft.
+- `print: true` also runs the print stage.
+- `out` is the output folder, relative to the jobs file.
+
+The script reads the workflow (`workflows/dnd_art_t2i.json`, or `--workflow`) each time it runs. To change the house style, models or sampler settings, edit them in ComfyUI and save the workflow over that file. The script finds the nodes it fills in by their titles: SUBJECT, HOUSE_STYLE, GEN_WIDTH, GEN_HEIGHT, SEED and "Scale to print size". Keep those titles.
+
+Each image is written as `<name>_<seed>_draft.png` (and `_print.png`), with `<name>_<seed>.json` beside it. The JSON records the subject, house style, seed, sizes, LoRAs and a hash of the workflow file: the image's provenance. `comfyui/jobs/example.json` has three sample jobs; its output goes to `comfyui/jobs/generated/`, which git ignores.
 
 ## Sizes
 
-Print needs 300 ppi at the final size, including bleed.
+Print needs 300 ppi at the final size. The sizes below are for letter paper with the template's layout: 0.75 in side margins, 0.33 in between the columns (so the text is 7.0 in wide and each column 3.335 in), and a 0.125 in bleed on every edge. Set **GEN_WIDTH** and **GEN_HEIGHT** to the Generate size, and the **Scale to print size** node to the Print size. The generate sizes are multiples of 16, about 2 megapixels, and within 0.5% of the print shape; the print stage crops the difference from the centre.
 
-| Use | Generate | Print | Print size |
-|---|---|---|---|
-| Full page, full bleed (`\DndFullPageImage`, `\DndPartArt`, `\DndFacingArt`) | 1232 × 1584 | 2625 × 3375 | 8.75 × 11.25 in (letter + 0.125 in bleed) |
+| Command | Generate | Print (px) | Print size (in) |
+| --- | --- | --- | --- |
+| `\DndFullPageImage`, `\DndPartArt`, `\DndFacingArt`, `\DndPageBackground` | 1232 × 1584 | 2625 × 3375 | 8.75 × 11.25, full bleed |
+| `\DndChapterArt` (default `height=.4\paperheight`) | 2016 × 1040 | 2625 × 1350 | 8.75 × 4.5, bleed on top and sides |
+| `\DndFadedImage*`, `\DndSpanImage` (2:1) | 1920 × 960 | 2100 × 1050 | 7.0 × 3.5 |
+| `\DndFadedImage` in a column, portrait (3:4) | 1200 × 1600 | 1000 × 1335 | 3.335 × 4.45 |
+| `\DndFadedImage` in a column, square, or spot art | 1344 × 1344 | 1000 × 1000 | 3.335 × 3.335 |
 
-More presets come with #16–#18.
+Covers and the wraparound cover spread depend on the spine width and come with #16.
+
+For A4 (8.27 × 11.69 in) or another bleed, work out the print size as inches × 300. For full-bleed art, add twice the bleed to the width and to the height.
