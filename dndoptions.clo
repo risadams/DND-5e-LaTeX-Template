@@ -39,7 +39,9 @@
 
 \tl_const:Nn \l__dnd_fontset_plain_tl {plain}
 \tl_const:Nn \l__dnd_fontset_wotc_tl {wotc}
-\tl_const:Nn \l__dnd_fontset_dmsguild_dl {dmsguild}
+\tl_const:Nn \l__dnd_fontset_dmsguild_tl {dmsguild}
+\tl_const:Nn \l__dnd_fontset_solbera_tl {solbera}
+\tl_new:N \l__dnd_font_path_tl
 
 \bool_set_true:N \l__dnd_multitoc_bool
 \bool_set_eq:NN \l__dnd_layout_bool \c__dnd_isclass_bool
@@ -89,11 +91,19 @@
       {
         \tl_set_eq:NN \l__dnd_fontset_tl \l__dnd_fontset_dmsguild_tl
       },
+    fonts / solbera .code:n =
+      {
+        \tl_set_eq:NN \l__dnd_fontset_tl \l__dnd_fontset_solbera_tl
+      },
     fonts / plain .code:n =
       {
         \tl_set_eq:NN \l__dnd_fontset_tl \l__dnd_fontset_plain_tl
       },
     fonts .initial:n = plain,
+
+    % Folder holding font files that are not installed on the system
+    fontpath .tl_set:N = \l__dnd_font_path_tl,
+    fontpath .initial:n = fonts/solbera/,
 
     % Draft-mode DndImage
     img .choice:,

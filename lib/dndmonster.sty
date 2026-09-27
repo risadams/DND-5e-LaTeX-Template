@@ -474,7 +474,7 @@
 
         #1 \nobreakspace (
         \int_compare:nNnTF {\l_tmpa_int} < {0}
-        { -- }
+        { \__dnd_minus_sign: }
         {+}
         \int_abs:n \l_tmpa_int )
       }
@@ -489,7 +489,7 @@
       {
         \int_set:Nn \l_tmpa_int { \fp_eval:n { floor ( ( #1 - 10 ) / 2 ) } }
         \int_compare:nNnTF {\l_tmpa_int} < {0}
-          { -- }
+          { \__dnd_minus_sign: }
           {+}
         \int_abs:n \l_tmpa_int
       }

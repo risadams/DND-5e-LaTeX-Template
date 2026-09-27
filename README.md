@@ -115,6 +115,10 @@ Note that the package has only been tested with the `book` class.
 | Option         | Package `dnd`   | Class `dndbook`   |
 | -------------- | :-------------: | :---------------: |
 | `bg`           | ✓               | ✓                 |
+| `fonts`        | ✓               | ✓                 |
+| `fontpath`     | ✓               | ✓                 |
+| `img`          | ✓               | ✓                 |
+| `stats`        | ✓               | ✓                 |
 | `justified`    | ✓               | ✓                 |
 | `layout`       | ✓               |                   |
 | `nomultitoc`   | ✓               | ✓                 |
@@ -127,8 +131,34 @@ The `dndbook` class also supports all the options of the `book` class.
 Declare how to load background and footer images. This is a key-value option with the following possible values:
 
 * `full`: Load both background and footer images. (**default**)
+* `eberron`: Eberron-style backgrounds and footers.
 * `none`: Removes both background and footer images.
 * `print`: Loads only the footer images.
+
+#### `fonts`
+
+Choose the font set:
+
+* `plain`: Free fonts that ship with TeX Live and work with every engine. (**default**)
+* `solbera`: Solbera's free imitations of the fonts in the 2014 core books. This is the closest free match to the official look. Requires XeLaTeX or LuaLaTeX; run `bin/get-solbera-fonts` once to download the fonts into `fonts/solbera/`.
+* `wotc`: The fonts used in the official books. You must buy and install them; requires XeLaTeX or LuaLaTeX.
+* `dmsguild`: The free fonts from the DMs Guild creator resources; requires XeLaTeX or LuaLaTeX.
+
+Solbera's fonts are licensed [CC BY-SA 4.0](https://github.com/jonathonf/solbera-dnd-fonts). You may sell documents typeset with them, but credit Solbera, Ryrok, Ners and LUCASTUCIOUS, and do not sell the fonts themselves.
+
+#### `fontpath`
+
+Folder that holds font files for `fonts=solbera`, relative to the document. Defaults to `fonts/solbera/`.
+
+#### `img`
+
+* `final`: Include images. (**default**)
+* `draft`: Replace `\DndImage` images with placeholders for faster builds.
+
+#### `stats`
+
+* `classic`: 2014 Monster Manual stat blocks. (**default**)
+* `modern`: 2024 Monster Manual stat blocks.
 
 #### `justified`
 
@@ -267,6 +297,7 @@ Install the appropriate plugin for your editor.
 ## Credits
 
 * Background image from [Lost and Taken](https://lostandtaken.com/)
+* `fonts=solbera` uses fonts by Solbera, Ryrok, Ners and LUCASTUCIOUS, [CC BY-SA 4.0](https://github.com/jonathonf/solbera-dnd-fonts)
 
 ## License
 

@@ -3,6 +3,29 @@
 % Useful regex strings
 \regex_const:Nn \c__pos_int_regex { \d+ }
 
+% Minus sign for modifiers. With Unicode (TU) fonts, use the true minus if
+% the current font has one, then an en dash, then a hyphen: some fonts
+% (e.g. Scaly Sans) lack both. 8-bit fonts keep the -- ligature.
+\cs_new_protected:Npn \__dnd_minus_sign:
+  {
+    \str_if_eq:eeTF { \use:c { f@encoding } } { TU }
+      {
+        \iffontchar \font "2212 \scan_stop:
+          \char "2212 \scan_stop:
+        \else:
+          \iffontchar \font "2013 \scan_stop:
+            \char "2013 \scan_stop:
+          \else:
+            -
+          \fi:
+        \fi:
+      }
+      { -- }
+  }
+
+% Document-level minus sign, e.g. initiative = \DndMinus 1
+\NewDocumentCommand { \DndMinus } {} { \__dnd_minus_sign: }
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Dice macro
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -39,7 +62,7 @@
                 \str_case_e:nn { \l__dice_mod_sign_tl }
                   {
                     { + } { ~+~\l__dice_mod_tl }
-                    { - } { ~--~\l__dice_mod_tl }
+                    { - } { ~\__dnd_minus_sign:~\l__dice_mod_tl }
                   }
               )
             }

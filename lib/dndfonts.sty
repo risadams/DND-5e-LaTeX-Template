@@ -38,11 +38,92 @@
 %         Daikon: <https://www.myfonts.com/fonts/pepper-type/daikon/>
 %                 US$30 per face, US$139 family of 16.
 %                 Currently 80% off (6/30/20), US$6 / US$27.80
+%
+% Solbera's fonts (free, CC BY-SA 4.0; run bin/get-solbera-fonts)
+%   Serif/Body Text: Bookinsanity         Chapter/Section Titles: Mr Eaves
+%   Sans Serif: Scaly Sans (+ Scaly Sans Caps)   Book Title: Nodesto
+%   Quotations: Zatanna Misdirection      Drop caps: Solbera Imitation
+
+\msg_new:nnn { dnd } { fonts / needs_unicode_engine }
+  {
+    The~"fonts=#1"~option~uses~OpenType~fonts~and~needs~XeLaTeX~or~
+    LuaLaTeX.~Compile~with~xelatex~or~lualatex~instead~of~pdflatex.
+  }
+
+\msg_new:nnn { dnd } { fonts / solbera_missing }
+  {
+    Solbera's~fonts~were~not~found~in~"#1".~Run~bin/get-solbera-fonts~
+    to~download~them,~or~set~the~"fontpath"~class~option~to~the~folder~
+    that~holds~them.
+  }
+
+% #1 - family variable, #2 - base file name, #3 - extra fontspec options
+\cs_new_protected:Npn \__dnd_solbera_family:Nnn #1#2#3
+  {
+    \newfontfamily #1 {#2}
+      [ Path = \l__dnd_font_path_tl , Extension = .otf , #3 ]
+  }
+
+\cs_new_protected:Npn \__dnd_load_solbera_fonts:
+  {
+    \file_if_exist:nF { \l__dnd_font_path_tl Bookinsanity.otf }
+      { \msg_fatal:nnV { dnd } { fonts / solbera_missing } \l__dnd_font_path_tl }
+    \setmainfont {Bookinsanity}
+      [
+        Path           = \l__dnd_font_path_tl ,
+        Extension      = .otf ,
+        UprightFont    = * ,
+        BoldFont       = *~Bold ,
+        ItalicFont     = *~Italic ,
+        BoldItalicFont = *~Bold~Italic ,
+        SmallCapsFont  = Mr~Eaves~Small~Caps ,
+      ]
+    \setsansfont {Scaly~Sans}
+      [
+        Path           = \l__dnd_font_path_tl ,
+        Extension      = .otf ,
+        UprightFont    = * ,
+        BoldFont       = *~Bold ,
+        ItalicFont     = *~Italic ,
+        BoldItalicFont = *~Bold~Italic ,
+        SmallCapsFont  = Scaly~Sans~Caps ,
+        BoldFeatures   = { SmallCapsFont = Scaly~Sans~Caps~Bold } ,
+      ]
+    % Mr Eaves only has small caps, so every shape maps to it; bold is faked
+    % for stat block titles.
+    \__dnd_solbera_family:Nnn \sctitlefont {Mr~Eaves~Small~Caps}
+      {
+        SmallCapsFont = * ,
+        BoldFont      = * ,
+        BoldFeatures  = { FakeBold = 1.5 } ,
+      }
+    \__dnd_solbera_family:Nnn \booktitlefont {Nodesto~Caps~Condensed}
+      {
+        BoldFont       = NodestoCapsCondensed-Bold ,
+        ItalicFont     = NodestoCapsCondensed-Italic ,
+        BoldItalicFont = NodestoCapsCondensed-Bold~Italic ,
+        SmallCapsFont  = * ,
+      }
+    \__dnd_solbera_family:Nnn \quotefont {Zatanna~Misdirection}
+      {
+        BoldFont       = *~Bold ,
+        ItalicFont     = *~Italic ,
+        BoldItalicFont = *~Bold~Italic ,
+      }
+    \__dnd_solbera_family:Nnn \dropcapfont {Solbera~Imitation} {}
+  }
 
 \bool_if:NT \l__dnd_layout_bool
   {
     \tl_case:NnF \l__dnd_fontset_tl
       {
+        \l__dnd_fontset_solbera_tl
+          {
+            \sys_if_engine_pdftex:T
+              { \msg_fatal:nnn { dnd } { fonts / needs_unicode_engine } {solbera} }
+            \RequirePackage{fontspec}
+            \__dnd_load_solbera_fonts:
+          }
         \l__dnd_fontset_wotc_tl
           {
             \RequirePackage{fontspec}
@@ -83,6 +164,10 @@
       }
   }
 
+% Font sets without their own drop cap face use Royal
+\cs_if_exist:NF \dropcapfont
+  { \cs_new_protected:Npn \dropcapfont { \Royal } }
+
 \cs_new_protected:Npn \__dnd_sf_initial_family:
   {
     \bool_if:NTF \l__dnd_layout_bool
@@ -91,6 +176,7 @@
           {
             \l__dnd_fontset_wotc_tl {}
             \l__dnd_fontset_dmsguild_tl {}
+            \l__dnd_fontset_solbera_tl {}
           }
           { \sffamily }
           { \gilliustwo }
@@ -322,7 +408,7 @@
     page-number-style .value_required:n = true,
     % Drop caps
     drop-cap-family .tl_set:N         = \l__dnd_drop_cap_family_tl,
-    drop-cap-family .initial:n        = \Royal,
+    drop-cap-family .initial:n        = \dropcapfont,
     drop-cap-family .value_required:n = true,
     drop-cap-style .tl_set:N         = \l__dnd_drop_cap_style_tl,
     drop-cap-style .value_required:n = true,

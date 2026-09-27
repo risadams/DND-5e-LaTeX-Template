@@ -1,0 +1,27 @@
+#!/bin/sh
+# Download Solbera's free D&D 5e fonts into fonts/solbera/ for use with the
+# `fonts=solbera` class option (XeLaTeX or LuaLaTeX).
+#
+# The fonts are licensed CC BY-SA 4.0 by Solbera, Ryrok, Ners and
+# LUCASTUCIOUS. Documents typeset with them may be sold, but credit the
+# authors (see fonts/solbera/LICENSE) and do not sell the fonts themselves.
+#
+# Usage: bin/get-solbera-fonts [destination]   (default: fonts/solbera)
+
+set -eu
+
+VERSION=v1.5
+URL="https://github.com/jonathonf/solbera-dnd-fonts/archive/refs/tags/${VERSION}.tar.gz"
+DEST="${1:-fonts/solbera}"
+
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+echo "Downloading Solbera fonts ${VERSION}..."
+curl -fsSL "$URL" | tar -xz -C "$TMP"
+
+mkdir -p "$DEST"
+find "$TMP" -name '*.otf' -exec cp {} "$DEST" \;
+cp "$TMP"/*/LICENSE "$DEST/LICENSE"
+
+echo "Installed $(find "$DEST" -name '*.otf' | wc -l | tr -d ' ') fonts to $DEST"

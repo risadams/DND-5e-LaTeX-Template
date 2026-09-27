@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Font set options:
     * `fonts=dmsguild` for DMs Guild fonts (freely available).
     * `fonts=wotc` for canonical WotC (paid, fairly expensive) font sets.
+    * `fonts=solbera` for Solbera's free imitations of the 2014 core book fonts, including the drop cap face. Run `bin/get-solbera-fonts` to download them; `fontpath` sets where they are loaded from.
     * Leave off the option to get current default fonts.
 * Image floats, captioned and standalone, based on `tcolorbox`.
 * Stat blocks: small inline ones for sentient weapons, and fully-fledged blocks for vehicles.
@@ -37,6 +38,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 * Moved devops from CircleCI to GitHub Actions
 * Page backgrounds are drawn with `eso-pic` behind all page content, so they no longer cover pages inserted with `\includepdf`. A page style that clears the header still suppresses the background (#314, #367)
+* Negative modifiers use a true minus sign when the font has one; `\DndMinus` gives the same sign in documents
 
 ### Fixed
 * `DndReadAloud`, `DndSidebar`, `DndComment`, `DndQuotation` and `DndAside` no longer fail on TeX Live 2026 when the optional argument is omitted (#391)
