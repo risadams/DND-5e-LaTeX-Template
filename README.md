@@ -247,6 +247,34 @@ Cut-out art (a PNG with a transparent background) works with every command. Save
 
 Text cannot flow around irregular art shapes. Place cut-out art in a column, or use a faded image, instead.
 
+## Maps
+
+`DndMap` places a map, numbers it by chapter ("Map 1.1") and draws the area numbers on it. The numbers come from `\DndArea` and `\DndSubArea`, so the map stays correct when you add or reorder areas. Export maps from your mapping tool without room numbers.
+
+```latex
+\begin{DndMap}[caption=Cragmaw Hideout, label=cragmaw,
+               scale={1 square = 5 feet}, compass, placement=wide]{maps/cragmaw}
+  \DndMapArea{0.42,0.61}{Cave Mouth}       % the area titled "Cave Mouth"
+  \DndMapSubArea{0.30,0.20}{Twin Pools}
+  \DndMapArea[region=B]{0.7,0.4}{Kennel}    % an area in another region
+  \DndMapText{0.80,0.10}{To Phandalin}     % on every version
+  \DndMapText*{0.55,0.75}{Secret door}     % DM map only
+\end{DndMap}
+```
+
+Positions are fractions of the image, from `0,0` at the bottom left to `1,1` at the top right. Add the `coordinates` option to overlay a 0.1 grid while you place labels.
+
+| Option | Meaning |
+| ------ | ------- |
+| `caption`, `label` | Caption text, and the name for `\DndMapRef` and `\DndPlayerMap` |
+| `placement` | `column` (default, in place), `wide` (across both columns, floated) or `page` (a page of its own) |
+| `float` | Float position: `t`, `b`, `h` or `p` |
+| `scale` | Scale note in the bottom-left corner |
+| `compass` | Compass rose; give an angle (`compass=30`) if north is not up |
+| `labels` | `false` hides area numbers and DM-only text |
+
+`\DndMapRef{cragmaw}` prints "Map 1.1" (`\DndMapRef*` prints just "1.1"), `\DndListOfMaps` lists every map, and `\DndPlayerMap[placement=page]{cragmaw}` reprints a map without area numbers or DM-only text, for a handout. `\DndSetMapOptions{labels=false}` turns labels off in the whole document. Restyle the labels with `\tikzset{dnd map label/.append style={...}}` (also `dnd map text` and `dnd map scale`).
+
 ## Class tables, spell lists and the index
 
 `DndClassTable` makes a full-width class table. Stripes start after `header-rows` rows, and `\multicolumn` works in any row. `float` is `t` (default), `b`, `p` or `none`.

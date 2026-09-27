@@ -1,0 +1,312 @@
+\ExplSyntaxOn
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Maps
+%
+% \begin{DndMap}[caption=Cragmaw Hideout, label=cragmaw, scale=1 square = 5 feet,
+%                compass=0, placement=wide]{maps/cragmaw}
+%   \DndMapArea{0.42,0.61}{Cave Mouth}      % prints the number \DndArea gave it
+%   \DndMapSubArea{0.30,0.20}{Twin Pools}
+%   \DndMapText{0.80,0.10}{To Phandalin}    % shown on every version
+%   \DndMapText*{0.55,0.75}{Secret door}    % DM map only
+% \end{DndMap}
+%
+% Positions are fractions of the image: (0,0) is the bottom-left corner and
+% (1,1) the top-right. Add `coordinates` to overlay a grid for finding them.
+% Area numbers come from \DndArea/\DndSubArea, so the map follows any
+% renumbering. \DndPlayerMap{cragmaw} prints the same map without the DM-only
+% labels, and \DndMapRef{cragmaw} gives "Map 1.1".
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Maps are numbered within chapters when there are chapters
+\newcounter {DndMap}
+\cs_if_exist:cT { c@chapter } { \counterwithin {DndMap} {chapter} }
+
+\tl_new:N \l__dnd_map_caption_tl
+\tl_new:N \l__dnd_map_label_tl
+\tl_new:N \l__dnd_map_placement_tl
+\tl_new:N \l__dnd_map_float_tl
+\tl_new:N \l__dnd_map_scale_tl
+\tl_new:N \l__dnd_map_compass_tl
+\bool_new:N \l__dnd_map_labels_bool
+\bool_new:N \l__dnd_map_coordinates_bool
+\bool_new:N \l__dnd_map_player_bool
+
+\prop_new:N \g__dnd_map_file_prop
+\prop_new:N \g__dnd_map_body_prop
+\prop_new:N \g__dnd_map_options_prop
+
+\msg_new:nnn { dnd } { map / unknown }
+  { No~map~with~label~"#1"~has~been~defined~yet.~Put~\token_to_str:N \DndPlayerMap \c_space_tl after~its~DndMap. }
+
+\keys_define:nn { dnd / map }
+  {
+    caption .tl_set:N = \l__dnd_map_caption_tl,
+    label .tl_set:N   = \l__dnd_map_label_tl,
+    placement .choices:nn = { column, wide, page }
+      { \tl_set_eq:NN \l__dnd_map_placement_tl \l_keys_choice_tl },
+    placement .initial:n  = column,
+    float .choices:nn = { t, b, h, p }
+      { \tl_set_eq:NN \l__dnd_map_float_tl \l_keys_choice_tl },
+    scale .tl_set:N   = \l__dnd_map_scale_tl,
+    compass .tl_set:N = \l__dnd_map_compass_tl,
+    compass .default:n = 0,
+    labels .bool_set:N = \l__dnd_map_labels_bool,
+    labels .initial:n  = true,
+    coordinates .bool_set:N = \l__dnd_map_coordinates_bool,
+    coordinates .default:n  = true,
+  }
+
+% Document-wide defaults, e.g. \DndSetMapOptions[labels=false] for a
+% player's edition
+\NewDocumentCommand {\DndSetMapOptions} { m }
+  { \keys_set:nn { dnd / map } {#1} }
+
+% Styles; override with e.g. \tikzset{dnd map label/.append style={fill=yellow}}
+\tikzset
+  {
+    dnd~map~label/.style =
+      {
+        circle , fill = white , draw = black , line~width = .8pt ,
+        inner~sep = 1pt , minimum~size = 1.7em ,
+        font = \sffamily \bfseries \small ,
+      },
+    dnd~map~text/.style =
+      {
+        fill = white , fill~opacity = .8 , text~opacity = 1 ,
+        inner~sep = 2pt , rounded~corners = 2pt ,
+        font = \sffamily \bfseries \footnotesize ,
+      },
+    dnd~map~scale/.style =
+      { dnd~map~text , font = \sffamily \itshape \footnotesize },
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Labels, for use inside DndMap
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% #1 - label text, #2 - position, #3 - style
+\cs_new_protected:Npn \__dnd_map_node:nnn #1#2#3
+  { \node [ #3 ] at ( #2 ) {#1}; }
+
+% \DndMapArea[<area options, e.g. region=B>]{x,y}{area label}
+\NewDocumentCommand {\DndMapArea} { o m m }
+  {
+    \bool_if:NT \l__dnd_map_labels_bool
+      {
+        \__dnd_map_node:nnn
+          { \IfNoValueTF {#1} { \DndAreaRef* {#3} } { \DndAreaRef* [#1] {#3} } }
+          {#2} { dnd~map~label }
+      }
+  }
+
+% \DndMapSubArea[<area options>]{x,y}{sub-area label}
+\NewDocumentCommand {\DndMapSubArea} { o m m }
+  {
+    \bool_if:NT \l__dnd_map_labels_bool
+      {
+        \__dnd_map_node:nnn
+          { \IfNoValueTF {#1} { \DndSubAreaRef* {#3} } { \DndSubAreaRef* [#1] {#3} } }
+          {#2} { dnd~map~label }
+      }
+  }
+
+% \DndMapText[<tikz style>]{x,y}{text}; the starred form is DM-only
+\NewDocumentCommand {\DndMapText} { s O{} m m }
+  {
+    \bool_lazy_or:nnT { !#1 } { \l__dnd_map_labels_bool }
+      { \__dnd_map_node:nnn {#4} {#3} { dnd~map~text , #2 } }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Drawing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Grid with 0.1 steps to read off label positions
+\cs_new_protected:Npn \__dnd_map_coordinates:
+  {
+    \bool_if:NT \l__dnd_map_coordinates_bool
+      {
+        \int_step_inline:nnn { 1 } { 9 }
+          {
+            \draw [ red , opacity = .6 , very~thin ]
+              ( \fp_eval:n { ##1 / 10 } , 0 ) -- ( \fp_eval:n { ##1 / 10 } , 1 );
+            \draw [ red , opacity = .6 , very~thin ]
+              ( 0 , \fp_eval:n { ##1 / 10 } ) -- ( 1 , \fp_eval:n { ##1 / 10 } );
+            \node [ red , font = \tiny \sffamily , anchor = south , fill = white , inner~sep = 1pt ]
+              at ( \fp_eval:n { ##1 / 10 } , 0 ) { .##1 };
+            \node [ red , font = \tiny \sffamily , anchor = west , fill = white , inner~sep = 1pt ]
+              at ( 0 , \fp_eval:n { ##1 / 10 } ) { .##1 };
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__dnd_map_compass:
+  {
+    \tl_if_empty:NF \l__dnd_map_compass_tl
+      {
+        \begin {scope} [ shift = { ( .92 , .88 ) } ]
+          \begin {scope} [ x = 1cm , y = 1cm ]
+            \fill [ white , opacity = .8 ] ( 0 , 0 ) circle ( .6 );
+            \draw [ line~width = .6pt ] ( 0 , 0 ) circle ( .6 );
+            \begin {scope} [ rotate = \l__dnd_map_compass_tl ]
+              \fill ( 0 , .25 ) -- ( -.13 , -.3 ) -- ( 0 , -.18 ) -- ( .13 , -.3 ) -- cycle;
+              \node [ font = \sffamily \bfseries \small , inner~sep = 0pt ]
+                at ( 0 , .42 ) { N };
+            \end {scope}
+          \end {scope}
+        \end {scope}
+      }
+  }
+
+% #1 - file, #2 - body (labels), #3 - includegraphics size options
+\cs_new_protected:Npn \__dnd_map_picture:nnn #1#2#3
+  {
+    \begin {tikzpicture}
+      \node [ anchor = south~west , inner~sep = 0pt ] ( dndmap ) at ( 0 , 0 )
+        { \__dnd_art_graphics:nn {#3} {#1} };
+      \begin {scope} [ x = { ( dndmap.south~east ) } , y = { ( dndmap.north~west ) } ]
+        \__dnd_map_coordinates:
+        #2
+        \tl_if_empty:NF \l__dnd_map_scale_tl
+          {
+            \node [ dnd~map~scale , anchor = south~west ] at ( .02 , .02 )
+              { \l__dnd_map_scale_tl };
+          }
+        \__dnd_map_compass:
+      \end {scope}
+    \end {tikzpicture}
+  }
+
+% Caption below the map. Numbered maps step the counter, get a label and a
+% list-of-maps entry; player maps are unnumbered.
+\cs_new_protected:Npn \__dnd_map_caption:
+  {
+    \par \nopagebreak \vspace { 3pt } \noindent
+    \bool_if:NTF \l__dnd_map_player_bool
+      {
+        { \DndFontTableTitle \playermapname
+          \tl_if_empty:NF \l__dnd_map_caption_tl { : ~ \l__dnd_map_caption_tl } }
+      }
+      {
+        \refstepcounter {DndMap}
+        \tl_if_empty:NF \l__dnd_map_label_tl
+          { \exp_args:Ne \label { map: \l__dnd_map_label_tl } }
+        \addcontentsline {lom} {dndmap}
+          {
+            \protect \numberline { \theDndMap }
+            \exp_not:V \l__dnd_map_caption_tl
+          }
+        { \DndFontTableTitle \mapname \nobreakspace \theDndMap
+          \tl_if_empty:NF \l__dnd_map_caption_tl { : ~ \l__dnd_map_caption_tl } }
+      }
+    \par
+  }
+
+% #1 - file, #2 - body
+\cs_new_protected:Npn \__dnd_map_place:nn #1#2
+  {
+    \str_case:Vn \l__dnd_map_placement_tl
+      {
+        { column }
+          {
+            \tl_if_empty:NTF \l__dnd_map_float_tl
+              {
+                \par \addvspace { 9pt plus 3pt minus 3pt } \noindent
+                \__dnd_map_picture:nnn {#1} {#2} { width = \linewidth }
+                \__dnd_map_caption:
+                \addvspace { 9pt plus 3pt minus 3pt }
+              }
+              {
+                \use:e { \exp_not:N \begin {figure} [ \l__dnd_map_float_tl ] }
+                  \noindent
+                  \__dnd_map_picture:nnn {#1} {#2} { width = \linewidth }
+                  \__dnd_map_caption:
+                \end {figure}
+              }
+          }
+        { wide }
+          {
+            \use:e
+              {
+                \exp_not:N \begin {figure*}
+                  [ \tl_if_empty:NTF \l__dnd_map_float_tl { t } { \l__dnd_map_float_tl } ]
+              }
+              \noindent
+              \__dnd_map_picture:nnn {#1} {#2} { width = \textwidth }
+              \__dnd_map_caption:
+            \end {figure*}
+          }
+        { page }
+          {
+            \begin {figure*} [p]
+              \centering
+              \__dnd_map_picture:nnn {#1} {#2}
+                {
+                  width = \textwidth ,
+                  height = \dim_eval:n { \textheight - 4 \baselineskip } ,
+                  keepaspectratio
+                }
+              \__dnd_map_caption:
+            \end {figure*}
+          }
+      }
+  }
+\cs_generate_variant:Nn \str_case:nn { V }
+
+% \begin{DndMap}[<options>]{<image>} <labels> \end{DndMap}
+\NewDocumentEnvironment {DndMap} { O{} m +b }
+  {
+    \group_begin:
+      \bool_set_false:N \l__dnd_map_player_bool
+      \keys_set:nn { dnd / map } {#1}
+      \tl_if_empty:NF \l__dnd_map_label_tl
+        {
+          \prop_gput:NVn \g__dnd_map_file_prop \l__dnd_map_label_tl {#2}
+          \prop_gput:NVn \g__dnd_map_body_prop \l__dnd_map_label_tl {#3}
+          \prop_gput:NVn \g__dnd_map_options_prop \l__dnd_map_label_tl {#1}
+        }
+      \__dnd_map_place:nn {#2} {#3}
+    \group_end:
+  }
+  {}
+
+% The same map for players: no area numbers or DM-only text, unnumbered.
+% \DndPlayerMap[<options, e.g. placement=page>]{<map label>}
+\NewDocumentCommand {\DndPlayerMap} { O{} m }
+  {
+    \prop_if_in:NnTF \g__dnd_map_file_prop {#2}
+      {
+        \group_begin:
+          \prop_get:NnN \g__dnd_map_options_prop {#2} \l_tmpa_tl
+          \exp_args:Nno \keys_set:nn { dnd / map } { \l_tmpa_tl }
+          \keys_set:nn { dnd / map } { label = {} , labels = false , #1 }
+          \bool_set_true:N \l__dnd_map_player_bool
+          \prop_get:NnN \g__dnd_map_file_prop {#2} \l_tmpa_tl
+          \prop_get:NnN \g__dnd_map_body_prop {#2} \l_tmpb_tl
+          \exp_args:NVV \__dnd_map_place:nn \l_tmpa_tl \l_tmpb_tl
+        \group_end:
+      }
+      { \msg_error:nnn { dnd } { map / unknown } {#2} }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% References and the list of maps
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \DndMapRef{label} gives "Map 1.1"; \DndMapRef*{label} gives "1.1"
+\NewDocumentCommand {\DndMapRef} { s m }
+  {
+    \IfBooleanTF {#1}
+      { \ref { map:#2 } }
+      { \mapname \nobreakspace \ref { map:#2 } }
+  }
+
+\cs_new:cpn { l@dndmap } { \@dottedtocline {1} {0em} {2.3em} }
+
+% \DndListOfMaps[<sectioning command>] (default \section*)
+\NewDocumentCommand {\DndListOfMaps} { O{\section*} }
+  {
+    #1 { \listmapsname }
+    \@starttoc {lom}
+  }

@@ -116,6 +116,20 @@ This ditch has a board spanning it.
 \DndSubArea{Entrance}
 A five-foot hole reveals the dirt floor illuminated by a hole in the roof.
 
+\section{Maps}
+The |DndMap| environment numbers maps by chapter and places the area numbers on the image, so they always match the text. \DndMapRef{hommlet} below labels the areas above. Positions run from |0,0| at the bottom left to |1,1| at the top right; add the |coordinates| option to overlay a grid while placing labels. |\DndPlayerMap| prints the same map without the numbers or DM-only notes.
+
+\begin{DndMap}[caption=Hommlet and Environs, label=hommlet,
+                scale={1 square = 5 feet}, compass]{img/example-map}
+  \DndMapArea{0.225,0.27}{Village of Hommlet}
+  \DndMapSubArea{0.375,0.27}{Inn of the Welcome Wench}
+  \DndMapSubArea{0.84,0.23}{Blacksmith's Forge}
+  \DndMapArea{0.55,0.63}{Foo's Castle}
+  \DndMapSubArea{0.54,0.38}{Moat}
+  \DndMapSubArea{0.55,0.78}{Entrance}
+  \DndMapText*{0.4,0.12}{Secret tunnel}
+\end{DndMap}
+
 \chapter{Text Boxes}
 
 The module has several environments for setting text apart so that it is drawn to the reader's attention. |DndReadAloud| is used for text that a game master would read aloud.
