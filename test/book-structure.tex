@@ -1,0 +1,50 @@
+% Printed-book structure (#7): chapters on right-hand pages, clean blank
+% pages, art facing a chapter, section breaks and the title page
+\documentclass[letterpaper,twoside,twocolumn,openright,nodeprecatedcode]{dndbook}
+
+\title{The Sunless\\Citadel}
+\DndSubtitle{An Adventure for Characters of 1st Level}
+\author{A. Writer}
+
+\begin{document}
+
+\frontmatter
+\maketitle                 % page i, recto
+\DndCreditsPage{           % page ii, verso: the back of the title page
+  \DndCredit{design}{A. Writer}
+}
+\tableofcontents           % page iii, recto
+
+\mainmatter
+
+% Page 1 ends on a recto, so a clean blank verso comes before chapter 2
+\chapter{One Page}
+Text.
+
+\chapter{Blank Page Before}
+Text.
+
+% Chapter 2 ends on a recto (page 3), so the art goes on the verso (page 4)
+\DndFacingArt{examples/art/chapter}
+\chapter{Facing Art}
+First passage.
+
+\DndSectionBreak
+
+Second passage, after the ornament, starts without an indent.
+
+Another paragraph.
+
+\clearpage
+Chapter 3 ends on page 6, a verso: a blank recto (7) comes first, so that
+the art is on a verso (8) facing chapter 4 (9).
+
+\DndFacingArt{examples/art/landscape}
+\chapter{Art After a Recto}
+Text.
+
+\part{A Part}
+
+\chapter{After the Part}
+Text.
+\end{document}

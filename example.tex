@@ -32,8 +32,8 @@
   breaklines=true,
 }
 
-\title{The Dark \LaTeX{} \\
-\large An Example of the dndbook Class}
+\title{The Dark \LaTeX{}}
+\DndSubtitle{An Example of the dndbook Class}
 \author{The rpgTeX Team}
 \date{2020/04/21}
 
@@ -114,6 +114,17 @@ The quill regains 1d3 expended charges daily at dawn.
 You are able to transform a written message of any length into a beautiful scroll. All creatures within range that can see the scroll must make a wisdom saving throw or be charmed by you until the spell ends.
 
 While the creature is charmed by you, they cannot take their eyes off the scroll and cannot willingly move away from the scroll. Also, the targets can make a wisdom saving throw at the end of each of their turns. On a success, they are no longer charmed.
+
+\section{Book Structure}
+|\maketitle| sets a title page in the book's fonts, with |\DndSubtitle| under the title. A printed book puts the credits and legal page on the back of the title page, then the contents on the next right-hand page.
+
+With the |twoside| and |openright| class options, chapters and parts start on right-hand pages. A page left blank before them has no footer; the |blankpages=empty| option also leaves off the paper background. |\DndFacingArt{file}| just before a chapter fills that left-hand page with art instead.
+
+|\DndSectionBreak| separates two passages of the same section with an ornament:
+
+\DndSectionBreak
+
+The text after it starts without an indent, like the text after a heading.
 
 \section{Map Regions}
 The map region functions |\DndArea| and |\DndSubArea| provide automatic numbering of areas. Use |\DndSetAreaOptions[area-reset=section]| (or |chapter| or |part|) to restart the numbering at each new section, or |\DndResetAreas| to restart it by hand.

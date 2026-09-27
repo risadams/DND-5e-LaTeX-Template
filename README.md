@@ -130,6 +130,7 @@ Note that the package has only been tested with the `book` class.
 | `srd`          | ✓               | ✓                 |
 | `printerfriendly`, `edition` | ✓ | ✓                 |
 | `justified`    | ✓               | ✓                 |
+| `blankpages`   | ✓               | ✓                 |
 | `layout`       | ✓               |                   |
 | `nomultitoc`   | ✓               | ✓                 |
 | `nodeprecatedcode`   | ✓               | ✓                 |
@@ -222,6 +223,10 @@ The name of the edition being built. `bin/build` sets it to `screen`, `print`, `
 #### `justified`
 
 Justify column copy.
+
+#### `blankpages`
+
+How to fill the page left blank before a chapter or part that starts on a right-hand page (with `twoside,openright`): `background` (default) keeps the paper background, `empty` leaves the page white. Either way the page has no footer or page number. See [Book structure](#book-structure).
 
 #### `layout`
 
@@ -410,6 +415,37 @@ The PDF checks need `pdfinfo`, `pdffonts` and `pdfimages` from Poppler. MiKTeX i
 ### Example books
 
 The [`examples`](examples) folder has three short books that show different options together, and how to build every edition of each. `make examples` builds and checks them all.
+
+## Book structure
+
+A printed book is read in spreads: chapters start on a right-hand (odd) page, and the left-hand page before a chapter holds art or is left blank on purpose. Use the `twoside` and `openright` class options for print:
+
+```latex
+\documentclass[letterpaper,twoside,twocolumn,openright,nodeprecatedcode]{dndbook}
+```
+
+A page left blank before a chapter or part has no footer or page number, so it doesn't look like a mistake. It keeps the paper background, or is white with `blankpages=empty`.
+
+| Command | Result |
+| ------- | ------ |
+| `\maketitle` | A title page in the book's fonts, from `\title`, `\author` and, if you set it, `\date`. |
+| `\DndSubtitle{text}` | A line under the title on the title page. |
+| `\DndFacingArt[fade=..., graphics={...}]{file}` | Put before `\chapter` or `\part`: full-page art on the left-hand page facing it, instead of a blank page. If the text ends on a left-hand page, a blank right-hand page comes first so the art still faces the chapter. Left out of the printer-friendly edition. |
+| `\DndSectionBreak[color]` | A centered ornament between two passages of the same section; the text after it starts without an indent. |
+| `\DndOrnament[width][color]` | The ornament on its own, e.g. on a title or credits page. |
+
+The core books put the front and back matter in this order; each item starts on a right-hand page unless noted:
+
+1. Front cover (`\DndFrontCover`, screen editions only; print services take the cover as its own file)
+2. Title page (`\maketitle`)
+3. Credits and legal page (`\DndCreditsPage`), on the back of the title page
+4. Contents (`\tableofcontents`) and list of maps (`\DndListOfMaps`)
+5. Introduction and chapters (`\mainmatter`)
+6. Appendices (`\appendix`), then player handouts
+7. Index (`\DndPrintIndex`, with the `index` class option)
+8. Back cover (`\DndBackCover`, screen editions only)
+
+The [book starter](https://github.com/risadams/DND-5e-LaTeX-starter) follows this order.
 
 ## Artwork
 

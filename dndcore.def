@@ -98,6 +98,7 @@
 \RequirePackage {lib/dndsections}   % section styling and special section headers
 \RequirePackage {lib/dndsidebar}    % sidebars
 \RequirePackage {lib/dndspelllist}  % class spell lists
+\RequirePackage {lib/dndstructure}  % blank pages, facing art, ornaments, title page
 \RequirePackage {lib/dndtable}      % tables
 \RequirePackage {lib/dndtoc}        % table of contents styling
 \RequirePackage {lib/dndvehicle}    % vehicle/ship stat blocks
