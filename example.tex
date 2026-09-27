@@ -1,4 +1,4 @@
-\documentclass[letterpaper,twocolumn,openany,nodeprecatedcode]{dndbook}
+\documentclass[letterpaper,twocolumn,openany,nodeprecatedcode,srd=5.1]{dndbook}
 
 % Use babel or polyglossia to automatically redefine macros for terms
 % Armor Class, Level, etc...
@@ -49,6 +49,19 @@
 \frontmatter
 
 \maketitle
+
+% SRD and font credits are added from the srd and fonts options.
+% Build with `make example-srd5.2.1.pdf` to switch to SRD 5.2.1.
+\DndCreditsPage{
+  \DndCredit{design}{The rpgTeX Team}
+  \DndCredit{writing}{The rpgTeX Team}
+  \DndCredit{cartography}{The rpgTeX Team}
+  \DndCredit{layout}{\LaTeX{} and the dndbook class}
+  \DndCredit{Rules}{\DndIfSRD{5.2}{DnD 5.5e rules.}{DnD 5e rules.}, from SRD~\DndSRDVersion}
+  \DndCreditsHeading{Contributors}
+  \DndCredit{thanks}{Everyone who has reported an issue or sent a pull request}
+  \DndLegalText{The dndbook class is released under the MIT License.}
+}
 
 \tableofcontents
 

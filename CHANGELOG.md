@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * `DndMonster` stat blocks can be referenced: `\begin{DndMonster}[label=monster:wolf]{Wolf}` works with `\pageref`, `\nameref` and hyperref links (#337)
 * `area-reset` option for `\DndSetAreaOptions` restarts area numbering at each part, chapter or section (#313)
 * PDF navigation: `hyperref` and `bookmark` load automatically, so the PDF has a bookmarks panel, a clickable table of contents, and linked map and area references. The `hyperref`, `links=hidden|color` and `bookmarksdepth` options control it, and `\DndSetMetadata` sets the PDF title, author, subject and keywords. Covers, the contents page, the list of maps and the index get bookmarks, and cover pages are no longer counted in the page numbers (risadams/DND-5e-LaTeX-Template#1)
+* Credits and legal page: `\DndCreditsPage` with `\DndCredit`, `\DndCreditsHeading`, `\DndLegalText` and `\DndCreditsLogo`. The `srd=5.1|5.2|5.2.1` option adds the SRD attribution statement, copied from Wizards of the Coast's SRDs, in German, Spanish, French or Italian where Wizards publishes one. The active font set is credited automatically when it uses Solbera's fonts. Credit roles are translated (risadams/DND-5e-LaTeX-Template#2)
+* Build-time options: `\DndBuildOptions` overrides the document's class options, `make book-srd5.1.pdf book-srd5.2.1.pdf` builds one PDF per SRD version, and `\DndIfSRD` selects text for one version
 * Portuguese translation
 * French translation
 * Automatically bolds the first row of tables

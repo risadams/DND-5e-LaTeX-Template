@@ -41,6 +41,7 @@
 \tl_new:N \l__dnd_hyperref_tl
 \tl_new:N \l__dnd_links_tl
 \tl_new:N \l__dnd_bookmarks_depth_tl
+\tl_new:N \l__dnd_srd_tl
 
 \tl_const:Nn \l__dnd_fontset_plain_tl {plain}
 \tl_const:Nn \l__dnd_fontset_wotc_tl {wotc}
@@ -170,6 +171,12 @@
     bookmarksdepth .tl_set:N = \l__dnd_bookmarks_depth_tl,
     bookmarksdepth .initial:n = section,
 
+    % System Reference Document the book uses material from: sets the
+    % attribution on the credits page and the text chosen by \DndIfSRD
+    srd .choices:nn = { none, 5.1, 5.2, 5.2.1 }
+      { \tl_set_eq:NN \l__dnd_srd_tl \l_keys_choice_tl },
+    srd .initial:n = none,
+
     % Justified text
     justified .code:n =
       {
@@ -237,6 +244,12 @@
   }
 
 \ProcessKeysOptions { dnd / options }
+
+% Options given at build time override the document's, so one source can be
+% built several ways without editing it, e.g.
+%   latexmk -usepretex="\def\DndBuildOptions{srd=5.2.1}" book.tex
+\cs_if_exist:NT \DndBuildOptions
+  { \keys_set:nV { dnd / options } \DndBuildOptions }
 
 \bool_if:NTF \l__dnd_eberron_mode_bool
   {

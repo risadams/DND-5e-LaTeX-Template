@@ -1,0 +1,444 @@
+\ExplSyntaxOn
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Credits and legal page
+%
+% \DndCreditsPage[<options>]{<credits>} sets a page of credits, then the legal
+% notices at the foot of the page: the SRD attribution for the `srd` class
+% option, a credit for the fonts of the active font set, and anything given
+% to \DndLegalText or \DndCreditsLogo.
+%
+%   \DndCredit{<role>}{<names>}  one line of credits; <role> is a keyword
+%                                (design, writing, ...) or any text
+%   \DndCreditsHeading{<text>}   a heading between groups of credits
+%   \DndLegalText{<text>}        a paragraph of legal text (e.g. DMsGuild's)
+%   \DndCreditsLogo[<height>]{<file>}  a logo in the row under the legal text
+%
+%   \DndSRDAttribution[<language>] the SRD attribution statement on its own
+%   \DndFontCredits                the font credit on its own
+%   \DndIfSRD{<version>}{<true>}{<false>}  text for one SRD version only
+%   \DndSRDVersion                 the SRD version of this build
+%
+% This is not legal advice. Check the sources given with each statement.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\RequirePackage {url}
+\RequirePackage {multicol}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SRD version (class option `srd`)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% True when the build uses SRD #1. A shorter version matches every release
+% under it: 5.2 matches 5.2 and 5.2.1.
+\prg_new_conditional:Npnn \__dnd_if_srd:n #1 { p, T, F, TF }
+  {
+    \bool_lazy_or:nnTF
+      { \str_if_eq_p:Vn \l__dnd_srd_tl {#1} }
+      {
+        \str_if_eq_p:ee
+          { \str_range:Nnn \l__dnd_srd_tl { 1 } { \str_count:n {#1} + 1 } }
+          { #1 . }
+      }
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+
+\NewExpandableDocumentCommand \DndIfSRD { m m m }
+  { \__dnd_if_srd:nTF {#1} {#2} {#3} }
+
+\NewExpandableDocumentCommand \DndSRDVersion { }
+  { \str_if_eq:VnF \l__dnd_srd_tl { none } { \tl_use:N \l__dnd_srd_tl } }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SRD attribution statements
+%
+% Copied word for word from the "Legal Information" page at the start of each
+% SRD PDF, which says to include that statement in your work. The PDFs are
+% linked from https://www.dndbeyond.com/srd (the page
+% https://dnd.wizards.com/resources/systems-reference-document redirects there).
+% Checked 2026-09-27. Only line breaks were changed: the PDFs break
+% "systems-reference-document" (French 5.1) and ".../4.0/legalcode" (5.2.1)
+% across lines. URLs are wrapped in \url so they break and link.
+%
+% Wizards publishes translated statements with its translated SRDs (5.1 and
+% 5.2.1; there are none for 5.2). The statement follows the document language
+% when a translation exists, and falls back to English.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% #1 - SRD version, #2 - language, #3 - statement
+\cs_new_protected:Npn \__dnd_srd_statement_new:nnn #1#2#3
+  { \tl_const:cn { c__dnd_srd_ #1 _ #2 _tl } {#3} }
+
+% Spaces are ordinary spaces while the statements are read, so they can be
+% copied as they are. The constants are global, so the group does not lose
+% them.
+\group_begin:
+\char_set_catcode_space:n { 32 }
+\cs_set_eq:NN \dnd@srd@statement \__dnd_srd_statement_new:nnn
+
+% https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf
+\dnd@srd@statement{5.1}{english}{%
+This work includes material taken from the System Reference Document 5.1
+(“SRD 5.1”) by Wizards of the Coast LLC and available at
+\url{https://dnd.wizards.com/resources/systems-reference-document}. The SRD 5.1
+is licensed under the Creative Commons Attribution 4.0 International License
+available at \url{https://creativecommons.org/licenses/by/4.0/legalcode}.}
+
+% https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1_DE.pdf
+% (the mismatched quotation marks around SRD 5.1 are in the original)
+\dnd@srd@statement{5.1}{german}{%
+Dieses Werk enthält Material aus dem Systemreferenzdokument 5.1 („SRD 5.1”)
+von Wizards of the Coast LLC, das unter
+\url{https://dnd.wizards.com/de/resources/systems-reference-document} verfügbar
+ist. Das SRD 5.1 ist lizenziert gemäß der Lizenz Creative Commons Namensnennung
+4.0 International, die unter
+\url{https://creativecommons.org/licenses/by/4.0/legalcode.de} verfügbar ist.}
+
+% https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1_ES.pdf
+\dnd@srd@statement{5.1}{spanish}{%
+Esta obra incluye materiales extraídos del Documento de referencia del sistema
+5.1 (“SRD 5.1”) de Wizards of the Coast LLC, que está disponible en
+\url{https://dnd.wizards.com/es/resources/systems-reference-document}. El SRD
+5.1 tiene la licencia Creative Commons Atribución/Reconocimiento 4.0 Licencia
+Pública Internacional, que está disponible en
+\url{https://creativecommons.org/licenses/by/4.0/legalcode.es}.}
+
+% https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1_FR.pdf
+\dnd@srd@statement{5.1}{french}{%
+Ce travail comprend la documentation tirée du Document de Référence du Système
+5.1 (« SRD 5.1 ») par Wizards of the Coast LLC et disponible à l'adresse
+\url{https://dnd.wizards.com/fr/resources/systems-reference-document}. Le SRD
+5.1 est distribué en vertu de la licence Creative Commons Attribution 4.0
+International disponible à l'adresse
+\url{https://creativecommons.org/licenses/by/4.0/legalcode.fr}.}
+
+% https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1_IT.pdf
+\dnd@srd@statement{5.1}{italian}{%
+Questo lavoro include materiale del System Reference Document 5.1 (“SRD 5.1”)
+di Wizards of the Coast LLC disponibile al sito
+\url{https://dnd.wizards.com/it/resources/systems-reference-document}. L’SRD
+5.1 è concesso in licenza sotto l’Attribuzione 4.0 Internazionale di Creative
+Commons disponibile al sito
+\url{https://creativecommons.org/licenses/by/4.0/legalcode.it}.}
+
+% https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.pdf
+\dnd@srd@statement{5.2}{english}{%
+This work includes material from the System Reference Document 5.2 (“SRD 5.2”)
+by Wizards of the Coast LLC, available at \url{https://www.dndbeyond.com/srd}.
+The SRD 5.2 is licensed under the Creative Commons Attribution 4.0
+International License, available at
+\url{https://creativecommons.org/licenses/by/4.0/legalcode}.}
+
+% https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf
+\dnd@srd@statement{5.2.1}{english}{%
+This work includes material from the System Reference Document 5.2.1 (“SRD
+5.2.1”) by Wizards of the Coast LLC, available at
+\url{https://www.dndbeyond.com/srd}. The SRD 5.2.1 is licensed under the
+Creative Commons Attribution 4.0 International License, available at
+\url{https://creativecommons.org/licenses/by/4.0/legalcode}.}
+
+% https://media.dndbeyond.com/compendium-images/srd/5.2/DE_SRD_CC_v5.2.1.pdf
+\dnd@srd@statement{5.2.1}{german}{%
+Dieses Werk enthält Material aus dem Systemreferenzdokument 5.2.1 („SRD
+5.2.1“) von Wizards of the Coast LLC, verfügbar unter
+\url{https://www.dndbeyond.com/srd}. Das SRD 5.2.1 ist lizenziert gemäß
+Creative Commons Namensnennung 4.0 International Public License (verfügbar
+unter \url{https://creativecommons.org/licenses/by/4.0/legalcode.de}).}
+
+% https://media.dndbeyond.com/compendium-images/srd/5.2/SP_SRD_CC_v5.2.1.pdf
+\dnd@srd@statement{5.2.1}{spanish}{%
+Esta obra incluye material procedente del documento de referencia del sistema
+5.2.1 (“SRD 5.2.1”) de Wizards of the Coast LLC, disponible en
+\url{https://www.dndbeyond.com/srd}. La licencia sobre el SRD 5.2.1 se concede
+de acuerdo con la licencia internacional de atribución/reconocimiento 4.0 de
+Creative Commons, disponible en
+\url{https://creativecommons.org/licenses/by/4.0/legalcode}.}
+
+% https://media.dndbeyond.com/compendium-images/srd/5.2/FR_SRD_CC_v5.2.1.pdf
+\dnd@srd@statement{5.2.1}{french}{%
+Cette œuvre inclut du matériel issu du System Reference Document 5.2.1 (« SRD
+5.2.1 ») de Wizards of the Coast LLC, disponible à l’adresse
+\url{https://www.dndbeyond.com/srd}. Le SRD 5.2.1 est régi par la Licence
+Creative Commons Attribution 4.0 International, disponible à l’adresse
+\url{https://creativecommons.org/licenses/by/4.0/legalcode}.}
+
+% https://media.dndbeyond.com/compendium-images/srd/5.2/IT_SRD_CC_v5.2.1.pdf
+\dnd@srd@statement{5.2.1}{italian}{%
+Quest'opera include materiale tratto dal System Reference Document 5.2.1
+("SRD 5.2.1") di Wizards of the Coast LLC, disponibile all'indirizzo
+\url{https://www.dndbeyond.com/srd}. Il SRD 5.2.1 è concesso in licenza ai
+sensi della licenza di attribuzione 4.0 Internazionale di Creative Commons,
+disponibile all'indirizzo
+\url{https://creativecommons.org/licenses/by/4.0/legalcode}.}
+
+\group_end:
+
+% Statement language for a babel or polyglossia language name
+% #1 - language name
+\cs_new:Npn \__dnd_srd_language:n #1
+  {
+    \str_case_e:nnF {#1}
+      {
+        { german }        { german }
+        { ngerman }       { german }
+        { austrian }      { german }
+        { naustrian }     { german }
+        { swissgerman }   { german }
+        { nswissgerman }  { german }
+        { spanish }       { spanish }
+        { french }        { french }
+        { francais }      { french }
+        { acadian }       { french }
+        { canadien }      { french }
+        { italian }       { italian }
+      }
+      { english }
+  }
+
+\msg_new:nnn { dnd } { credits / srd_language }
+  {
+    There~is~no~"#2"~SRD~#1~attribution~statement.~
+    Using~the~English~statement.
+  }
+
+% #1 - language: auto (the document language) or english, german, spanish,
+%      french, italian
+\cs_new_protected:Npn \__dnd_srd_attribution:n #1
+  {
+    \str_if_eq:VnF \l__dnd_srd_tl { none }
+      {
+        \tl_set:Ne \l__dnd_tmp_tl
+          {
+            \str_if_eq:nnTF {#1} { auto }
+              {
+                \cs_if_exist:NTF \languagename
+                  { \__dnd_srd_language:n { \languagename } }
+                  { english }
+              }
+              {#1}
+          }
+        \cs_if_exist:cF { c__dnd_srd_ \l__dnd_srd_tl _ \l__dnd_tmp_tl _tl }
+          {
+            \str_if_eq:nnF {#1} { auto }
+              {
+                \msg_warning:nnVV { dnd } { credits / srd_language }
+                  \l__dnd_srd_tl \l__dnd_tmp_tl
+              }
+            \tl_set:Nn \l__dnd_tmp_tl { english }
+          }
+        \tl_use:c { c__dnd_srd_ \l__dnd_srd_tl _ \l__dnd_tmp_tl _tl }
+      }
+  }
+\tl_new:N \l__dnd_tmp_tl
+
+\NewDocumentCommand \DndSRDAttribution { O{auto} }
+  { \__dnd_srd_attribution:n {#1} }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Font credits
+%
+% Solbera's fonts are licensed CC BY-SA 4.0, which asks for the creators, the
+% license with a link to it, and a link to the material (section 3(a)(1)).
+% The font package sets no wording of its own; this credit gives all three.
+% Sources, checked 2026-09-27:
+%   https://github.com/jonathonf/solbera-dnd-fonts/tree/v1.5 (README, LICENSE)
+%   https://creativecommons.org/licenses/by-sa/4.0/legalcode
+%
+% fonts=dmsguild and fonts=wotc also use one of Solbera's fonts each. The other
+% fonts the template uses (TeX Gyre Bonum, Andada, Junction, Bookman, Gillius,
+% Kp-Fonts, Royal) do not ask for a credit in the document.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Solbera's fonts in use, or nothing
+\cs_new:Npn \__dnd_solbera_fonts_used:
+  {
+    \bool_if:NT \l__dnd_layout_bool
+      {
+        \str_case:VnF \l__dnd_fontset_tl
+          {
+            { solbera }
+              {
+                Bookinsanity,~Mr~Eaves~Small~Caps,~Nodesto~Caps~Condensed,~
+                Scaly~Sans,~Scaly~Sans~Caps,~Solbera~Imitation,~
+                Zatanna~Misdirection
+              }
+            { dmsguild } { Zatanna~Misdirection }
+            { wotc }     { Nodesto~Caps~Condensed }
+          }
+          { }
+      }
+  }
+
+\cs_new_protected:Npn \__dnd_font_credits:
+  {
+    \tl_set:Ne \l__dnd_tmp_tl { \__dnd_solbera_fonts_used: }
+    \tl_if_empty:NF \l__dnd_tmp_tl
+      {
+        \textbf { \fontscreditname : } ~
+        \exp_args:NnV \__dnd_caption:nn { \fontcreditname } \l__dnd_tmp_tl
+        \c_space_tl
+        \url { https://github.com/jonathonf/solbera-dnd-fonts } . ~
+        \fontlicensename \c_space_tl
+        \url { https://creativecommons.org/licenses/by-sa/4.0/ } .
+      }
+  }
+
+\NewDocumentCommand \DndFontCredits { } { \__dnd_font_credits: }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Credits
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Role keywords and the captions they print
+\prop_const_from_keyval:Nn \c__dnd_credit_roles_prop
+  {
+    design        = \designcreditname ,
+    development   = \developmentcreditname ,
+    writing       = \writingcreditname ,
+    editing       = \editingcreditname ,
+    art-direction = \artdirectioncreditname ,
+    cover-art     = \coverartcreditname ,
+    interior-art  = \interiorartcreditname ,
+    cartography   = \cartographycreditname ,
+    layout        = \layoutcreditname ,
+    playtesting   = \playtestingcreditname ,
+    thanks        = \thankscreditname ,
+    fonts         = \fontscreditname ,
+  }
+
+% #1 - role keyword or text, #2 - names
+\NewDocumentCommand \DndCredit { m m }
+  {
+    \par
+    \hangindent = 1em
+    \hangafter = 1
+    \noindent
+    \textbf
+      {
+        \prop_get:NnNTF \c__dnd_credit_roles_prop {#1} \l__dnd_tmp_tl
+          { \tl_use:N \l__dnd_tmp_tl }
+          {#1}
+        :
+      } ~
+    #2
+    \par
+  }
+
+\NewDocumentCommand \DndCreditsHeading { m }
+  {
+    \par
+    \addvspace { 1ex }
+    \noindent
+    { \DndFontSubsection #1 }
+    \par
+    \nopagebreak
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Legal text and logos
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tl_new:N \g__dnd_credits_legal_tl
+\tl_new:N \g__dnd_credits_logos_tl
+
+% Paragraphs printed under the SRD and font credits by the next
+% \DndCreditsPage. Use it in the preamble or in the page's credits.
+\NewDocumentCommand \DndLegalText { +m }
+  { \tl_gput_right:Nn \g__dnd_credits_legal_tl { \par #1 \par } }
+
+\NewDocumentCommand \DndCreditsLogo { O{.5in} m }
+  {
+    \tl_gput_right:Nn \g__dnd_credits_logos_tl
+      { \includegraphics [ height = #1 ] {#2} \hfil }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tl_new:N \l__dnd_credits_title_tl
+\int_new:N \l__dnd_credits_columns_int
+\bool_new:N \l__dnd_credits_fonts_bool
+\tl_new:N \l__dnd_credits_srd_language_tl
+\tl_new:N \l__dnd_credits_pagestyle_tl
+
+\keys_define:nn { dnd / credits }
+  {
+    title .tl_set:N          = \l__dnd_credits_title_tl,
+    title .initial:n         = \creditsname,
+    columns .int_set:N       = \l__dnd_credits_columns_int,
+    columns .initial:n       = 2,
+    fonts .choice:,
+    fonts / auto .code:n     = \bool_set_true:N \l__dnd_credits_fonts_bool,
+    fonts / none .code:n     = \bool_set_false:N \l__dnd_credits_fonts_bool,
+    fonts .initial:n         = auto,
+    srd-language .tl_set:N   = \l__dnd_credits_srd_language_tl,
+    srd-language .initial:n  = auto,
+    pagestyle .tl_set:N      = \l__dnd_credits_pagestyle_tl,
+    pagestyle .initial:n     = empty,
+  }
+
+\cs_new_protected:Npn \__dnd_credits_legal:
+  {
+    \str_if_eq:VnF \l__dnd_srd_tl { none }
+      { \par \__dnd_srd_attribution:V \l__dnd_credits_srd_language_tl \par }
+    \bool_if:NT \l__dnd_credits_fonts_bool
+      { \par \__dnd_font_credits: \par }
+    \tl_use:N \g__dnd_credits_legal_tl
+    \tl_gclear:N \g__dnd_credits_legal_tl
+    \tl_if_empty:NF \g__dnd_credits_logos_tl
+      {
+        \par \addvspace { 1ex }
+        \hbox_to_wd:nn { \linewidth } { \hfil \g__dnd_credits_logos_tl }
+        \tl_gclear:N \g__dnd_credits_logos_tl
+      }
+  }
+\cs_generate_variant:Nn \__dnd_srd_attribution:n { V }
+
+\bool_new:N \l__dnd_credits_twocolumn_bool
+
+% #1 - options, #2 - credits
+\NewDocumentCommand \DndCreditsPage { O{} +m }
+  {
+    % The page is one column wide. \onecolumn and \twocolumn set the column
+    % layout globally, so switch outside the group.
+    \bool_set:Nn \l__dnd_credits_twocolumn_bool
+      { \legacy_if_p:n { @twocolumn } }
+    \bool_if:NTF \l__dnd_credits_twocolumn_bool { \onecolumn } { \clearpage }
+    \group_begin:
+      \keys_set:nn { dnd / credits } {#1}
+      \exp_args:NV \thispagestyle \l__dnd_credits_pagestyle_tl
+      \tl_if_empty:NF \l__dnd_credits_title_tl
+        {
+          \__dnd_pdf_bookmark:nn
+            { \cs_if_exist:NTF \chapter { 0 } { 1 } }
+            { \l__dnd_credits_title_tl }
+          \noindent
+          { \DndFontSection \l__dnd_credits_title_tl }
+          \par \nopagebreak \medskip
+        }
+      \group_begin:
+        \small
+        \int_compare:nNnTF \l__dnd_credits_columns_int > 1
+          {
+            \setlength { \columnsep } { .33in }
+            \raggedcolumns
+            \begin{multicols} { \l__dnd_credits_columns_int }
+              #2
+            \end{multicols}
+          }
+          { #2 \par }
+      \group_end:
+      \vfill
+      \group_begin:
+        \scriptsize
+        \urlstyle { same }
+        \setlength { \parindent } { 0pt }
+        \setlength { \parskip } { .6ex }
+        \__dnd_credits_legal:
+      \group_end:
+    \group_end:
+    \clearpage
+    \bool_if:NT \l__dnd_credits_twocolumn_bool { \twocolumn }
+  }

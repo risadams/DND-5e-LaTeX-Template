@@ -127,6 +127,7 @@ Note that the package has only been tested with the `book` class.
 | `hyperref`     | ✓               | ✓                 |
 | `links`        | ✓               | ✓                 |
 | `bookmarksdepth` | ✓             | ✓                 |
+| `srd`          | ✓               | ✓                 |
 | `justified`    | ✓               | ✓                 |
 | `layout`       | ✓               |                   |
 | `nomultitoc`   | ✓               | ✓                 |
@@ -200,6 +201,15 @@ Load `hyperref` and `bookmark` for links, PDF bookmarks and metadata; see [PDF n
 
 The deepest heading level shown in the PDF bookmarks panel: `part`, `chapter`, `section` (**default**, the same as the table of contents), `subsection`, ... Area headings are subsections by default, so use `bookmarksdepth=subsection` to list every area.
 
+#### `srd`
+
+The System Reference Document your book takes material from. It sets the attribution statement on the credits page and the text chosen by `\DndIfSRD`. See [Credits and legal page](#credits-and-legal-page).
+
+* `none`: No SRD material. (**default**)
+* `5.1`: SRD 5.1, the 2014 rules.
+* `5.2`: SRD 5.2, the 2024 rules.
+* `5.2.1`: SRD 5.2.1, the 2024 rules with errata. This is the current release of SRD 5.2.
+
 #### `justified`
 
 Justify column copy.
@@ -243,6 +253,72 @@ To give `hyperref` options of your own, or to use a package that must be loaded 
 Headings that contain `\\` or `\newline` break the table of contents. Give them a short title for the contents and bookmarks: `\section[Short title]{Long\\title}`.
 
 Cover pages made with `\DndFrontCover` and `\DndBackCover` are not counted in the page numbers, and are labelled "Cover" and "Back Cover" in the PDF reader's page box.
+
+## Credits and legal page
+
+`\DndCreditsPage` sets a page of credits, usually on the page after the title page, with the legal notices at the foot of the page:
+
+```latex
+\DndCreditsPage{
+  \DndCredit{design}{A. Writer}
+  \DndCredit{cover-art}{B. Artist}
+  \DndCredit{cartography}{C. Mapper}
+  \DndCredit{Sensitivity Reading}{D. Reader}
+  \DndCreditsHeading{Playtesters}
+  \DndCredit{thanks}{E. Player, F. Player}
+  \DndLegalText{Text required by your publisher, e.g. DMsGuild.}
+  \DndCreditsLogo{img/publisher-logo}
+}
+```
+
+* `\DndCredit{role}{names}` prints one credit. These roles are translated with the document language: `design`, `development`, `writing`, `editing`, `art-direction`, `cover-art`, `interior-art`, `cartography`, `layout`, `playtesting`, `thanks` and `fonts`. Any other role is printed as you wrote it.
+* `\DndCreditsHeading{text}` separates groups of credits.
+* `\DndLegalText{text}` adds a paragraph to the legal notices. Use it in the preamble or inside the page.
+* `\DndCreditsLogo[height]{file}` adds a logo to a row under the legal notices (default height `.5in`).
+
+The page adds two notices by itself:
+
+* **SRD attribution.** With the `srd` class option, the page prints the attribution statement that the SRD's own legal page asks for, word for word. The statement follows the document language when Wizards of the Coast publishes a translated SRD with its own statement (German, Spanish, French and Italian for SRD 5.1 and 5.2.1), and is in English otherwise.
+* **Font credit.** Solbera's fonts are licensed CC BY-SA 4.0, which requires crediting their authors. With `fonts=solbera` the page credits all of them; `fonts=dmsguild` and `fonts=wotc` each use one of Solbera's fonts, so it credits that one. The other font sets need no credit.
+
+Options: `\DndCreditsPage[title=Credits, columns=2, fonts=auto, srd-language=auto, pagestyle=empty]`. `title={}` drops the heading, `columns=1` sets the credits in one column, `fonts=none` leaves out the font credit, and `srd-language=english` (or `german`, `spanish`, `french`, `italian`) picks the statement's language instead of following the document. The page is one column wide in a two-column document.
+
+`\DndSRDAttribution[language]` and `\DndFontCredits` print those notices on their own, for example on the back cover.
+
+### One book, two editions
+
+The SRD version is a build option, so the same source can produce a 2014 (SRD 5.1) and a 2024 (SRD 5.2) edition. Build one PDF per version:
+
+```sh
+make book-srd5.1.pdf book-srd5.2.1.pdf
+```
+
+This works without editing `book.tex`, and overrides any `srd` option in its `\documentclass`. To build by hand, define `\DndBuildOptions` before the document is read; it takes any class options and overrides the document's:
+
+```latex
+% book-srd5.2.1.tex
+\def\DndBuildOptions{srd=5.2.1}
+\input{book}
+```
+
+Use `\DndIfSRD` for text that differs between the editions. A shorter version matches every release under it, so `5.2` matches `5.2` and `5.2.1`:
+
+```latex
+Choose a \DndIfSRD{5.2}{species}{race} for your character.
+```
+
+`\DndSRDVersion` prints the version of the current build.
+
+### Before you publish
+
+This is not legal advice. The template copies the statements as published, but whether your product needs them, and what else it needs, depends on what you use and where you sell it. Check the sources yourself:
+
+* [SRD downloads and FAQ](https://www.dndbeyond.com/srd): each SRD PDF starts with a "Legal Information" page that gives the statement. It also asks you not to include any other attribution to Wizards of the Coast.
+* [Solbera's fonts](https://github.com/jonathonf/solbera-dnd-fonts) and the [CC BY-SA 4.0 license](https://creativecommons.org/licenses/by-sa/4.0/legalcode).
+* DMsGuild products use the legal text and logos that DMsGuild supplies to creators under its Community Content Agreement. Put its text in `\DndLegalText` and its logos in `\DndCreditsLogo`; they are not included here.
+* Artists, cartographers and asset packs often ask for specific wording. Add it with `\DndCredit` or `\DndLegalText`.
+
+Each statement's source and the date it was checked are recorded next to it in `lib/dndcredits.sty`.
 
 ## Artwork
 
