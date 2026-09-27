@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 * Moved devops from CircleCI to GitHub Actions
 
+### Fixed
+* `DndReadAloud`, `DndSidebar` and `DndComment` no longer fail on TeX Live 2026 when the optional argument is omitted (#391)
+
 ## [0.8.0] - 2020-04-21
 
 ### Added in 0.8.0
