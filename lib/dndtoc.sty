@@ -30,8 +30,61 @@
     {\titlerule*{.}\contentspage} % filler-page-format
 
   \newcommand\tocchapapp{\tocchapterabbreviationname}
-  \g@addto@macro\appendix{%
-    \addtocontents{toc}{\protect\renewcommand{\protect\@chapapp}{\appendixname}}%
-    \addtocontents{toc}{\protect\renewcommand{\protect\tocchapapp}{\appendixname}}%
-  }
+
+  % The contents switch to "Appendix" labels just before the first chapter
+  % after \appendix (see \addcontentsline below). Writing the switch from
+  % \appendix itself puts it after the appendix entries when the appendix is
+  % in an \include'd file, whose .aux file is read first.
+  \g@addto@macro\appendix
+    { \bool_gset_true:N \g__dnd_appendix_toc_pending_bool }
 }
+
+\bool_new:N \g__dnd_appendix_toc_pending_bool
+
+% #1 - contents file, #2 - entry level
+\cs_new_protected:Npn \__dnd_appendix_toc:nn #1#2
+  {
+    \bool_lazy_and:nnT
+      { \g__dnd_appendix_toc_pending_bool }
+      { \str_if_eq_p:nn {#1 / #2} { toc / chapter } }
+      {
+        \bool_gset_false:N \g__dnd_appendix_toc_pending_bool
+        \addtocontents{toc}{\protect\renewcommand{\protect\@chapapp}{\appendixname}}
+        \addtocontents{toc}{\protect\renewcommand{\protect\tocchapapp}{\appendixname}}
+      }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Line breaks in headings
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A \\ or \newline in a heading breaks the line in the heading itself, but
+% shows as a space in the contents, the list of maps and the footer. Ragged
+% text makes \\ fragile, so it is swapped for \DndTocBreak before the heading
+% is written to the .toc file or the page mark.
+
+\cs_new_protected:Npn \DndTocBreak { \unskip \c_space_tl \ignorespaces }
+
+\cs_new_protected:Npn \__dnd_toc_breaks_as_spaces:
+  {
+    \cs_set:Npn \\ { \DndTocBreak }
+    \cs_set:Npn \newline { \DndTocBreak }
+  }
+
+\AddToHook { package / hyperref / after }
+  { \pdfstringdefDisableCommands { \cs_set:Npn \DndTocBreak { ~ } } }
+
+% Contents entries get the line breaks as spaces and the switch to appendix
+% labels. hyperref redefines \addcontentsline when it loads at the start of
+% the document, so wrap it after that.
+\AddToHook { begindocument / end }
+  {
+    \cs_set_eq:NN \__dnd_addcontentsline:nnn \addcontentsline
+    \cs_set_protected:Npn \addcontentsline #1#2#3
+      {
+        \__dnd_appendix_toc:nn {#1} {#2}
+        \group_begin:
+          \__dnd_toc_breaks_as_spaces:
+          \__dnd_addcontentsline:nnn {#1} {#2} {#3}
+        \group_end:
+      }
+  }

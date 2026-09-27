@@ -259,7 +259,7 @@ The PDF title and author come from `\title` and `\author`. Set the rest with `\D
 
 To give `hyperref` options of your own, or to use a package that must be loaded after it (such as `cleveref`), load `hyperref` yourself in the preamble. The template's defaults still apply unless you set those options yourself.
 
-Headings that contain `\\` or `\newline` break the table of contents. Give them a short title for the contents and bookmarks: `\section[Short title]{Long\\title}`.
+A `\\` or `\newline` in a heading breaks the line in the heading itself, and shows as a space in the table of contents, the bookmarks and the footer. To show a different title there, give a short title: `\section[Short title]{Long\\title}`.
 
 Cover pages made with `\DndFrontCover` and `\DndBackCover` are not counted in the page numbers, and are labelled "Cover" and "Back Cover" in the PDF reader's page box.
 

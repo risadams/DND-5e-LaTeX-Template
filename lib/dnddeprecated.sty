@@ -37,7 +37,8 @@
 % Backwards-compatible aliases and colours
 \colorlet {commentgreen}  {PhbLightGreen}
 \colorlet {itemtablepink} {DmgCoral}
-\colorlet {monstertan}    {statblockbg}
+\colorlet {statblockbg}   {statblockbg14}
+\colorlet {monstertan}    {statblockbg14}
 \definecolor {monstertandark} {HTML} {F0DBB5}
 
 % Old interface
@@ -181,8 +182,8 @@
   borderline north={2pt}{0.5pt}{statblockribbon},
   borderline south={3pt}{0pt}{titlered},
   borderline south={2pt}{0.5pt}{statblockribbon},
-  colback=statblockbg,
-  colbacktitle=statblockbg,
+  colback=statblockbg14,
+  colbacktitle=statblockbg14,
   colframe=titlered,
   fonttitle=\DndFontStatBlockTitle,
   coltitle=titlered,
@@ -474,7 +475,7 @@
   after~skip=14pt plus 4pt minus 4pt,
   #1
 }
-\ExplSyntaxOn
+\ExplSyntaxOff
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % dndquote.sty - to be removed in version 1.0.0
