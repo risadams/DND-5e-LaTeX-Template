@@ -69,6 +69,35 @@
   { \msg_warning:nn { dnd } { structure / part_patch } }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Balanced columns
+%
+% With the balance option (default), the two columns on the last page of a
+% chapter or part end at the same height, instead of a full left column
+% and a short right one. flushend does the balancing, and also balances the
+% last page of the document.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% End the current page with balanced columns
+\cs_new_protected:Npn \__dnd_balance_columns:
+  {
+    \bool_lazy_and:nnT
+      { \l__dnd_balance_bool } { \legacy_if_p:n { @twocolumn } }
+      { \flushcolsend \clearpage \raggedcolsend }
+  }
+
+\bool_if:NT \l__dnd_layout_bool
+  {
+    \AddToHook { cmd / chapter / before } { \__dnd_balance_columns: }
+    \AddToHook { cmd / part / before }    { \__dnd_balance_columns: }
+    \AddToHook { include / before }       { \__dnd_balance_columns: }
+    \AddToHook { enddocument }            { \par \__dnd_balance_columns: }
+    % flushend's own balancing at the end of the document comes too late
+    % for the page style and background; the enddocument hook above does it
+    \AddToHook { begindocument / end }
+      { \bool_if:NT \l__dnd_balance_bool { \raggedend } }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Facing art
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -81,6 +110,7 @@
   {
     \bool_if:NF \l__dnd_printer_friendly_bool
       {
+        \__dnd_balance_columns:
         \__dnd_clear_to_verso:
         \DndFullPageImage [#1] {#2}
       }

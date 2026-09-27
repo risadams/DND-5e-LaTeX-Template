@@ -238,6 +238,17 @@
       {\scriptsize \textcolor{pagegold}}
   }
 
+% A font size as a multiple of the current size, e.g. \DndRelativeSize{1.3}
+% for 13pt headings in a 10pt book. Heading sizes are measured from the
+% 2014 core books; see docs/typography.md.
+\NewDocumentCommand {\DndRelativeSize} { m }
+  {
+    \fontsize
+      { \fp_eval:n { round ( #1 * \f@size , 2 ) } pt }
+      { \fp_eval:n { round ( #1 * \f@size , 2 ) } pt }
+    \selectfont
+  }
+
 \keys_define:nn { dnd / fonts }
   {
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -269,14 +280,14 @@
     subsection-family .initial:n        = \sctitlefont,
     subsection-family .value_required:n = true,
     subsection-style .tl_set:N         = \l__dnd_subsection_style_tl,
-    subsection-style .initial:n        = \linespread{.9} \color{titlered} \Large \scshape \RaggedRight,
+    subsection-style .initial:n        = \linespread{.9} \color{titlered} \DndRelativeSize{1.64} \scshape \RaggedRight,
     subsection-style .value_required:n = true,
     % subsubsection
     subsubsection-family .tl_set:N         = \l__dnd_subsubsection_family_tl,
     subsubsection-family .initial:n        = \sctitlefont,
     subsubsection-family .value_required:n = true,
     subsubsection-style .tl_set:N         = \l__dnd_subsubsection_style_tl,
-    subsubsection-style .initial:n        = \linespread{.9} \color{titlered} \large \scshape \RaggedRight,
+    subsubsection-style .initial:n        = \linespread{.9} \color{titlered} \DndRelativeSize{1.3} \scshape \RaggedRight,
     subsubsection-style .value_required:n = true,
     % paragraph
     paragraph-family .tl_set:N         = \l__dnd_paragraph_family_tl,

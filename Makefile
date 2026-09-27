@@ -73,7 +73,7 @@ examples:
 # bin/preflight must reject a PDF with known problems
 # and the documents in test/ must build
 TESTS = deprecated-code package-mode toc-line-breaks appendix-include \
-	book-structure handouts
+	book-structure handouts typography
 
 test:
 	if texlua bin/build --preflight print test/preflight-fail.tex; then \

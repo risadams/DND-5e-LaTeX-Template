@@ -309,6 +309,7 @@
     \seq_if_empty:NF \g__dnd_handout_appendix_seq
       {
         \bool_set:Nn \l__dnd_handout_twocolumn_bool { \legacy_if_p:n { @twocolumn } }
+        \__dnd_balance_columns:
         \bool_if:NTF \l__dnd_handout_twocolumn_bool { \onecolumn } { \clearpage }
         \IfBooleanTF {#1}
           { \bool_gset_true:N \g__dnd_handout_first_page_bool }

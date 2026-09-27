@@ -131,6 +131,8 @@ Note that the package has only been tested with the `book` class.
 | `printerfriendly`, `edition` | ✓ | ✓                 |
 | `justified`    | ✓               | ✓                 |
 | `blankpages`   | ✓               | ✓                 |
+| `hyphenate`    | ✓               | ✓                 |
+| `balance`      | ✓               | ✓                 |
 | `layout`       | ✓               |                   |
 | `nomultitoc`   | ✓               | ✓                 |
 | `nodeprecatedcode`   | ✓               | ✓                 |
@@ -223,6 +225,14 @@ The name of the edition being built. `bin/build` sets it to `screen`, `print`, `
 #### `justified`
 
 Justify column copy.
+
+#### `hyphenate`
+
+Hyphenate words at line ends, as the core books do (default). `hyphenate=false` never hyphenates, as the template did before; lines are then more ragged and justified text gets wider gaps. The body typography follows measurements of the 2014 books; see [docs/typography.md](docs/typography.md).
+
+#### `balance`
+
+End the two columns at the same height on the last page of each chapter and part, and of the document (default). `balance=false` fills the left column first, as before.
 
 #### `blankpages`
 

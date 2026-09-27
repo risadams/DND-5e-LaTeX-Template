@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Page backgrounds are drawn with `eso-pic` behind all page content, so they no longer cover pages inserted with `\includepdf`. A page style that clears the header still suppresses the background (#314, #367)
 * Floats on pages holding only floats sit at the top of the page instead of the middle, as in the core books
 * Negative modifiers use a true minus sign when the font has one; `\DndMinus` gives the same sign in documents
+* **Visible change:** body typography follows measurements of the 2014 core books (see [docs/typography.md](docs/typography.md)). Text is hyphenated (`hyphenate=false` restores the old line breaking); a single line of a paragraph is no longer left alone at the top or bottom of a column; columns end where their text ends (`\raggedbottom`); the columns on the last page of each chapter, part and the document are balanced (`balance=false` turns this off); subsections are 16.4pt and subsubsections 13pt (from 14.4pt and 12pt), and the space around headings matches the books. Existing documents will break lines and pages differently.
 
 ### Fixed
 * `DndReadAloud` no longer typesets a stray `;` (a "Missing character" warning in the log)

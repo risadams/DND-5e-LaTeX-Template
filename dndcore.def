@@ -53,11 +53,37 @@
     \setlength {\RaggedRightRightskip} {0pt plus 1em}
     \setlength {\RaggedRightParindent} {\parindent}
 
-    % Restrict hyphenation
-    \tolerance        = 1
+    % Line breaking. The core books hyphenate; hyphenate=false keeps words
+    % whole, at the cost of more ragged lines and occasional gaps.
+    % Either way, a paragraph with no acceptable line breaks (e.g. a long
+    % URL or command name) is set loosely rather than past the margin.
+    \bool_if:NTF \l__dnd_hyphenate_bool
+      {
+        \tolerance        = 500
+        \hyphenpenalty    = 50
+        \exhyphenpenalty  = 50
+      }
+      {
+        \tolerance        = 1
+        \hyphenpenalty    = 10000
+      }
     \emergencystretch = \maxdimen
-    \hyphenpenalty    = 10000
-    \hbadness         = 10000
+    \hbadness = 10000
+
+    % No single line of a paragraph alone at the top or bottom of a column.
+    % Just below 10000 (forbidden), so that balancing the last page of a
+    % chapter can still find a place to split the columns. Columns end where
+    % their text ends instead of being stretched to the same height, as in
+    % the core books.
+    \clubpenalty         = 9000
+    \widowpenalty        = 9000
+    \displaywidowpenalty = 9000
+    \raggedbottom
+
+    % Balance the columns on the last page of each chapter, part and the
+    % document (see \__dnd_balance_columns: in lib/dndstructure)
+    \bool_if:NT \l__dnd_balance_bool
+      { \RequirePackage {flushend} }
 
     % Set left justification if not justified
     \bool_if:NF \l__dnd_justified_bool

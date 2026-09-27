@@ -45,6 +45,8 @@
 \bool_new:N \l__dnd_printer_friendly_bool
 \tl_new:N \l__dnd_edition_tl
 \tl_new:N \l__dnd_blank_pages_tl
+\bool_new:N \l__dnd_hyphenate_bool
+\bool_new:N \l__dnd_balance_bool
 
 \tl_const:Nn \l__dnd_fontset_plain_tl {plain}
 \tl_const:Nn \l__dnd_fontset_wotc_tl {wotc}
@@ -196,6 +198,17 @@
     blankpages .choices:nn = { background, empty }
       { \tl_set_eq:NN \l__dnd_blank_pages_tl \l_keys_choice_tl },
     blankpages .initial:n = background,
+
+    % Hyphenate the text like the core books (false: never hyphenate, the
+    % template's behaviour before version 0.9)
+    hyphenate .bool_set:N = \l__dnd_hyphenate_bool,
+    hyphenate .initial:n  = true,
+    hyphenate .default:n  = true,
+
+    % Balance the two columns on the last page of each chapter and part
+    balance .bool_set:N = \l__dnd_balance_bool,
+    balance .initial:n  = true,
+    balance .default:n  = true,
 
     % Justified text
     justified .code:n =

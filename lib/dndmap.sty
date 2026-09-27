@@ -296,6 +296,7 @@
 \cs_new_protected:Npn \__dnd_map_sideways:n #1
   {
     \bool_set:Nn \l__dnd_map_twocolumn_bool { \legacy_if_p:n { @twocolumn } }
+    \__dnd_balance_columns:
     \bool_if:NTF \l__dnd_map_twocolumn_bool { \onecolumn } { \clearpage }
     \begin {landscape}
       #1
