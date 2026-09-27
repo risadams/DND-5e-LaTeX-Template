@@ -37,7 +37,7 @@ all: example.pdf
 
 # Edition outputs of BOOK, by extension (never .tex)
 EDITIONS = screen print printer-friendly cover
-OUTPUTS = pdf log aux toc out fls fdb_latexmk idx ind ilg lom
+OUTPUTS = pdf log aux toc out fls fdb_latexmk idx ind ilg lom loh
 BOOK_BASE = $(basename $(BOOK))
 
 clean:
