@@ -3,14 +3,15 @@
 % \addto\captions<language> cannot handle macros with parameters
 % We need to make our own parameters
 % |1| represents parameter 1
+% Work on token lists rather than strings: converting to a string breaks
+% multi-byte UTF-8 characters under pdfTeX (e.g. "día" becomes "dÃa").
 
 \cs_new_protected:Npn \__dnd_caption:nn #1#2
   {
     \group_begin:
-      \str_set:Nx \l_tmpa_str { #1 }
-      \str_set:Nx \l_tmpb_str { #2 }
-      \exp_args:NNnx \str_replace_all:Nnn \l_tmpa_str { |1| } { #2 }
-      \str_use:N \l_tmpa_str
+      \tl_set:Ne \l_tmpa_tl { \text_expand:n {#1} }
+      \tl_replace_all:Nnn \l_tmpa_tl { |1| } {#2}
+      \tl_use:N \l_tmpa_tl
     \group_end:
   }
 
