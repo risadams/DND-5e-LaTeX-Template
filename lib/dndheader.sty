@@ -12,8 +12,11 @@
 
 \cs_if_free:NF \chaptermark
   {
+    % Line breaks in the chapter title become spaces (see dndtoc.sty)
     \renewcommand*{\chaptermark}[1]
       {
+        \group_begin:
+        \__dnd_toc_breaks_as_spaces:
         \markboth
           {
             \MakeUppercase
@@ -25,6 +28,7 @@
               }
           }
           {}
+        \group_end:
       }
   }
 

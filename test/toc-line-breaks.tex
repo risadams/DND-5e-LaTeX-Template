@@ -1,0 +1,34 @@
+% Line breaks in headings must not break the contents, bookmarks or footer
+% (#14), and \\ must still work everywhere else
+\documentclass[nodeprecatedcode]{dndbook}
+
+\title{The Sunless\\Citadel}
+\author{Tester}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\part{The\\Sunless Deep}
+\chapter{Into the\newline Citadel}
+\section{Long\\Title}
+\section{Another\newline Long Title}
+\subsection{Short\\Subsection}
+
+\begin{DndReadAloud}
+  First line\\second line.
+\end{DndReadAloud}
+
+\begin{DndSidebar}{Sidebar\\Title}
+  First line\\second line.
+\end{DndSidebar}
+
+\begin{DndComment}{Comment}
+  First line\newline second line.
+\end{DndComment}
+
+\begin{DndTable}{XX}
+  A & B \\
+  C & D
+\end{DndTable}
+\end{document}

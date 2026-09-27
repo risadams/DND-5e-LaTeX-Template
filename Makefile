@@ -71,8 +71,16 @@ examples:
 	done; exit $$status
 
 # bin/preflight must reject a PDF with known problems
+# and the documents in test/ must build
+TESTS = deprecated-code package-mode toc-line-breaks appendix-include
+
 test:
 	texlua bin/build print test/preflight-fail.tex
 	if texlua bin/preflight --print test/preflight-fail-print.pdf; then \
 	  echo "preflight passed a PDF it should have rejected"; exit 1; \
 	fi
+	@status=0; for t in $(TESTS); do \
+	  texlua bin/build --engine=$(ENGINE) screen test/$$t.tex || status=1; \
+	done; exit $$status
+	@grep -B1 'Monsters' test/appendix-include-screen.toc | head -1 | grep -q tocchapapp || \
+	  { echo "the appendix is not labeled Appendix in the contents"; exit 1; }

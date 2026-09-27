@@ -1,0 +1,10 @@
+% An appendix in an \include'd file must be labeled "Appendix" in the
+% contents, not "Ch." (the contents line comes from the included .aux file)
+\documentclass[nodeprecatedcode]{dndbook}
+\begin{document}
+\tableofcontents
+\chapter{First Chapter}
+Text.
+\appendix
+\include{appendix-include-chapter}
+\end{document}
