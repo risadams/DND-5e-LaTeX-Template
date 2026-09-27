@@ -1,0 +1,357 @@
+\ExplSyntaxOn
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Player handouts
+%
+% \begin{DndHandout}[style=letter, title={The Mayor's Letter}, label=mayor,
+%                    appendix]
+%   To whoever finds this, ...
+% \end{DndHandout}
+%
+% Styles: letter (paper and handwriting), note (a torn scrap, handwriting)
+% and poster (a bordered sheet with a large title and an optional image,
+% art=<file>). A handout appears in the text (inline=false to leave it out)
+% and, with `appendix`, again at full page size where \DndHandoutAppendix is
+% used. \DndPlayerMap[appendix]{<map label>} adds a player map there too.
+%
+% Handouts are numbered through the book. \DndHandoutRef{mayor} gives
+% "Handout 1", and \DndListOfHandouts lists them. Links and list entries
+% point to the full-page copy when there is one.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TikZ libraries need normal catcodes, where spaces count
+\ExplSyntaxOff
+\usetikzlibrary{decorations.pathmorphing}
+\ExplSyntaxOn
+
+\newcounter {DndHandout}
+
+\tl_new:N \l__dnd_handout_kind_tl
+\tl_new:N \l__dnd_handout_title_tl
+\tl_new:N \l__dnd_handout_label_tl
+\tl_new:N \l__dnd_handout_art_tl
+\tl_new:N \l__dnd_handout_number_tl
+\tl_new:N \g__dnd_handout_defaults_tl
+\bool_new:N \l__dnd_handout_inline_bool
+\bool_new:N \l__dnd_handout_appendix_bool
+\bool_new:N \l__dnd_handout_full_bool
+\bool_new:N \l__dnd_handout_twocolumn_bool
+\bool_new:N \g__dnd_handout_first_page_bool
+\int_new:N \l__dnd_handout_saved_int
+\seq_new:N \g__dnd_handout_appendix_seq
+
+\msg_new:nnn { dnd } { handout / hidden }
+  { Handout~"#1"~has~inline=false~and~no~appendix,~so~it~never~appears. }
+
+\keys_define:nn { dnd / handout }
+  {
+    style .choices:nn = { letter, note, poster }
+      { \tl_set_eq:NN \l__dnd_handout_kind_tl \l_keys_choice_tl },
+    title .tl_set:N = \l__dnd_handout_title_tl,
+    label .tl_set:N = \l__dnd_handout_label_tl,
+    art .tl_set:N   = \l__dnd_handout_art_tl,
+    inline .bool_set:N   = \l__dnd_handout_inline_bool,
+    inline .default:n    = true,
+    appendix .bool_set:N = \l__dnd_handout_appendix_bool,
+    appendix .default:n  = true,
+  }
+
+% Document-wide defaults, e.g. \DndSetHandoutOptions{appendix}
+\NewDocumentCommand {\DndSetHandoutOptions} { m }
+  { \tl_gput_right:Nn \g__dnd_handout_defaults_tl { , #1 } }
+
+\cs_new_protected:Npn \__dnd_handout_keys:n #1
+  {
+    \keys_set:nn { dnd / handout }
+      {
+        style = letter , title = {} , label = {} , art = {} ,
+        inline = true , appendix = false
+      }
+    \keys_set:nV { dnd / handout } \g__dnd_handout_defaults_tl
+    \keys_set:nn { dnd / handout } {#1}
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Styles; change them with e.g.
+% \tcbset{dnd handout letter/.append style={colback=white}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Handwriting is larger on the full-page copy
+\cs_new_protected:Npn \__dnd_handout_size:
+  { \bool_if:NT \l__dnd_handout_full_bool { \LARGE } }
+
+\tcbset
+  {
+    dnd~handout/.style =
+      {
+        enhanced , sharp~corners , boxrule = 0pt , width = \linewidth ,
+        colback = handoutpaper , coltext = handoutink ,
+        before~skip = 0pt , after~skip = 0pt ,
+        before~upper =
+          {
+            \setlength { \parindent } { 0pt }
+            \setlength { \parskip } { .5em~plus~.2em }
+          },
+      },
+    dnd~handout~letter/.style =
+      {
+        dnd~handout , frame~hidden ,
+        fuzzy~shadow = { 0pt } { -2pt } { 0pt } { 1.2pt } { black!45 } ,
+        left = 14pt , right = 14pt , top = 12pt , bottom = 12pt ,
+        fontupper = \DndFontHandout \__dnd_handout_size: ,
+      },
+    % The torn edge is random but the same on every build: the seed comes
+    % from the handout number
+    dnd~handout~note/.style =
+      {
+        dnd~handout , interior~code = {} ,
+        frame~code =
+          {
+            \pgfmathsetseed { \int_eval:n { 1000 + 37 * \l__dnd_handout_number_tl } }
+            \fill
+              [
+                handoutpaper , decorate ,
+                decoration = { random~steps , segment~length = 5pt , amplitude = 1.6pt }
+              ]
+              (frame.south~west) -- (frame.south~east) --
+              (frame.north~east) -- (frame.north~west) -- cycle;
+          },
+        left = 14pt , right = 14pt , top = 12pt , bottom = 12pt ,
+        fontupper = \DndFontHandout \__dnd_handout_size: ,
+      },
+    dnd~handout~poster/.style =
+      {
+        dnd~handout , colframe = handoutink , boxrule = 1.2pt ,
+        borderline = { .4pt } { 2.5pt } { handoutink } ,
+        halign = center , left = 12pt , right = 12pt , top = 10pt , bottom = 12pt ,
+        fontupper = \bool_if:NTF \l__dnd_handout_full_bool { \LARGE } { \large } ,
+      },
+  }
+
+% Poster title and image, above the text
+\cs_new_protected:Npn \__dnd_handout_poster_head:
+  {
+    \tl_if_empty:NF \l__dnd_handout_title_tl
+      {
+        {
+          \DndFontHandoutTitle
+          \bool_if:NT \l__dnd_handout_full_bool
+            { \fontsize { 64pt } { 66pt } \selectfont }
+          \l__dnd_handout_title_tl
+          \par
+        }
+        \vspace { .3em }
+      }
+    \tl_if_empty:NF \l__dnd_handout_art_tl
+      {
+        \exp_args:NnV \__dnd_art_cover:nnnnn { } \l__dnd_handout_art_tl
+          { \linewidth } { .6\linewidth } { none }
+        \par
+        \vspace { .4em }
+      }
+  }
+
+% #1 - text
+\cs_new_protected:Npn \__dnd_handout_box:n #1
+  {
+    \use:e
+      { \exp_not:N \begin {tcolorbox} [ dnd~handout~\l__dnd_handout_kind_tl ] }
+      \str_if_eq:VnT \l__dnd_handout_kind_tl { poster }
+        { \__dnd_handout_poster_head: }
+      #1
+    \end {tcolorbox}
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Numbers, links and captions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Make handout number #1 point here: its link target, the page shown in the
+% list of handouts, and \label{handout:#2} if #2 is not empty. The counter
+% itself stays where the handouts were numbered.
+\cs_new_protected:Npn \__dnd_handout_target:nn #1#2
+  {
+    \int_set:Nn \l__dnd_handout_saved_int { \value { DndHandout } }
+    \setcounter { DndHandout } { \int_eval:n { #1 - 1 } }
+    \refstepcounter { DndHandout }
+    \label { handout-page:#1 }
+    \tl_if_empty:nF {#2} { \label { handout:#2 } }
+    \setcounter { DndHandout } { \l__dnd_handout_saved_int }
+  }
+\cs_generate_variant:Nn \__dnd_handout_target:nn { VV }
+
+% The list of handouts is in number order, so each entry is written where
+% the handout is numbered, with the page of its target (the full-page copy
+% if there is one). #1 - number, #2 - title
+\cs_new_protected:Npn \__dnd_handout_list_entry:nn #1#2
+  {
+    \addtocontents { loh }
+      {
+        \protect \contentsline { dndhandout }
+          { \protect \numberline {#1} #2 }
+          { \protect \DndHandoutPage {#1} }
+          { \cs_if_exist:NT \hyperref { DndHandout.#1 } }
+      }
+  }
+\cs_generate_variant:Nn \__dnd_handout_list_entry:nn { VV }
+
+% Page number of handout #1's target, for the list of handouts
+\NewDocumentCommand {\DndHandoutPage} { m }
+  {
+    \cs_if_exist:NTF \hyperref
+      { \pageref* { handout-page:#1 } }
+      { \pageref { handout-page:#1 } }
+  }
+
+% "Handout 1: The Mayor's Letter"; #1 - number, #2 - title
+\cs_new_protected:Npn \__dnd_handout_caption_text:nn #1#2
+  { \handoutname \nobreakspace #1 \tl_if_empty:nF {#2} { : ~ #2 } }
+
+% Next handout number, in \l__dnd_handout_number_tl
+\cs_new_protected:Npn \__dnd_handout_next_number:
+  {
+    \stepcounter { DndHandout }
+    \tl_set:Ne \l__dnd_handout_number_tl { \arabic { DndHandout } }
+  }
+
+% Queue a full-page copy for \DndHandoutAppendix; #1 - code that prints it
+\cs_new_protected:Npn \__dnd_handout_queue:n #1
+  { \seq_gput_right:Nn \g__dnd_handout_appendix_seq {#1} }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The environment
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\NewDocumentEnvironment {DndHandout} { O{} +b }
+  {
+    \group_begin:
+      \__dnd_handout_keys:n {#1}
+      \__dnd_handout_next_number:
+      \__dnd_handout_list_entry:VV \l__dnd_handout_number_tl \l__dnd_handout_title_tl
+      \bool_if:NT \l__dnd_handout_inline_bool
+        {
+          \par \addvspace { 9pt~plus~3pt~minus~3pt }
+          \bool_if:NF \l__dnd_handout_appendix_bool
+            {
+              \__dnd_handout_target:VV \l__dnd_handout_number_tl
+                \l__dnd_handout_label_tl
+            }
+          \noindent
+          \__dnd_handout_box:n {#2}
+          \par \nopagebreak \vspace { 3pt } \noindent
+          {
+            \DndFontTableTitle
+            \exp_args:NV \__dnd_handout_caption_text:nn
+              \l__dnd_handout_number_tl { \l__dnd_handout_title_tl }
+          }
+          \par \addvspace { 9pt~plus~3pt~minus~3pt }
+        }
+      \bool_if:NT \l__dnd_handout_appendix_bool
+        {
+          \use:e
+            {
+              \__dnd_handout_queue:n
+                {
+                  \exp_not:N \__dnd_handout_page:nnn
+                    { \l__dnd_handout_number_tl }
+                    { \exp_not:n {#1} }
+                    { \exp_not:n {#2} }
+                }
+            }
+        }
+      \bool_lazy_or:nnF
+        { \l__dnd_handout_inline_bool } { \l__dnd_handout_appendix_bool }
+        { \msg_warning:nnV { dnd } { handout / hidden } \l__dnd_handout_title_tl }
+    \group_end:
+  }
+  { }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The appendix
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Start a handout page (the first one shares the page with the heading) and
+% print "Handout 1: title" at its top. #1 - number, #2 - label, #3 - title
+\cs_new_protected:Npn \__dnd_handout_heading:nnn #1#2#3
+  {
+    \bool_if:NTF \g__dnd_handout_first_page_bool
+      { \bool_gset_false:N \g__dnd_handout_first_page_bool }
+      { \clearpage }
+    \__dnd_handout_target:nn {#1} {#2}
+    \noindent
+    { \DndFontSubsection \__dnd_handout_caption_text:nn {#1} {#3} \par }
+    \nopagebreak
+  }
+\cs_generate_variant:Nn \__dnd_handout_heading:nnn { nVV , nnV }
+
+% A full-page handout; #1 - number, #2 - options, #3 - text
+\cs_new_protected:Npn \__dnd_handout_page:nnn #1#2#3
+  {
+    \group_begin:
+      \__dnd_handout_keys:n {#2}
+      \tl_set:Nn \l__dnd_handout_number_tl {#1}
+      \bool_set_true:N \l__dnd_handout_full_bool
+      \__dnd_handout_heading:nVV {#1}
+        \l__dnd_handout_label_tl \l__dnd_handout_title_tl
+      \vfill
+      \noindent
+      \__dnd_handout_box:n {#3}
+      \vfill
+    \group_end:
+  }
+
+% Every handout and player map marked `appendix`, one per page, in one
+% column. The heading (default \chapter{Handouts}; none with the star)
+% shares the page with the first handout.
+% \DndHandoutAppendix*[<sectioning command>]
+\NewDocumentCommand {\DndHandoutAppendix} { s O{\chapter} }
+  {
+    \seq_if_empty:NF \g__dnd_handout_appendix_seq
+      {
+        \bool_set:Nn \l__dnd_handout_twocolumn_bool { \legacy_if_p:n { @twocolumn } }
+        \bool_if:NTF \l__dnd_handout_twocolumn_bool { \onecolumn } { \clearpage }
+        \IfBooleanTF {#1}
+          { \bool_gset_true:N \g__dnd_handout_first_page_bool }
+          {
+            #2 { \listhandoutsname }
+            \bool_gset_true:N \g__dnd_handout_first_page_bool
+          }
+        \seq_map_function:NN \g__dnd_handout_appendix_seq \use:n
+        \seq_gclear:N \g__dnd_handout_appendix_seq
+        \clearpage
+        \bool_if:NT \l__dnd_handout_twocolumn_bool { \twocolumn }
+      }
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% References and the list of handouts
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \DndHandoutRef{label} gives "Handout 1"; \DndHandoutRef*{label} gives "1"
+\NewDocumentCommand {\DndHandoutRef} { s m }
+  {
+    \IfBooleanTF {#1}
+      { \ref { handout:#2 } }
+      { \handoutname \nobreakspace \ref { handout:#2 } }
+  }
+
+\cs_new:cpn { l@dndhandout } { \@dottedtocline {1} {0em} {2.3em} }
+
+% \DndListOfHandouts[<sectioning command>] (default \section*)
+\NewDocumentCommand {\DndListOfHandouts} { O{\section*} }
+  {
+    #1 { \listhandoutsname }
+    % Starred headings have no bookmark; add one at the heading's level
+    \__dnd_pdf_bookmark:nn
+      {
+        \str_case:nnF {#1}
+          {
+            { \part* }       { -1 }
+            { \chapter* }    { 0 }
+            { \subsection* } { 2 }
+          }
+          { 1 }
+      }
+      { \listhandoutsname }
+    \@starttoc {loh}
+  }

@@ -1,0 +1,55 @@
+% Player handouts, sideways maps and the handout appendix (#5)
+\documentclass[letterpaper,twoside,twocolumn,openany,nodeprecatedcode]{dndbook}
+\begin{document}
+\tableofcontents
+\DndListOfHandouts
+
+\chapter{Handouts}
+
+A letter shown here and again, full page, in the appendix as \DndHandoutRef{mayor}:
+
+\begin{DndHandout}[style=letter, title={The Mayor's Letter}, label=mayor, appendix]
+  To whoever finds this,
+
+  The bell rang again last night. I fear the chapel has woken. Come quickly, and bring silver.
+
+  \hfill --- Mayor Oswin
+\end{DndHandout}
+
+A torn note, inline only:
+
+\begin{DndHandout}[style=note, title={Scrap of Paper}, label=scrap]
+  Third pew from the altar. Under the stone.
+\end{DndHandout}
+
+A poster, only in the appendix (\DndHandoutRef{wanted}):
+
+\begin{DndHandout}[style=poster, title=Wanted, label=wanted, art=examples/art/chapter, inline=false, appendix]
+  \textbf{Grell the Butcher}\\
+  For crimes against the crown.\\
+  Reward: 500 gold pieces.
+\end{DndHandout}
+
+\begin{DndMap}[caption=The Ruins, label=ruins]{img/example-map}
+  \DndMapArea{0.225,0.27}{Gatehouse}
+\end{DndMap}
+
+\DndArea{Gatehouse}
+Text.
+
+% The player version goes to the appendix as a handout
+\DndPlayerMap[appendix]{ruins}
+
+The player map is \DndHandoutRef{ruins}.
+
+% A landscape map on its own page, turned sideways
+\begin{DndMap}[caption=The Coast, label=coast, placement=sideways]{examples/art/landscape}
+\end{DndMap}
+
+Text after the sideways map.
+
+\appendix
+% Starts with \chapter{Handouts}; the first handout shares its page
+\DndHandoutAppendix
+
+\end{document}

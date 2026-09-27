@@ -191,12 +191,22 @@
         \newcommand{\booktitlefont}{\normalfont}
         \newcommand{\sctitlefont}{\normalfont}
         \newcommand{\quotefont}{\sffamily}
+        % URW Chancery, a Zapf Chancery clone in every TeX distribution
+        \newcommand{\handwritingfont}{\fontfamily{pzc}\selectfont}
       }
   }
 
 % Font sets without their own drop cap face use Royal
 \cs_if_exist:NF \dropcapfont
   { \cs_new_protected:Npn \dropcapfont { \Royal } }
+
+% Handwriting for letters and notes: the font set's quotation face
+% (Zatanna Misdirection with Solbera's fonts)
+\cs_if_exist:NF \handwritingfont
+  {
+    \cs_new_protected:Npn \handwritingfont
+      { \cs_if_exist:NTF \quotefont { \quotefont } { \itshape } }
+  }
 
 \cs_new_protected:Npn \__dnd_sf_initial_family:
   {
@@ -365,6 +375,23 @@
     quotation-body-style .initial:n        = \small,
     quotation-body-style .value_required:n = true,
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Player handouts
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Letters and notes
+    handout-family .tl_set:N         = \l__dnd_handout_family_tl,
+    handout-family .initial:n        = \handwritingfont,
+    handout-family .value_required:n = true,
+    handout-style .tl_set:N         = \l__dnd_handout_style_tl,
+    handout-style .initial:n        = \large,
+    handout-style .value_required:n = true,
+    % Poster titles
+    handout-title-family .tl_set:N         = \l__dnd_handout_title_family_tl,
+    handout-title-family .initial:n        = \booktitlefont,
+    handout-title-family .value_required:n = true,
+    handout-title-style .tl_set:N         = \l__dnd_handout_title_style_tl,
+    handout-title-style .initial:n        = \color{black} \Huge,
+    handout-title-style .value_required:n = true,
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Table of Contents
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Part
@@ -508,6 +535,13 @@
 
 \NewDocumentCommand{\DndFontQuoteAttribution}{}
   { \l__dnd_quote_attr_family_tl \l__dnd_quote_attr_style_tl }
+
+% Player handouts
+\NewDocumentCommand{\DndFontHandout}{}
+  { \l__dnd_handout_family_tl \l__dnd_handout_style_tl }
+
+\NewDocumentCommand{\DndFontHandoutTitle}{}
+  { \l__dnd_handout_title_family_tl \l__dnd_handout_title_style_tl }
 
 % Table of Contents
 \NewDocumentCommand{\DndFontTocPart}{}

@@ -87,6 +87,7 @@
 \RequirePackage {lib/dndcomment}    % inline comment boxes
 \RequirePackage {lib/dndcover}      % front, back and print cover spreads
 \RequirePackage {lib/dndcredits}    % credits page, SRD and font attribution
+\RequirePackage {lib/dndhandout}    % player handouts and the handout appendix
 \RequirePackage {lib/dndheader}     % fancy headers and footers
 \RequirePackage {lib/dndimage}      % image display
 \RequirePackage {lib/dndindex}      % index (class option `index`)

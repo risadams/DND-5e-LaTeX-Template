@@ -511,13 +511,45 @@ Positions are fractions of the image, from `0,0` at the bottom left to `1,1` at 
 | Option | Meaning |
 | ------ | ------- |
 | `caption`, `label` | Caption text, and the name for `\DndMapRef` and `\DndPlayerMap` |
-| `placement` | `column` (default, in place), `wide` (across both columns, floated) or `page` (a page of its own) |
+| `placement` | `column` (default, in place), `wide` (across both columns, floated), `page` (a page of its own) or `sideways` (a page of its own, turned sideways for a landscape map; PDF viewers show it upright). The text stops at the end of the page before a sideways map, so put one where a page break is fine, such as the end of a section. |
 | `float` | Float position: `t`, `b`, `h` or `p` |
 | `scale` | Scale note in the bottom-left corner |
 | `compass` | Compass rose; give an angle (`compass=30`) if north is not up |
 | `labels` | `false` hides area numbers and DM-only text |
 
 `\DndMapRef{cragmaw}` prints "Map 1.1" (`\DndMapRef*` prints just "1.1"), `\DndListOfMaps` lists every map, and `\DndPlayerMap[placement=page]{cragmaw}` reprints a map without area numbers or DM-only text, for a handout. `\DndSetMapOptions{labels=false}` turns labels off in the whole document. Restyle the labels with `\tikzset{dnd map label/.append style={...}}` (also `dnd map text` and `dnd map scale`).
+
+`\DndPlayerMap[appendix]{cragmaw}` puts the player map in the handout appendix instead (see [Player handouts](#player-handouts)).
+
+## Player handouts
+
+Letters, notes and posters for the players. A handout appears in the text and, with `appendix`, again at full page size in a handout appendix that the DM can print and cut out.
+
+```latex
+\begin{DndHandout}[style=letter, title={The Mayor's Letter}, label=mayor, appendix]
+  To whoever finds this, ...
+\end{DndHandout}
+
+Give the players \DndHandoutRef{mayor}.      % "Handout 1"
+
+\appendix
+\DndHandoutAppendix                           % "Appendix A: Handouts"
+```
+
+| Option | Meaning |
+| ------ | ------- |
+| `style` | `letter` (paper and handwriting, default), `note` (a torn scrap, handwriting) or `poster` (a bordered sheet with a large title) |
+| `title` | Caption ("Handout 1: The Mayor's Letter") and poster title |
+| `label` | Name for `\DndHandoutRef` |
+| `art` | Poster only: image under the title |
+| `appendix` | Also print the handout full page in `\DndHandoutAppendix` |
+| `inline=false` | Leave the handout out of the text (use with `appendix`) |
+
+- Handouts are numbered through the book. `\DndHandoutRef{mayor}` prints "Handout 1" (`\DndHandoutRef*` prints "1"), and `\DndListOfHandouts` lists them with the page of the full-page copy.
+- `\DndPlayerMap[appendix]{<map label>}` adds a player map to the appendix as a numbered handout; refer to it with `\DndHandoutRef{<map label>}`. A map with `placement=sideways` gets a sideways page there too.
+- `\DndHandoutAppendix` prints every handout marked `appendix`, one per page, in one column, under `\chapter{Handouts}`. Give another heading command with `\DndHandoutAppendix[\section*]`, or none with `\DndHandoutAppendix*`.
+- `\DndSetHandoutOptions{appendix}` sets options for every handout.
+- Handwriting uses the font set's handwritten face: Zatanna Misdirection with `fonts=solbera` and `fonts=dmsguild`, DaiVernon Misdirect with `fonts=wotc`, and URW Chancery with the default fonts. Change it with `\DndSetFonts[handout-family=..., handout-style=...]`, and restyle the boxes with `\tcbset{dnd handout letter/.append style={...}}` (also `note` and `poster`).
 
 ## Class tables, spell lists and the index
 
