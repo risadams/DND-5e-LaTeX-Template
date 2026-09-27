@@ -145,6 +145,10 @@
       },
     colormodel .initial:n = rgb,
 
+    % Load imakeidx and style the index
+    index .bool_set:N = \l__dnd_index_bool,
+    index .default:n  = true,
+
     % Print cover spread: back cover, spine and front cover on one sheet
     cover .bool_set:N = \l__dnd_cover_bool,
     cover .default:n  = true,

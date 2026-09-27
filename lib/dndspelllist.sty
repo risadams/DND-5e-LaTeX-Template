@@ -1,0 +1,76 @@
+\ExplSyntaxOn
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Class spell lists, as in the core books' "Spell Lists" chapter.
+%
+% \begin{DndSpellList}{Bard Spells}
+%   \DndSpellListLevel{0}{Vicious Mockery, Blade Ward, Dancing Lights}
+%   \DndSpellListLevel{1}{Charm Person, Bane, Healing Word}
+% \end{DndSpellList}
+%
+% Levels 0-9 get the translated level names (0 is Cantrips); anything else
+% is used as the heading text. Spells are sorted alphabetically unless
+% sort=false is given.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tl_new:N \l__dnd_spell_list_heading_tl
+\seq_new:N \l__dnd_spell_list_seq
+
+\keys_define:nn { dnd / spell_list }
+  {
+    heading .choices:nn = { part, chapter, section, subsection, subsubsection, none }
+      { \tl_set_eq:NN \l__dnd_spell_list_heading_tl \l_keys_choice_tl },
+    heading .initial:n  = subsection,
+    sort .bool_set:N    = \l__dnd_spell_list_sort_bool,
+    sort .initial:n     = true,
+  }
+
+\cs_new:Npn \__dnd_spell_level_name:n #1
+  {
+    \str_case:nnF {#1}
+      {
+        {0} { \spellcantripsname }
+        {1} { \spellfirstlevelname }
+        {2} { \spellsecondlevelname }
+        {3} { \spellthirdlevelname }
+        {4} { \spellfourthlevelname }
+        {5} { \spellfifthlevelname }
+        {6} { \spellsixthlevelname }
+        {7} { \spellseventhlevelname }
+        {8} { \spelleighthlevelname }
+        {9} { \spellninthlevelname }
+      }
+      {#1}
+  }
+
+\NewDocumentEnvironment {DndSpellList} { O{} m }
+  {
+    \group_begin:
+    \keys_set:nn { dnd / spell_list } {#1}
+    \str_if_eq:VnF \l__dnd_spell_list_heading_tl { none }
+      { \use:c { \l__dnd_spell_list_heading_tl } {#2} }
+  }
+  {
+    \par
+    \group_end:
+  }
+
+% #1 - level (0-9) or heading text, #2 - comma-separated spell names
+\NewDocumentCommand {\DndSpellListLevel} { m m }
+  {
+    \par \addvspace { 6pt plus 2pt minus 2pt }
+    \noindent { \DndFontSidebarTitle \__dnd_spell_level_name:n {#1} }
+    \par \nopagebreak \vspace { 2pt }
+    \seq_set_from_clist:Nn \l__dnd_spell_list_seq {#2}
+    \bool_if:NT \l__dnd_spell_list_sort_bool
+      {
+        \seq_sort:Nn \l__dnd_spell_list_seq
+          {
+            \str_compare:eNeTF { \str_casefold:n {##1} } > { \str_casefold:n {##2} }
+              { \sort_return_swapped: }
+              { \sort_return_same: }
+          }
+      }
+    \seq_map_inline:Nn \l__dnd_spell_list_seq
+      { \noindent ##1 \par }
+  }

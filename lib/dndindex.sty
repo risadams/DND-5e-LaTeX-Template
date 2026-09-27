@@ -1,0 +1,49 @@
+\ExplSyntaxOn
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Index (class option `index`)
+%
+% Mark entries with \index{term}, \index{parent!child} or \index{term|see{other}},
+% then print the index with \DndPrintIndex. Entries are grouped under letter
+% headings in the heading font. latexmk runs makeindex automatically.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\msg_new:nnn { dnd } { index / disabled }
+  { \token_to_str:N \DndPrintIndex \c_space_tl needs~the~"index"~class~option. }
+
+\bool_if:NTF \l__dnd_index_bool
+  {
+    \RequirePackage {imakeidx}
+
+    % makeindex style with letter headings, written next to the document so
+    % it is found wherever the template is installed
+    \iow_new:N \g__dnd_index_ist_iow
+    \iow_open:Nn \g__dnd_index_ist_iow { \c_sys_jobname_str -dnd.ist }
+    \iow_now:Ne \g__dnd_index_ist_iow
+      {
+        headings_flag ~ 1 \iow_newline:
+        heading_prefix ~ "\c_backslash_str\c_backslash_str DndIndexHeading \c_left_brace_str" \iow_newline:
+        heading_suffix ~ "\c_right_brace_str \c_backslash_str n" \iow_newline:
+        symhead_positive ~ "Symbols" \iow_newline:
+        numhead_positive ~ "Numbers" \iow_newline:
+      }
+    \iow_close:N \g__dnd_index_ist_iow
+
+    \use:e
+      {
+        \exp_not:N \makeindex
+          [ intoc , options = { -s ~ \c_sys_jobname_str -dnd.ist } ]
+      }
+
+    \NewDocumentCommand {\DndIndexHeading} { m }
+      {
+        \par \addvspace { 8pt plus 2pt minus 2pt }
+        { \DndFontSubsubsection #1 } \par \nopagebreak
+      }
+
+    \NewDocumentCommand {\DndPrintIndex} {} { \printindex }
+  }
+  {
+    \NewDocumentCommand {\DndPrintIndex} {}
+      { \msg_error:nn { dnd } { index / disabled } }
+  }

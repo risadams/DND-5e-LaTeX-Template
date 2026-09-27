@@ -64,3 +64,83 @@
 
   \group_end:
 }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Class tables: full-width tables like "The Wizard" in the core books.
+%
+% \begin{DndClassTable}[title=The Wizard, header-rows=2, float=t]{ccXccc}
+%   \DndClassTableGroup{3}{3}{Spell Slots per Spell Level}
+%   \DndClassTableHeader{Level & Proficiency Bonus & Features & 1st & 2nd & 3rd}
+%   1st & +2 & Spellcasting & 2 & -- & -- \
+% \end{DndClassTable}
+%
+% Unlike DndTable, rows are not styled automatically, so \multicolumn works
+% in any row. Stripes start after `header-rows` rows.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tl_new:N \l__dnd_class_table_float_tl
+
+\keys_define:nn { dnd / class_table }
+  {
+    title .tl_set:N            = \l__dnd_class_table_title_tl,
+    color .tl_set:N            = \l__dnd_class_table_color_tl,
+    color .initial:n           = tablecolor,
+    header-rows .int_set:N     = \l__dnd_class_table_header_rows_int,
+    header-rows .initial:n     = 1,
+    float .choices:nn          = { t, b, p, none }
+      { \tl_set_eq:NN \l__dnd_class_table_float_tl \l_keys_choice_tl },
+    float .initial:n           = t,
+  }
+
+% A header row: bold cells, ended with \
+\NewDocumentCommand {\DndClassTableHeader} { m }
+  { \rowstyle { \DndFontTableHeader } #1 \\ }
+
+% A heading spanning several columns, e.g. "--Spell Slots per Spell Level--".
+% #1 - empty columns before it, #2 - columns spanned, #3 - text
+\NewExpandableDocumentCommand {\DndClassTableGroup} { m m m }
+  {
+    \prg_replicate:nn {#1} { & }
+    \multicolumn {#2} {c} { \DndFontTableHeader \textemdash #3 \textemdash } \\
+  }
+
+% #1 - column spec, #2 - table body
+\cs_new_protected:Npn \__dnd_class_table:nn #1#2
+  {
+    \par \noindent
+    \tl_if_empty:NF \l__dnd_class_table_title_tl
+      {
+        { \DndFontTableTitle \l__dnd_class_table_title_tl } \nopagebreak
+        \par \vspace { 5pt plus 2pt minus 2pt } \noindent
+      }
+    \DndFontTableBody
+    \exp_args:Ne \rowcolors
+      { \int_eval:n { \l__dnd_class_table_header_rows_int + 1 } }
+      { \l__dnd_class_table_color_tl } {}
+    \regex_extract_all:NnN \c__preamble_regex {#1} \l_tmpa_seq
+    \tl_set:Ne \l_tmpa_tl { \seq_use:Nn \l_tmpa_seq {^} }
+    \use:e
+      {
+        \exp_not:N \begin {tabularx} { \exp_not:N \linewidth } { ` \exp_not:V \l_tmpa_tl }
+          \exp_not:n {#2}
+        \exp_not:N \end {tabularx}
+      }
+    \par
+  }
+
+% The body is collected first so that tabularx, which scans for the end of
+% the current environment, sees its own \end{tabularx} inside the float.
+\NewDocumentEnvironment {DndClassTable} { O{} m +b }
+  {
+    \group_begin:
+    \keys_set:nn { dnd / class_table } {#1}
+    \str_if_eq:VnTF \l__dnd_class_table_float_tl { none }
+      { \__dnd_class_table:nn {#2} {#3} }
+      {
+        \use:e { \exp_not:N \begin {table*} [ \l__dnd_class_table_float_tl ] }
+          \__dnd_class_table:nn {#2} {#3}
+        \end {table*}
+      }
+    \group_end:
+  }
+  {}

@@ -123,6 +123,7 @@ Note that the package has only been tested with the `book` class.
 | `cropmarks`    | ✓               | ✓                 |
 | `colormodel`   | ✓               | ✓                 |
 | `cover`, `spine` | ✓             | ✓                 |
+| `index`        | ✓               | ✓                 |
 | `justified`    | ✓               | ✓                 |
 | `layout`       | ✓               |                   |
 | `nomultitoc`   | ✓               | ✓                 |
@@ -243,6 +244,29 @@ Use `wrap-art=<file>` instead of `art` and `back-art` for one image across the w
 Cut-out art (a PNG with a transparent background) works with every command. Save PNGs as 8-bit: XeLaTeX cannot show 16-bit PNGs with transparency. `bin/prepare-images SRC DEST` converts a folder of images to 8-bit, lists the largest size each can print at 300 dpi, and with `--cmyk PROFILE.icc` converts them to CMYK for print.
 
 Text cannot flow around irregular art shapes. Place cut-out art in a column, or use a faded image, instead.
+
+## Class tables, spell lists and the index
+
+`DndClassTable` makes a full-width class table. Stripes start after `header-rows` rows, and `\multicolumn` works in any row. `float` is `t` (default), `b`, `p` or `none`.
+
+```latex
+\begin{DndClassTable}[title=The Wizard, header-rows=2]{ccXccc}
+  \DndClassTableGroup{3}{3}{Spell Slots per Spell Level} % 3 empty cells, then 3 spanned
+  \DndClassTableHeader{Level & Proficiency Bonus & Features & 1st & 2nd & 3rd}
+  1st & +2 & Spellcasting, Arcane Recovery & 2 & -- & -- \\
+\end{DndClassTable}
+```
+
+`DndSpellList` lists a class's spells by level. Levels `0`–`9` get the translated level names; any other text is used as is. Spells are sorted alphabetically unless you pass `sort=false`, and `heading` picks the sectioning level of the title (default `subsection`, or `none`).
+
+```latex
+\begin{DndSpellList}{Bard Spells}
+  \DndSpellListLevel{0}{Vicious Mockery, Blade Ward, Dancing Lights}
+  \DndSpellListLevel{1}{Healing Word, Bane, Charm Person}
+\end{DndSpellList}
+```
+
+With the `index` class option, mark entries with `\index{term}`, `\index{parent!child}` or `\index{term|see{other}}` and print the index with `\DndPrintIndex`. Entries are grouped under letter headings. `latexmk` runs `makeindex` for you.
 
 ## Dependencies
 

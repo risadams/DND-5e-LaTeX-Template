@@ -87,12 +87,14 @@
 \RequirePackage {lib/dndcover}      % front, back and print cover spreads
 \RequirePackage {lib/dndheader}     % fancy headers and footers
 \RequirePackage {lib/dndimage}      % image display
+\RequirePackage {lib/dndindex}      % index (class option `index`)
 \RequirePackage {lib/dndmonster}    % stat blocks
 \RequirePackage {lib/dndprint}      % bleed, crop marks and full-page images
 \RequirePackage {lib/dndquote}      % quotation/aside blocks
 \RequirePackage {lib/dndreadaloud}  % read-aloud text
 \RequirePackage {lib/dndsections}   % section styling and special section headers
 \RequirePackage {lib/dndsidebar}    % sidebars
+\RequirePackage {lib/dndspelllist}  % class spell lists
 \RequirePackage {lib/dndtable}      % tables
 \RequirePackage {lib/dndtoc}        % table of contents styling
 \RequirePackage {lib/dndvehicle}    % vehicle/ship stat blocks
