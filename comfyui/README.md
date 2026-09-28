@@ -34,7 +34,7 @@ The cover, NPC portrait and interior art workflows (issues #16, #17 and #18) bui
 
 Every workflow joins the scene (**SUBJECT**) and the shared **HOUSE_STYLE** text into one prompt. SUBJECT says what is in the picture. HOUSE_STYLE says how it is painted: an oil-on-canvas look, a warm natural palette, dramatic light, and no text or logos. Change the style in one place, `dnd_art_t2i.json`, and copy it to the other workflows.
 
-Keep HOUSE_STYLE short and about the painting only. An earlier, longer version that also described figures and armour turned almost every subject into a line-up of armoured heroes facing the viewer: the lich became a living knight, the spot-art sword gained two men holding it, and the sahuagin became humans.
+Keep HOUSE_STYLE about the painting: medium, palette, lighting and composition. Do not describe figures or armour there. A version with a "Figures: … practical weathered armour and gear" line turned almost every subject into a line-up of armoured heroes facing the viewer: the lich became a living knight, the spot-art sword gained two men holding it, and the sahuagin became humans. A short version without palette, lighting and composition detail got the subjects right but looked flatter and less like the core books.
 
 Keep the line "Every person is fully clothed in period fantasy dress. No nudity." With the short style and the guard LoRA, the model sometimes drew a figure nude when the subject did not mention clothing. In tests with the line, 4 of 4 seeds were clothed, including one that was nude without it.
 
