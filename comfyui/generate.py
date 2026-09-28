@@ -377,6 +377,7 @@ def main():
     ap.add_argument("--workflow", default=DEFAULT_WORKFLOW, help="UI-format workflow to use")
     ap.add_argument("--only", action="append", help="run only the job with this name (repeatable)")
     ap.add_argument("--check", action="store_true", help="check the prompts for banned terms and stop")
+    ap.add_argument("--draft", action="store_true", help='treat every job as "draft": true')
     ap.add_argument("--dry-run", action="store_true",
                     help="show each job's sizes and prompt and build its graph, without generating")
     ap.add_argument("--retries", type=int, default=3, help="new seeds to try after a blocked card (default %(default)s)")
@@ -385,6 +386,9 @@ def main():
     with open(args.jobs, encoding="utf-8") as f:
         spec = json.load(f)
     jobs = [j for j in spec["jobs"] if not args.only or j["name"] in args.only]
+    if args.draft:
+        for j in jobs:
+            j["draft"] = True
     with open(args.workflow, "rb") as f:
         raw = f.read()
     wf, wf_hash = json.loads(raw), hashlib.sha256(raw).hexdigest()

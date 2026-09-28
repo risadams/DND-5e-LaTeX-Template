@@ -70,6 +70,7 @@ python comfyui/generate.py mybook/art/jobs.json
 python comfyui/generate.py mybook/art/jobs.json --only cover-hero
 python comfyui/generate.py mybook/art/jobs.json --check     # banned-terms check only
 python comfyui/generate.py mybook/art/jobs.json --dry-run   # sizes and prompts, no images
+python comfyui/generate.py mybook/art/jobs.json --draft     # every job as a quick draft
 ```
 
 A jobs file lists the images:
