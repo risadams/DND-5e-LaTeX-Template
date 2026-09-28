@@ -32,7 +32,17 @@ The cover, NPC portrait and interior art workflows (issues #16, #17 and #18) bui
 
 ## House style
 
-Every workflow joins the scene (**SUBJECT**) and the shared **HOUSE_STYLE** text into one prompt. SUBJECT says what is in the picture. HOUSE_STYLE says how it is painted: an oil-on-canvas look, grounded figures, a warm natural palette, dramatic light, and no text or logos. Change the style in one place, `dnd_art_t2i.json`, and copy it to the other workflows.
+Every workflow joins the scene (**SUBJECT**) and the shared **HOUSE_STYLE** text into one prompt. SUBJECT says what is in the picture. HOUSE_STYLE says how it is painted: an oil-on-canvas look, a warm natural palette, dramatic light, and no text or logos. Change the style in one place, `dnd_art_t2i.json`, and copy it to the other workflows.
+
+Keep HOUSE_STYLE short and about the painting only. An earlier, longer version that also described figures and armour turned almost every subject into a line-up of armoured heroes facing the viewer: the lich became a living knight, the spot-art sword gained two men holding it, and the sahuagin became humans.
+
+Keep the line "Every person is fully clothed in period fantasy dress. No nudity." With the short style and the guard LoRA, the model sometimes drew a figure nude when the subject did not mention clothing. In tests with the line, 4 of 4 seeds were clothed, including one that was nude without it.
+
+Tips for SUBJECT:
+
+- Describe unusual creatures instead of only naming them. "An owlbear" came out as a plain bear; "an owlbear, a huge bear with an owl's feathered face and hooked beak" works better.
+- For spot art, say "on a plain parchment background, spot illustration".
+- The model sometimes adds a small signature scribble in a corner despite "no signature". Crop or retouch it before placing the image.
 
 Rules for prompts:
 

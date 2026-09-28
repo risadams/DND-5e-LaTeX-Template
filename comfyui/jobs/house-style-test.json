@@ -12,7 +12,7 @@
     { "name": "05-red-dragon", "preset": "full-page", "draft": true,
       "subject": "A red dragon perched on a crumbling mountain ridge, wings half spread, smoke curling from its jaws, a tiny knight on horseback on the path far below for scale" },
     { "name": "06-owlbear-ambush", "preset": "span", "draft": true,
-      "subject": "An owlbear bursting out of a misty pine forest onto a muddy trail, a ranger drawing her bow and a fighter raising his shield" },
+      "subject": "An owlbear, a huge bear with an owl's feathered face and hooked beak, bursting out of a misty pine forest onto a muddy trail, a ranger drawing her bow and a fighter raising his shield" },
     { "name": "07-lich", "preset": "full-page", "draft": true,
       "subject": "A lich in tattered royal robes on a throne of bone in a vast crypt, green witchlight burning in its eye sockets, its phylactery glowing on the armrest" },
     { "name": "08-market-city", "preset": "chapter", "draft": true,
@@ -24,6 +24,6 @@
     { "name": "11-tiefling-warlock", "preset": "column", "draft": true,
       "subject": "A tiefling warlock with curling horns and a long coat conjuring violet eldritch fire between her hands on a rain-soaked city rooftop at night" },
     { "name": "12-sahuagin-raid", "preset": "span", "draft": true,
-      "subject": "Sahuagin warriors with tridents climbing out of the surf onto a moonlit fishing village beach, villagers fleeing with lanterns" }
+      "subject": "Sahuagin, scaly fish-headed sea devils with fins and claws, carrying tridents and climbing out of the surf onto a moonlit fishing village beach, villagers fleeing with lanterns" }
   ]
 }

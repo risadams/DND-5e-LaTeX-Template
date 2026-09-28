@@ -144,6 +144,15 @@ def to_api(wf, info, include_muted):
     return api
 
 
+def workflow_name(path):
+    """The workflow path relative to comfyui/, or absolute if it is elsewhere."""
+    try:
+        rel = os.path.relpath(path, HERE)
+    except ValueError:  # another drive on Windows
+        return path.replace(os.sep, "/")
+    return (path if rel.startswith("..") else rel).replace(os.sep, "/")
+
+
 def is_blocked(png):
     try:
         from io import BytesIO
@@ -222,7 +231,7 @@ def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
             "name": job["name"], "subject": job["subject"], "house_style": style,
             "seed": seed, "preset": job.get("preset", "full-page"),
             "generate_size": [gen_w, gen_h], "schedule": schedule or "workflow", "print_size": [print_w, print_h] if do_print else None,
-            "loras": loras, "workflow": os.path.relpath(job["_workflow"], HERE).replace(os.sep, "/"),
+            "loras": loras, "workflow": workflow_name(job["_workflow"]),
             "workflow_sha256": wf_hash, "files": written,
             "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "seconds": round(time.time() - t0),
