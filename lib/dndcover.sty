@@ -17,6 +17,7 @@
 \tl_new:N \l__dnd_cover_back_art_tl
 \tl_new:N \l__dnd_cover_wrap_art_tl
 \tl_new:N \l__dnd_cover_title_position_tl
+\tl_new:N \l__dnd_cover_spine_title_tl
 \tl_new:N \l__dnd_cover_node_options_tl
 \tl_new:N \l__dnd_cover_title_block_tl
 \tl_new:N \l__dnd_cover_author_block_tl
@@ -40,6 +41,7 @@
     title-position .choices:nn  = { top, bottom }
       { \tl_set_eq:NN \l__dnd_cover_title_position_tl \l_keys_choice_tl },
     title-position .initial:n   = top,
+    spine-title .tl_set:N       = \l__dnd_cover_spine_title_tl,
     spine-color .tl_set:N       = \l__dnd_cover_spine_color_tl,
     spine-color .initial:n      = titlered,
     spine-text-color .tl_set:N  = \l__dnd_cover_spine_text_color_tl,
@@ -250,12 +252,16 @@
 % Print cover spread (needs the `cover` class option):
 % \DndCoverSpread[title=..., subtitle=..., author=..., blurb={...},
 %                 art=<front>, back-art=<back>, wrap-art=<whole spread>,
-%                 spine-color=..., spine-text-color=..., guides]
+%                 spine-title=..., spine-color=..., spine-text-color=..., guides]
 \msg_new:nnn { dnd } { cover / needs_option }
   { \token_to_str:N \DndCoverSpread \c_space_tl needs~the~"cover"~class~option. }
 
+% The spine shows spine-title, or the title when spine-title is not given
+% (e.g. leave title out and set spine-title when the art has the title painted in).
 \cs_new_protected:Npn \__dnd_cover_spine_text:
   {
+    \tl_if_empty:NT \l__dnd_cover_spine_title_tl
+      { \tl_set_eq:NN \l__dnd_cover_spine_title_tl \l__dnd_cover_title_tl }
     \dim_set:Nn \l_tmpa_dim { \dim_min:nn { .55 \l__dnd_spine_dim } { 24pt } }
     \__dnd_cover_node:nnen
       { \l__dnd_bleed_dim + \l__dnd_trim_width_dim + \l__dnd_spine_dim / 2 }
@@ -263,9 +269,12 @@
       { rotate = -90 , text = \l__dnd_cover_spine_text_color_tl }
       {
         \booktitlefont \fontsize { \l_tmpa_dim } { \l_tmpa_dim } \selectfont
-        \l__dnd_cover_title_tl
-        \tl_if_empty:NF \l__dnd_cover_author_tl
-          { \quad \textbullet \quad \l__dnd_cover_author_tl }
+        \l__dnd_cover_spine_title_tl
+        \bool_lazy_or:nnF
+          { \tl_if_empty_p:N \l__dnd_cover_spine_title_tl }
+          { \tl_if_empty_p:N \l__dnd_cover_author_tl }
+          { \quad \textbullet \quad }
+        \l__dnd_cover_author_tl
       }
   }
 
