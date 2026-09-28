@@ -42,6 +42,72 @@ PRESETS = {
     "square":    {"gen": (1344, 1344), "print": (1000, 1000)},
 }
 
+# NPC portrait presets: print size in inches (column width 3.335in) and the
+# default COMPOSITION. "figure" is cut out (transparent background) by default.
+NPC_PRESETS = {
+    "bust": {"inches": (3.335, 4.17), "cutout": False, "composition":
+             "Head-and-shoulders portrait of one character, the face in sharp focus and well lit, "
+             "looking slightly off to one side, against a simple dark painterly background."},
+    "figure": {"inches": (3.335, 5.0), "cutout": True, "composition":
+               "Full-length figure of one character standing, the whole body from head to feet "
+               "visible with space around it, on a plain, flat, off-white background with no "
+               "scenery, no floor and no cast shadow."},
+    "npc-page": {"inches": (8.75, 11.25), "cutout": False, "composition":
+                 "Portrait of one character in a setting that suits them, shown from the knees up, "
+                 "the character large, in focus and filling most of the picture."},
+}
+
+# Ancestries from the SRD (5.1 and 5.2.1), each with a short physical
+# description: a bare name ("dwarf") is often drawn as a human.
+ANCESTRIES = {
+    "human": "",
+    "dwarf": "short, stocky and broad-shouldered, about four and a half feet tall",
+    "elf": "with pointed ears and fine, sharp features",
+    "halfling": "a small person about three feet tall with an adult's proportions",
+    "gnome": "a small person about three and a half feet tall, bright-eyed",
+    "dragonborn": "a tall humanoid with a dragon's scaled head and scaly skin, no tail and no wings",
+    "half-elf": "with slightly pointed ears",
+    "half-orc": "with grey-green skin, a heavy brow and small tusks",
+    "orc": "tall and muscular, with grey-green skin, a heavy brow and small tusks",
+    "tiefling": "with curling horns and a long thin tail",
+    "goliath": "a massively built humanoid seven to eight feet tall, with grey skin marked by darker patches",
+}
+
+# Character sheet fields in the order they are written into SUBJECT. The name
+# is never used in the prompt (it could be lettered into the picture).
+NPC_FIELDS = ("ancestry", "role", "gender", "age", "build", "skin", "hair", "face",
+              "clothing", "gear", "mood", "palette")
+
+
+def npc_subject(sheet, extra=""):
+    """SUBJECT text from a character sheet, plus the job's own subject (pose, scene)."""
+    words = " ".join(x for x in (sheet.get("age"), sheet["ancestry"], sheet.get("gender")) if x)
+    text = ("An " if words[0].lower() in "aeiou" else "A ") + words
+    if ANCESTRIES[sheet["ancestry"]]:
+        text += ", " + ANCESTRIES[sheet["ancestry"]]
+    if sheet.get("role"):
+        role = sheet["role"]
+        text += ", " + ("an " if role[0].lower() in "aeiou" else "a ") + role
+    looks = [f"{sheet['build']} build" if sheet.get("build") else "",
+             f"{sheet['skin']} skin" if sheet.get("skin") else "",
+             sheet.get("hair", ""), sheet.get("face", "")]
+    looks = [x for x in looks if x]
+    if looks:
+        text += ". " + "; ".join(looks)[0].upper() + "; ".join(looks)[1:]
+    text += "."
+    if sheet.get("clothing"):
+        text += f" Wearing {sheet['clothing']}."
+    if sheet.get("gear"):
+        text += f" Carrying {sheet['gear']}."
+    if sheet.get("mood"):
+        text += f" Expression: {sheet['mood']}."
+    if sheet.get("palette"):
+        text += f" Colour accents: {sheet['palette']}."
+    if extra:
+        text += " " + extra
+    return text
+
+
 # Cover presets: sizes come from the trim size, bleed and spine (inches).
 COVER_PRESETS = {"cover-front", "cover-back", "cover-wrap"}
 COVER_DEFAULTS = {"trim": [8.5, 11], "bleed": 0.125, "spine": 0.25, "title_position": "top"}
@@ -158,14 +224,27 @@ def node_by_title(wf, title, prefix=False):
     raise SystemExit(f"workflow has no node titled {title!r}")
 
 
-def to_api(wf, info, include_muted):
+def job_stages(job):
+    """Muted workflow stages a job switches on (node property dnd_stage)."""
+    stages = set()
+    cutout = job.get("cutout", NPC_PRESETS.get(job.get("preset"), {}).get("cutout", False))
+    if job.get("print"):
+        stages.add("print")
+    if cutout:
+        stages.add("cutout")
+    if job.get("print") and cutout:
+        stages.add("cutout-print")
+    return stages
+
+
+def to_api(wf, info, stages):
     """Convert a UI-format workflow to the API format the /prompt endpoint takes."""
     links = {l[0]: (l[1], l[2]) for l in wf["links"]}
     api = {}
     for n in wf["nodes"]:
         if n["type"] in SKIP_TYPES or n.get("mode") == BYPASSED:
             continue
-        if n.get("mode") == MUTED and not include_muted:
+        if n.get("mode") == MUTED and n.get("properties", {}).get("dnd_stage") not in stages:
             continue
         spec = info[n["type"]]["input"]
         order = info[n["type"]].get("input_order", {})
@@ -235,7 +314,11 @@ def job_layout(job):
     """Preset name, generate size, print size, composition text and cover geometry."""
     name = job.get("preset", "full-page")
     geom = None
-    if name in COVER_PRESETS:
+    if name in NPC_PRESETS:
+        w, h = NPC_PRESETS[name]["inches"]
+        gen, prt = gen_for_ratio(w / h), (round(w * PPI), round(h * PPI))
+        composition = NPC_PRESETS[name]["composition"]
+    elif name in COVER_PRESETS:
         geom = cover_geometry(job)
         sw, sh = geom["sheet"]
         gen, prt = gen_for_ratio(sw / sh), (round(sw * PPI), round(sh * PPI))
@@ -330,7 +413,7 @@ def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
                 sched["widgets_values"][0] = steps
                 sched["widgets_values"][3:5] = [mu, std]
 
-            api = to_api(wf, info, include_muted=do_print)
+            api = to_api(wf, info, job_stages(job))
             t0 = time.time()
             pid = comfy.post("/prompt", {"prompt": api})["prompt_id"]
             while True:
@@ -359,7 +442,10 @@ def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
         base = f"{job['name']}_{seed}"
         written = []
         for title, png in images.items():
-            suffix = "print" if title.startswith("Print") else "draft"
+            suffix = {"Draft": "draft", "Print": "print", "Cut-out draft": "cutout",
+                      "Cut-out print": "print_cutout"}.get(
+                next((k for k in ("Cut-out draft", "Cut-out print", "Print", "Draft") if title.startswith(k)), ""),
+                "draft")
             path = os.path.join(out_dir, f"{base}_{suffix}.png")
             with open(path, "wb") as f:
                 f.write(png)
@@ -374,7 +460,7 @@ def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
         loras = [n["widgets_values"][:2] for n in wf["nodes"]
                  if n["type"] == "LoraLoaderModelOnly" and n.get("mode", 0) == 0]
         sidecar = {
-            "name": job["name"], "subject": job["subject"], "title": job.get("title"),
+            "name": job["name"], "npc": job.get("_npc"), "subject": job["subject"], "title": job.get("title"),
             "subtitle": job.get("subtitle"), "house_style": style,
             "composition": composition, "seed": seed, "preset": preset_name, "cover": geom,
             "generate_size": [gen_w, gen_h], "schedule": schedule or "workflow", "print_size": [print_w, print_h] if do_print else None,
@@ -409,6 +495,19 @@ def main():
     if args.draft:
         for j in jobs:
             j["draft"] = True
+    npcs = spec.get("npcs", {})
+    for j in jobs:
+        if "npc" in j:
+            if j["npc"] not in npcs:
+                sys.exit(f"{j['name']}: no character sheet {j['npc']!r} in \"npcs\"")
+            sheet = npcs[j["npc"]]
+            if sheet.get("ancestry") not in ANCESTRIES:
+                sys.exit(f"{j['name']}: ancestry must be one of {', '.join(ANCESTRIES)}")
+            unknown = set(sheet) - set(NPC_FIELDS) - {"name", "notes"}
+            if unknown:
+                sys.exit(f"{j['name']}: unknown character sheet fields {', '.join(sorted(unknown))}")
+            j["_npc"] = dict(sheet, id=j["npc"])
+            j["subject"] = npc_subject(sheet, j.get("subject", ""))
     with open(args.workflow, "rb") as f:
         raw = f.read()
     wf, wf_hash = json.loads(raw), hashlib.sha256(raw).hexdigest()
@@ -419,9 +518,9 @@ def main():
         if j.get("schedule", "turbo") not in SCHEDULES:
             print(f"{j['name']}: unknown schedule {j['schedule']!r} (use {', '.join(SCHEDULES)})")
             bad = True
-        if j.get("preset", "full-page") not in set(PRESETS) | COVER_PRESETS:
+        if j.get("preset", "full-page") not in set(PRESETS) | COVER_PRESETS | set(NPC_PRESETS):
             print(f"{j['name']}: unknown preset {j['preset']!r} "
-                  f"(use {', '.join(list(PRESETS) + sorted(COVER_PRESETS))})")
+                  f"(use {', '.join(list(PRESETS) + list(NPC_PRESETS) + sorted(COVER_PRESETS))})")
             bad = True
             continue
         if j.get("title_position", "top") not in ("top", "bottom"):
@@ -451,10 +550,11 @@ def main():
             preset_name, gen, prt, composition, geom = job_layout(j)
             wf = json.loads(raw)
             node_by_title(wf, T_COMPOSITION, prefix=True)
-            api = to_api(wf, info, include_muted=bool(j.get("print")))
+            api = to_api(wf, info, job_stages(j))
             sheet = "" if geom is None else ", sheet %.3f x %.3f in" % tuple(geom["sheet"])
             print(f"{j['name']}: {preset_name}, generate {gen[0]}x{gen[1]}, "
                   f"print {prt[0]}x{prt[1]}{sheet}, {len(api)} nodes")
+            print(f"  subject: {j['subject']}")
             if composition:
                 print(f"  composition: {composition}")
         return

@@ -1,8 +1,8 @@
 {
   "id": "5e0d1a27-8c4b-4f3e-9d61-2b7a9c4e1f08",
   "revision": 0,
-  "last_node_id": 32,
-  "last_link_id": 33,
+  "last_node_id": 48,
+  "last_link_id": 45,
   "nodes": [
     {
       "id": 1,
@@ -726,7 +726,9 @@
           "type": "IMAGE",
           "links": [
             27,
-            29
+            29,
+            35,
+            37
           ]
         }
       ],
@@ -854,7 +856,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "UpscaleModelLoader"
+        "Node name for S&R": "UpscaleModelLoader",
+        "dnd_stage": "print"
       },
       "widgets_values": [
         "RealESRGAN_x4plus.pth"
@@ -896,7 +899,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "ImageUpscaleWithModel"
+        "Node name for S&R": "ImageUpscaleWithModel",
+        "dnd_stage": "print"
       },
       "title": "Upscale 4x"
     },
@@ -926,12 +930,15 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            31
+            31,
+            41,
+            43
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "ImageScale"
+        "Node name for S&R": "ImageScale",
+        "dnd_stage": "print"
       },
       "widgets_values": [
         "lanczos",
@@ -964,7 +971,8 @@
       ],
       "outputs": [],
       "properties": {
-        "Node name for S&R": "PreviewImage"
+        "Node name for S&R": "PreviewImage",
+        "dnd_stage": "print"
       },
       "title": "Print (right-click, Save Image)"
     },
@@ -988,7 +996,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "## dnd_art_t2i - Ideogram 4, fully local\n\nBase workflow for book art (issue #15). Ideogram 4 fp8 weights, no API nodes, no credits.\n\n### How to use\n\n1. Write the scene in **SUBJECT**. Say what is in the picture, not how it is painted. Describe unusual creatures instead of only naming them (\"an owlbear, a huge bear with an owl's feathered face and hooked beak\").\n2. **COMPOSITION** is optional: where things go and what to keep empty, e.g. \"The top quarter is calm sky, reserved for the title.\" `generate.py` fills it for cover presets.\n3. Leave **HOUSE_STYLE** alone unless you are tuning the house style. Every book-art workflow shares it. Keep it about the painting (medium, palette, lighting, composition): a style block that describes figures or armour turns every subject into a line-up of armoured heroes.\n4. Queue. The draft appears in the **Draft** preview, and **Seed used** shows its seed.\n5. When you like a draft, copy the seed into **SEED** and set it to `fixed`. Select the **Print** group, press **Ctrl+M** to unmute it, and queue again. Right-click the print preview and choose **Save Image**.\n\n### Sizes (full-page preset)\n\n| Stage | Size | Notes |\n|---|---|---|\n| Generate | 1232 x 1584 | GEN_WIDTH / GEN_HEIGHT, both multiples of 16, ratio 0.778 |\n| Print | 2625 x 3375 | 8.75 x 11.25 in at 300 ppi = letter page + 0.125 in bleed |\n\nThe scheduler and the latent both read GEN_WIDTH / GEN_HEIGHT, so change them there only.\n\n### Scheduler presets (Ideogram4Scheduler)\n\n| Preset | steps | mu | std |\n|---|---|---|---|\n| Quality (finals) | 48 | 0.0 | 1.5 |\n| Default (set here) | 20 | 0.0 | 1.75 |\n| Turbo (quick drafts) | 12 | 0.5 | 1.75 |\n\n### Test subjects\n\n- A dwarf cleric in battered plate armour raising a glowing holy symbol in a dark dungeon corridor, skeletons lurching out of the shadows towards her, torchlight on wet stone\n- A ruined hilltop keep at dusk seen from the road below, crows circling the broken tower, a small party of adventurers climbing the path\n- A young elf wizard studying a floating spellbook in a cluttered tower library, candlelight and drifting motes of arcane light\n- A red dragon perched on a crumbling mountain ridge, wings half spread, smoke curling from its jaws, a tiny knight on horseback below for scale\n- An ornate longsword with a sapphire pommel lying on a velvet cloth, on a plain parchment background (spot art)\n\n### Guard LoRAs (do not remove)\n\nWithout a LoRA on **both** the conditional and the unconditional model, the base Ideogram 4 weights ignore the prompt. They return a grey \"Image blocked by safety filter\" card or an unrelated photo. How often this happens depends on the seed and on the total LoRA strength. In tests at Realism Engine 0.6, 3 of 4 seeds came back blocked; at 1.0, 0 of 4 did, and the house style still made the result painterly. Keep both LoRAs at 1.0 until we have a house-style LoRA of our own.\n\n### Rules\n\nNo WotC logos, trade dress or product identity (beholders, mind flayers, displacer beasts, Forgotten Realms names), and no living artists' names. No person-likeness LoRAs."
+        "## dnd_art_t2i - Ideogram 4, fully local\n\nBase workflow for book art (issue #15). Ideogram 4 fp8 weights, no API nodes, no credits.\n\n### How to use\n\n1. Write the scene in **SUBJECT**. Say what is in the picture, not how it is painted. Describe unusual creatures instead of only naming them (\"an owlbear, a huge bear with an owl's feathered face and hooked beak\").\n2. **COMPOSITION** is optional: where things go and what to keep empty, e.g. \"The top quarter is calm sky, reserved for the title.\" `generate.py` fills it for cover presets.\n3. Leave **HOUSE_STYLE** alone unless you are tuning the house style. Every book-art workflow shares it. Keep it about the painting (medium, palette, lighting, composition): a style block that describes figures or armour turns every subject into a line-up of armoured heroes.\n4. Queue. The draft appears in the **Draft** preview, and **Seed used** shows its seed.\n5. When you like a draft, copy the seed into **SEED** and set it to `fixed`. Select the **Print** group, press **Ctrl+M** to unmute it, and queue again. Right-click the print preview and choose **Save Image**.\n6. For a cut-out (transparent background, e.g. a full figure for a column), also unmute **Cut-out**; for a print-size cut-out, unmute **Print**, **Cut-out** and **Cut-out print**. BiRefNet finds the subject, so ask for a plain, flat background in COMPOSITION.\n\n### Sizes (full-page preset)\n\n| Stage | Size | Notes |\n|---|---|---|\n| Generate | 1232 x 1584 | GEN_WIDTH / GEN_HEIGHT, both multiples of 16, ratio 0.778 |\n| Print | 2625 x 3375 | 8.75 x 11.25 in at 300 ppi = letter page + 0.125 in bleed |\n\nThe scheduler and the latent both read GEN_WIDTH / GEN_HEIGHT, so change them there only.\n\n### Scheduler presets (Ideogram4Scheduler)\n\n| Preset | steps | mu | std |\n|---|---|---|---|\n| Quality (finals) | 48 | 0.0 | 1.5 |\n| Default (set here) | 20 | 0.0 | 1.75 |\n| Turbo (quick drafts) | 12 | 0.5 | 1.75 |\n\n### Test subjects\n\n- A dwarf cleric in battered plate armour raising a glowing holy symbol in a dark dungeon corridor, skeletons lurching out of the shadows towards her, torchlight on wet stone\n- A ruined hilltop keep at dusk seen from the road below, crows circling the broken tower, a small party of adventurers climbing the path\n- A young elf wizard studying a floating spellbook in a cluttered tower library, candlelight and drifting motes of arcane light\n- A red dragon perched on a crumbling mountain ridge, wings half spread, smoke curling from its jaws, a tiny knight on horseback below for scale\n- An ornate longsword with a sapphire pommel lying on a velvet cloth, on a plain parchment background (spot art)\n\n### Guard LoRAs (do not remove)\n\nWithout a LoRA on **both** the conditional and the unconditional model, the base Ideogram 4 weights ignore the prompt. They return a grey \"Image blocked by safety filter\" card or an unrelated photo. How often this happens depends on the seed and on the total LoRA strength. In tests at Realism Engine 0.6, 3 of 4 seeds came back blocked; at 1.0, 0 of 4 did, and the house style still made the result painterly. Keep both LoRAs at 1.0 until we have a house-style LoRA of our own.\n\n### Rules\n\nNo WotC logos, trade dress or product identity (beholders, mind flayers, displacer beasts, Forgotten Realms names), and no living artists' names. No person-likeness LoRAs."
       ],
       "title": "How to use this workflow"
     },
@@ -1213,6 +1221,332 @@
         "\n\n"
       ],
       "title": "Subject + composition"
+    },
+    {
+      "id": 40,
+      "type": "LoadBackgroundRemovalModel",
+      "pos": [
+        980,
+        300
+      ],
+      "size": [
+        340,
+        60
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 2,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "BACKGROUND_REMOVAL",
+          "type": "BACKGROUND_REMOVAL",
+          "links": [
+            34,
+            40
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadBackgroundRemovalModel",
+        "dnd_stage": "cutout"
+      },
+      "title": "Cut-out model (BiRefNet)",
+      "widgets_values": [
+        "birefnet.safetensors"
+      ]
+    },
+    {
+      "id": 41,
+      "type": "RemoveBackground",
+      "pos": [
+        980,
+        400
+      ],
+      "size": [
+        340,
+        60
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "bg_removal_model",
+          "type": "BACKGROUND_REMOVAL",
+          "link": 34
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 35
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RemoveBackground",
+        "dnd_stage": "cutout"
+      },
+      "title": "Cut-out mask (draft)"
+    },
+    {
+      "id": 42,
+      "type": "InvertMask",
+      "pos": [
+        980,
+        500
+      ],
+      "size": [
+        340,
+        60
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 36
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InvertMask",
+        "dnd_stage": "cutout"
+      },
+      "title": "Cut-out invert (draft)"
+    },
+    {
+      "id": 43,
+      "type": "JoinImageWithAlpha",
+      "pos": [
+        980,
+        600
+      ],
+      "size": [
+        340,
+        60
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 37
+        },
+        {
+          "name": "alpha",
+          "type": "MASK",
+          "link": 38
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinImageWithAlpha",
+        "dnd_stage": "cutout"
+      },
+      "title": "Cut-out join (draft)"
+    },
+    {
+      "id": 44,
+      "type": "PreviewImage",
+      "pos": [
+        1360,
+        300
+      ],
+      "size": [
+        480,
+        560
+      ],
+      "flags": {},
+      "order": 44,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 39
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "dnd_stage": "cutout"
+      },
+      "title": "Cut-out draft"
+    },
+    {
+      "id": 45,
+      "type": "RemoveBackground",
+      "pos": [
+        1900,
+        400
+      ],
+      "size": [
+        340,
+        60
+      ],
+      "flags": {},
+      "order": 45,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "bg_removal_model",
+          "type": "BACKGROUND_REMOVAL",
+          "link": 40
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            42
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RemoveBackground",
+        "dnd_stage": "cutout-print"
+      },
+      "title": "Cut-out mask (print)"
+    },
+    {
+      "id": 46,
+      "type": "InvertMask",
+      "pos": [
+        1900,
+        500
+      ],
+      "size": [
+        340,
+        60
+      ],
+      "flags": {},
+      "order": 46,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 42
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            44
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InvertMask",
+        "dnd_stage": "cutout-print"
+      },
+      "title": "Cut-out invert (print)"
+    },
+    {
+      "id": 47,
+      "type": "JoinImageWithAlpha",
+      "pos": [
+        1900,
+        600
+      ],
+      "size": [
+        340,
+        60
+      ],
+      "flags": {},
+      "order": 47,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 43
+        },
+        {
+          "name": "alpha",
+          "type": "MASK",
+          "link": 44
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            45
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinImageWithAlpha",
+        "dnd_stage": "cutout-print"
+      },
+      "title": "Cut-out join (print)"
+    },
+    {
+      "id": 48,
+      "type": "PreviewImage",
+      "pos": [
+        2280,
+        300
+      ],
+      "size": [
+        480,
+        560
+      ],
+      "flags": {},
+      "order": 48,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 45
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "dnd_stage": "cutout-print"
+      },
+      "title": "Cut-out print (right-click, Save Image)"
     }
   ],
   "links": [
@@ -1479,6 +1813,102 @@
       3,
       0,
       "STRING"
+    ],
+    [
+      34,
+      40,
+      0,
+      41,
+      0,
+      "BACKGROUND_REMOVAL"
+    ],
+    [
+      35,
+      18,
+      0,
+      41,
+      1,
+      "IMAGE"
+    ],
+    [
+      36,
+      41,
+      0,
+      42,
+      0,
+      "MASK"
+    ],
+    [
+      37,
+      18,
+      0,
+      43,
+      0,
+      "IMAGE"
+    ],
+    [
+      38,
+      42,
+      0,
+      43,
+      1,
+      "MASK"
+    ],
+    [
+      39,
+      43,
+      0,
+      44,
+      0,
+      "IMAGE"
+    ],
+    [
+      40,
+      40,
+      0,
+      45,
+      0,
+      "BACKGROUND_REMOVAL"
+    ],
+    [
+      41,
+      24,
+      0,
+      45,
+      1,
+      "IMAGE"
+    ],
+    [
+      42,
+      45,
+      0,
+      46,
+      0,
+      "MASK"
+    ],
+    [
+      43,
+      24,
+      0,
+      47,
+      0,
+      "IMAGE"
+    ],
+    [
+      44,
+      46,
+      0,
+      47,
+      1,
+      "MASK"
+    ],
+    [
+      45,
+      47,
+      0,
+      48,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [
@@ -1492,6 +1922,32 @@
         680
       ],
       "color": "#8A8",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Cut-out (muted: select, Ctrl+M)",
+      "bounding": [
+        960,
+        220,
+        900,
+        680
+      ],
+      "color": "#a1309b",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Cut-out print (needs Print and Cut-out)",
+      "bounding": [
+        1880,
+        220,
+        900,
+        680
+      ],
+      "color": "#a1309b",
       "font_size": 24,
       "flags": {}
     }

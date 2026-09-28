@@ -16,6 +16,7 @@ Generated images belong in the book's repository (see the starter repo, which ke
    | `text_encoders` | `qwen_3_8b.safetensors` | Text encoder (CLIP type `ideogram4`) |
    | `vae` | `flux2-vae.safetensors` | VAE |
    | `loras` | `Realism_Engine_Ideogram4_V1.safetensors` | Guard LoRA on both models, strength 1.0 (see below) |
+   | `background_removal` | `birefnet.safetensors` | Cut-outs with a transparent background ([Comfy-Org/BiRefNet](https://huggingface.co/Comfy-Org/BiRefNet), MIT) |
    | `upscale_models` | `RealESRGAN_x4plus.pth` | 4x upscale for print ([Real-ESRGAN v0.1.0](https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.1.0), BSD-3) |
 
 3. Drag a workflow from `workflows/` onto the ComfyUI canvas.
@@ -133,3 +134,47 @@ The composition text never says what an empty area is for. "Reserved for the tit
 Test result: covers from these presets, upscaled to print size, built into the adventure example with `bin/build --preflight` as separate front and back art and as one wraparound image, passed with no failures or warnings.
 
 For A4 (8.27 × 11.69 in) or another bleed, work out the print size as inches × 300. For full-bleed art, add twice the bleed to the width and to the height.
+
+## NPC portraits
+
+Describe each NPC once, in the `npcs` section of a jobs file, and refer to it from jobs with `npc`. `generate.py` turns the character sheet into SUBJECT, then adds the job's own `subject` (a pose or scene):
+
+```json
+{
+  "npcs": {
+    "borin": {
+      "name": "Borin Ashgrave",
+      "ancestry": "dwarf", "role": "old mine foreman", "gender": "man", "age": "elderly",
+      "build": "barrel-chested", "skin": "deep brown",
+      "hair": "a long white beard in three braids bound with iron rings",
+      "clothing": "a soot-stained quilted jerkin and heavy boots",
+      "gear": "a miner's pick and a hooded lantern",
+      "mood": "stern and tired", "palette": "rust and lantern gold"
+    }
+  },
+  "jobs": [
+    { "name": "borin-figure", "npc": "borin", "preset": "figure", "print": true }
+  ]
+}
+```
+
+- Fields: `ancestry` (required), `role`, `gender`, `age`, `build`, `skin`, `hair`, `face`, `clothing`, `gear`, `mood` and `palette`. `name` and `notes` are for you and never go into the prompt, because a name can end up lettered into the picture.
+- `ancestry` is one of the SRD ancestries: human, dwarf, elf, halfling, gnome, dragonborn, half-elf, half-orc, orc, tiefling or goliath. Each adds a short physical description, since a bare "dwarf" is often drawn as a human.
+- Vary age, build, skin, hair and gender across a book's cast, so the NPCs do not all look alike.
+
+| Preset | Use | Print (px) | Print size (in) |
+|---|---|---|---|
+| `bust` | Head and shoulders, 4:5, for `\DndFadedImage` or a figure in a column | 1000 × 1251 | 3.335 × 4.17 |
+| `figure` | Full length on a plain background, cut out, for a column | 1000 × 1500 | 3.335 × 5 |
+| `npc-page` | The character in a setting, for `\DndFullPageImage` or `\DndFacingArt` | 2625 × 3375 | 8.75 × 11.25 |
+
+### Cut-outs
+
+`figure` jobs are cut out by default: BiRefNet finds the character and the background becomes transparent, saved as `<name>_<seed>_cutout.png` (and `_print_cutout.png` with `print`). Set `"cutout": true` or `false` on any job to change this. In ComfyUI, unmute the **Cut-out** group, and for print size also **Print** and **Cut-out print**. A plain, flat background in COMPOSITION gives the cleanest edges.
+
+Use the cut-out PNG in a column (see "Cut-out art" in the main README). XeLaTeX needs 8-bit PNGs, which is what ComfyUI saves.
+
+### Keeping an NPC consistent
+
+The same character sheet with the same seed gives the closest match across a bust, a figure and scenes. `comfyui/jobs/npcs.json` has a four-image consistency set for one NPC (`mirela-consistency-1` to `-4`). If the faces drift too far between images, the next steps are img2img from a chosen portrait, or a small character LoRA trained locally from the portraits you keep.
+
