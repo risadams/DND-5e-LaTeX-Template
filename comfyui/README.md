@@ -86,6 +86,7 @@ A jobs file lists the images:
 ```
 
 - `preset` is one of `full-page`, `chapter`, `span`, `column` or `square`, or `cover-front`, `cover-back` or `cover-wrap` (see [Sizes](#sizes)). `gen` and `print_size` override the sizes, e.g. `"gen": [1024, 1024]`.
+- `title` and `subtitle` (`cover-front` and `cover-wrap` only) have Ideogram paint the title into the art; see [Covers](#covers).
 - Cover presets also take `title_position` (`top` or `bottom`, as in `\DndFrontCover`), `trim` (`[8.5, 11]`), `bleed` (`0.125`) and `spine` (`0.25`), in inches. Each cover image also gets a `_guides.png` copy showing the trim (cyan), the spine folds, the safe area (magenta), the title, author and blurb areas (yellow) and a barcode space (white), matching what `\DndCoverSpread[guides]` draws.
 - `composition` sets the COMPOSITION text (where things go, what to keep empty). Cover presets fill it in; set it to `""` to leave it empty.
 - `count` is the number of images, each with a random seed. `seed` fixes the seed, for example to reproduce a draft.
@@ -122,6 +123,13 @@ Cover sizes depend on the trim size, bleed and, for the wraparound spread, the s
 
 Each cover preset fills **COMPOSITION** with where the subject goes and what to keep empty. The template sets the title and subtitle 0.75 in from the top of the trim, and the author 0.75 in from the bottom; with `title-position=bottom` they swap. The back cover's blurb box sits just above the middle, and printers usually put the barcode in the lower right. For a wraparound, the subject goes in the right half (the front cover), and the left half stays quiet for the blurb.
 
-The generated art needs no text: LaTeX sets the title, subtitle, author, blurb and spine text.
+There are two ways to put the title on the front cover:
+
+- **LaTeX sets it** (the default). The art has no lettering, and `\DndFrontCover[title=..., subtitle=..., author=...]` sets the text in the book's fonts. The composition keeps the title band as calm, open sky or shadow.
+- **Ideogram paints it.** Give the job a `title` (and optionally a `subtitle`), and the title is painted into the title band as ornate fantasy lettering, like the logo on an official cover. For that job only, the house style's "No text" line becomes "No other text". Leave `title=` and `subtitle=` out of `\DndFrontCover` and keep `author=`: the author band is kept empty for LaTeX to fill. Check the spelling in every draft, because the model sometimes gets letters wrong. Limitation: in `\DndCoverSpread`, `title=` also sets the spine text, so leaving it out to avoid a second title on the front leaves the spine without a title.
+
+The composition text never says what an empty area is for. "Reserved for the title" or "room for the author's name" made Ideogram paint a made-up title or name there (6 of 12 test covers), so the text only asks for calm, plain areas with no lettering.
+
+Test result: covers from these presets, upscaled to print size, built into the adventure example with `bin/build --preflight` as separate front and back art and as one wraparound image, passed with no failures or warnings.
 
 For A4 (8.27 × 11.69 in) or another bleed, work out the print size as inches × 300. For full-bleed art, add twice the bleed to the width and to the height.

@@ -47,33 +47,51 @@ COVER_PRESETS = {"cover-front", "cover-back", "cover-wrap"}
 COVER_DEFAULTS = {"trim": [8.5, 11], "bleed": 0.125, "spine": 0.25, "title_position": "top"}
 PPI = 300
 
-# Default COMPOSITION text per cover preset and title position.
-COMPOSITION = {
-    ("cover-front", "top"):
-        "Book cover composition: the main subject is large and fills the lower two thirds "
-        "of the picture, centred. The top quarter of the picture is calm, uncluttered sky or "
-        "shadow with no important detail, reserved for the title. Nothing important near the edges.",
-    ("cover-front", "bottom"):
-        "Book cover composition: the main subject is large and fills the upper two thirds "
-        "of the picture, centred. The bottom third of the picture is calm, uncluttered ground or "
-        "shadow with no important detail, reserved for the title. Nothing important near the edges.",
-    ("cover-back", None):
-        "Back cover composition: a quiet, atmospheric scene with no central figure. The middle "
-        "of the picture is calm and evenly toned, suitable for a block of text over it. "
-        "The lower right corner is plain.",
-    ("cover-wrap", "top"):
-        "A very wide panoramic scene for a wraparound book cover. The main subject is large, in "
-        "the right half of the picture. The left half continues the same scene quietly, with a "
-        "calm, evenly toned area in its middle and no figures there. The top quarter of the right "
-        "half is calm sky, reserved for the title. Nothing important in a narrow strip down the "
-        "exact centre.",
-    ("cover-wrap", "bottom"):
-        "A very wide panoramic scene for a wraparound book cover. The main subject is large, in "
-        "the upper part of the right half of the picture. The left half continues the same scene "
-        "quietly, with a calm, evenly toned area in its middle and no figures there. The bottom "
-        "third of the right half is calm ground or shadow, reserved for the title. Nothing "
-        "important in a narrow strip down the exact centre.",
-}
+# COMPOSITION text for the cover presets. Words like "reserved for the title"
+# make Ideogram paint a made-up title, so without a real title the text only
+# asks for calm, empty areas.
+def cover_composition(preset, position, title="", subtitle=""):
+    if preset == "cover-back":
+        return ("Back cover composition: a quiet, atmospheric scene with no central figure. The "
+                "middle of the picture is calm and evenly toned, with no lettering. The lower right "
+                "corner is plain.")
+    top = position == "top"
+    title_area = "the top quarter" if top else "the bottom third"
+    author_area = "the bottom strip" if top else "the top strip"
+    where = "of the picture" if preset == "cover-front" else "of the right half of the picture"
+    if preset == "cover-front":
+        text = ("Book cover composition: the main subject is large and fills the "
+                f"{'lower' if top else 'upper'} two thirds of the picture, centred.")
+    else:
+        text = ("A very wide panoramic scene for a wraparound book cover. The main subject is large, "
+                f"in the {'' if top else 'upper part of the '}right half of the picture. The left half "
+                "continues the same scene quietly, with a calm, evenly toned area in its middle, no "
+                "figures and no lettering there. Nothing important in a narrow strip down the exact "
+                "centre.")
+    if title:
+        text += (f' Across {title_area} {where}, the title "{title}" is written in large, ornate, '
+                 "carved fantasy lettering with a metallic finish, centred")
+        if subtitle:
+            text += f', with the subtitle "{subtitle}" in smaller lettering beneath it'
+        text += ". Spell the words exactly."
+    else:
+        text += (f" {title_area[0].upper() + title_area[1:]} {where} is calm, open "
+                 f"{'sky' if top else 'ground'} or shadow with no detail and no lettering.")
+    # Not "room for the author's name": naming the purpose makes Ideogram letter one.
+    text += (f" {author_area[0].upper() + author_area[1:]} {where} is calm and plain, with no "
+             "detail and no lettering. Nothing important near the edges.")
+    return text
+
+
+def job_style(style, job):
+    """The house style for a job: a painted title needs "no other text" instead of "no text"."""
+    if not job.get("title"):
+        return style
+    allowed = "the title and subtitle" if job.get("subtitle") else "the title"
+    return re.sub(r"^No text,.*?no UI elements\.", f"No other text: no letters or words except {allowed}, "
+                  "no watermark, no signature, no logos, no border, no frame, no UI elements.",
+                  style, flags=re.M)
+
 
 # Ideogram4Scheduler settings: steps, mu, std.
 SCHEDULES = {
@@ -221,8 +239,8 @@ def job_layout(job):
         geom = cover_geometry(job)
         sw, sh = geom["sheet"]
         gen, prt = gen_for_ratio(sw / sh), (round(sw * PPI), round(sh * PPI))
-        pos = None if name == "cover-back" else geom["title_position"]
-        composition = COMPOSITION[(name, pos)]
+        composition = cover_composition(name, geom["title_position"],
+                                        job.get("title", ""), job.get("subtitle", ""))
     else:
         gen, prt, composition = PRESETS[name]["gen"], PRESETS[name]["print"], ""
     gen = tuple(job.get("gen", gen))
@@ -292,7 +310,8 @@ def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
         gen_w, gen_h = round(gen_w * .7 / 16) * 16, round(gen_h * .7 / 16) * 16  # about half the pixels
     do_print = bool(job.get("print", False))
     fixed_seed = job.get("seed")
-    style = node_by_title(wf, T_STYLE, prefix=True)["widgets_values"][0]
+    style_node = node_by_title(wf, T_STYLE, prefix=True)
+    style = style_node["widgets_values"][0] = job_style(style_node["widgets_values"][0], job)
 
     results = []
     for i in range(job.get("count", 1)):
@@ -355,7 +374,8 @@ def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
         loras = [n["widgets_values"][:2] for n in wf["nodes"]
                  if n["type"] == "LoraLoaderModelOnly" and n.get("mode", 0) == 0]
         sidecar = {
-            "name": job["name"], "subject": job["subject"], "house_style": style,
+            "name": job["name"], "subject": job["subject"], "title": job.get("title"),
+            "subtitle": job.get("subtitle"), "house_style": style,
             "composition": composition, "seed": seed, "preset": preset_name, "cover": geom,
             "generate_size": [gen_w, gen_h], "schedule": schedule or "workflow", "print_size": [print_w, print_h] if do_print else None,
             "loras": loras, "workflow": workflow_name(job["_workflow"]),
@@ -408,7 +428,11 @@ def main():
             print(f"{j['name']}: title_position must be top or bottom")
             bad = True
             continue
-        found = banned_in(j["subject"] + "\n" + job_layout(j)[3] + "\n" + style, terms)
+        if j.get("title") and j.get("preset") not in ("cover-front", "cover-wrap"):
+            print(f"{j['name']}: title only works with cover-front and cover-wrap")
+            bad = True
+            continue
+        found = banned_in(j["subject"] + "\n" + job_layout(j)[3] + "\n" + job_style(style, j), terms)
         if found:
             print(f"{j['name']}: banned terms in prompt: {', '.join(found)}")
             bad = True
