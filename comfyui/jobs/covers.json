@@ -1,0 +1,41 @@
+{
+  "out": "generated/covers",
+  "jobs": [
+    {
+      "name": "hero-party-front",
+      "preset": "cover-front",
+      "title_position": "top",
+      "count": 4,
+      "subject": "A band of four adventurers standing on a cliff edge at sunset, looking out over a vast ruined city in a misty valley, a red dragon circling the tallest tower"
+    },
+    {
+      "name": "titled-front",
+      "preset": "cover-front",
+      "title_position": "top",
+      "count": 4,
+      "title": "The Drowned Chapel",
+      "subtitle": "An Adventure for Characters of 3rd Level",
+      "subject": "A ruined stone chapel half sunk in a misty lake at dusk, its broken bell tower leaning, a faint ghostly light in the empty windows, a small rowing boat with two adventurers approaching"
+    },
+    {
+      "name": "villain-front",
+      "preset": "cover-front",
+      "title_position": "bottom",
+      "count": 4,
+      "subject": "A lich in tattered royal robes rising from a sarcophagus in a vast crypt, green witchlight burning in its eye sockets, skeletal hands raised"
+    },
+    {
+      "name": "location-back",
+      "preset": "cover-back",
+      "count": 2,
+      "subject": "The misty valley of a vast ruined city at dusk, broken towers and overgrown walls, crows in the sky"
+    },
+    {
+      "name": "monster-wrap",
+      "preset": "cover-wrap",
+      "spine": 0.4,
+      "count": 2,
+      "subject": "A vast ruined city in a misty valley at sunset; on the right, a red dragon perched on the tallest broken tower, wings spread; on the left, the empty overgrown streets and walls stretch away into the mist"
+    }
+  ]
+}

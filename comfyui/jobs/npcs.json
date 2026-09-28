@@ -1,0 +1,61 @@
+{
+  "out": "generated/npcs",
+  "npcs": {
+    "mirela": {
+      "name": "Mirela Vost",
+      "notes": "Innkeeper of the Salted Eel, secretly a smuggler",
+      "ancestry": "half-elf",
+      "role": "innkeeper",
+      "gender": "woman",
+      "age": "middle-aged",
+      "build": "sturdy",
+      "skin": "warm olive",
+      "hair": "greying black hair tied back with a leather cord",
+      "face": "a small scar through her left eyebrow",
+      "clothing": "a rolled-sleeve linen shirt, a stained leather apron and a green scarf",
+      "gear": "a brass ring of keys at her belt",
+      "mood": "wry, watchful half-smile",
+      "palette": "sea green and brass"
+    },
+    "borin": {
+      "name": "Borin Ashgrave",
+      "ancestry": "dwarf",
+      "role": "old mine foreman",
+      "gender": "man",
+      "age": "elderly",
+      "build": "barrel-chested",
+      "skin": "deep brown",
+      "hair": "a long white beard in three braids bound with iron rings",
+      "clothing": "a soot-stained quilted jerkin and heavy boots",
+      "gear": "a miner's pick and a hooded lantern",
+      "mood": "stern and tired",
+      "palette": "rust and lantern gold"
+    },
+    "sefa": {
+      "name": "Sefa of the Ninth Bell",
+      "ancestry": "dragonborn",
+      "role": "temple guard captain",
+      "gender": "woman",
+      "age": "young adult",
+      "build": "tall and athletic",
+      "skin": "bronze-scaled",
+      "clothing": "polished scale armour over a white surcoat with a bell emblem",
+      "gear": "a glaive and a round bronze shield",
+      "mood": "calm, proud and alert",
+      "palette": "bronze and white"
+    }
+  },
+  "jobs": [
+    { "name": "mirela-bust", "npc": "mirela", "preset": "bust", "count": 2 },
+    { "name": "borin-figure", "npc": "borin", "preset": "figure", "count": 2 },
+    { "name": "sefa-page", "npc": "sefa", "preset": "npc-page",
+      "subject": "She stands guard on the steps of a great bell temple at dawn.", "count": 2 },
+
+    { "name": "mirela-consistency-1", "npc": "mirela", "preset": "bust", "seed": 4242 },
+    { "name": "mirela-consistency-2", "npc": "mirela", "preset": "figure", "seed": 4242 },
+    { "name": "mirela-consistency-3", "npc": "mirela", "preset": "npc-page", "seed": 4242,
+      "subject": "She pours ale behind the bar of a crowded, lamp-lit tavern." },
+    { "name": "mirela-consistency-4", "npc": "mirela", "preset": "npc-page", "seed": 4242,
+      "subject": "She hands a sealed crate to a hooded sailor on a foggy pier at night." }
+  ]
+}

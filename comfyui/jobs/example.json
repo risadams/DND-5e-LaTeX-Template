@@ -1,0 +1,24 @@
+{
+  "out": "generated",
+  "jobs": [
+    {
+      "name": "keep-at-dusk",
+      "preset": "chapter",
+      "subject": "A ruined hilltop keep at dusk seen from the road below, crows circling the broken tower, a small party of adventurers climbing the path",
+      "count": 2
+    },
+    {
+      "name": "dwarf-cleric",
+      "preset": "column",
+      "subject": "A short, stocky, broad-shouldered dwarf woman cleric in battered plate armour, braided hair, raising a glowing holy symbol in a dark dungeon corridor, skeletons lurching out of the shadows towards her, torchlight on wet stone",
+      "count": 1,
+      "print": true
+    },
+    {
+      "name": "sapphire-sword",
+      "preset": "square",
+      "subject": "An ornate longsword with a sapphire pommel lying on a velvet cloth, on a plain parchment background, spot illustration",
+      "seed": 12345
+    }
+  ]
+}

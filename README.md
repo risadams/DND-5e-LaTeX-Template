@@ -509,7 +509,7 @@ Print-on-demand services want the cover as a separate PDF with the back cover, s
 \end{document}
 ```
 
-Use `wrap-art=<file>` instead of `art` and `back-art` for one image across the whole spread. The spine is filled with `spine-color` (default `titlered`) and gets the title and author in `spine-text-color` when it is wider than 0.25in. Remove `guides` before sending the file to print.
+Use `wrap-art=<file>` instead of `art` and `back-art` for one image across the whole spread. The spine is filled with `spine-color` (default `titlered`) and gets the title and author in `spine-text-color` when it is wider than 0.25in. `spine-title` sets the spine's title on its own: when the cover art already has the title painted in (see [`comfyui/README.md`](comfyui/README.md#covers)), leave out `title` and `subtitle` and set `spine-title` instead. Remove `guides` before sending the file to print.
 
 Cut-out art (a PNG with a transparent background) works with every command. Save PNGs as 8-bit: XeLaTeX cannot show 16-bit PNGs with transparency. `bin/prepare-images SRC DEST` converts a folder of images to 8-bit, lists the largest size each can print at 300 dpi, and with `--cmyk PROFILE.icc` converts them to CMYK for print.
 

@@ -1,0 +1,29 @@
+{
+  "out": "generated/house-style-test",
+  "jobs": [
+    { "name": "01-dwarf-cleric", "preset": "column", "draft": true,
+      "subject": "A short, stocky, broad-shouldered dwarf woman cleric in battered plate armour, braided hair, raising a glowing holy symbol in a dark dungeon corridor, skeletons lurching out of the shadows towards her, torchlight on wet stone" },
+    { "name": "02-elf-wizard", "preset": "column", "draft": true,
+      "subject": "A young elf wizard with long silver hair studying a floating spellbook in a cluttered tower library, candlelight and drifting motes of arcane light" },
+    { "name": "03-halfling-rogue", "preset": "square", "draft": true,
+      "subject": "A grinning halfling rogue in a dark hooded cloak crouched on a tavern rafter above a crowded common room, a stolen coin purse in one hand" },
+    { "name": "04-ruined-keep", "preset": "chapter", "draft": true,
+      "subject": "A ruined hilltop keep at dusk seen from the road below, crows circling the broken tower, a small party of adventurers climbing the path" },
+    { "name": "05-red-dragon", "preset": "full-page", "draft": true,
+      "subject": "A red dragon perched on a crumbling mountain ridge, wings half spread, smoke curling from its jaws, a tiny knight on horseback on the path far below for scale" },
+    { "name": "06-owlbear-ambush", "preset": "span", "draft": true,
+      "subject": "An owlbear, a huge bear with an owl's feathered face and hooked beak, bursting out of a misty pine forest onto a muddy trail, a ranger drawing her bow and a fighter raising his shield" },
+    { "name": "07-lich", "preset": "full-page", "draft": true,
+      "subject": "A lich in tattered royal robes on a throne of bone in a vast crypt, green witchlight burning in its eye sockets, its phylactery glowing on the armrest" },
+    { "name": "08-market-city", "preset": "chapter", "draft": true,
+      "subject": "A bustling harbour city market at midday, merchants of many peoples under colourful awnings, tall ships in the harbour behind, gulls overhead" },
+    { "name": "09-sword-spot", "preset": "square", "draft": true,
+      "subject": "An ornate longsword with a sapphire pommel lying on a velvet cloth, on a plain parchment background, spot illustration" },
+    { "name": "10-potion-spot", "preset": "square", "draft": true,
+      "subject": "Three glass potion bottles of different shapes, one glowing red, one swirling blue, one smoking green, on a plain parchment background, spot illustration" },
+    { "name": "11-tiefling-warlock", "preset": "column", "draft": true,
+      "subject": "A tiefling warlock with curling horns and a long coat conjuring violet eldritch fire between her hands on a rain-soaked city rooftop at night" },
+    { "name": "12-sahuagin-raid", "preset": "span", "draft": true,
+      "subject": "Sahuagin, scaly fish-headed sea devils with fins and claws, carrying tridents and climbing out of the surf onto a moonlit fishing village beach, villagers fleeing with lanterns" }
+  ]
+}

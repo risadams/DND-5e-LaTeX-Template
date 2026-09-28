@@ -18,3 +18,8 @@
 .DS_Store
 fonts/
 *.xdv
+
+# ComfyUI output from comfyui/generate.py
+comfyui/jobs/generated/
+
+comfyui/__pycache__/

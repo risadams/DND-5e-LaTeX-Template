@@ -1,0 +1,69 @@
+# Terms that must not appear in a book-art prompt. generate.py refuses any
+# job whose prompt contains one (whole words, case-insensitive).
+#
+# Product identity named in the SRD 5.1 legal notice, WotC trademarks and
+# settings, and named WotC characters. SRD creatures and your own setting
+# are fine. Add a line to ban more; lines starting with # are comments.
+
+# Trademarks
+Dungeons & Dragons
+Dungeons and Dragons
+D&D
+Wizards of the Coast
+WotC
+Player's Handbook
+Dungeon Master's Guide
+Monster Manual
+d20 System
+
+# Settings and places
+Forgotten Realms
+Faerun
+Faerûn
+Sword Coast
+Waterdeep
+Baldur's Gate
+Neverwinter
+Underdark
+Thay
+Red Wizard
+City of Brass
+Sigil
+Lady of Pain
+Greyhawk
+Eberron
+Ravenloft
+Barovia
+Dragonlance
+Krynn
+Spelljammer
+Planescape
+Dark Sun
+Athas
+Baator
+
+# Creatures (SRD 5.1 product identity)
+beholder
+gauth
+carrion crawler
+tanar'ri
+baatezu
+displacer beast
+githyanki
+githzerai
+mind flayer
+illithid
+umber hulk
+yuan-ti
+
+# Named characters
+Strahd
+Drizzt
+Elminster
+Mordenkainen
+Tasha
+Xanathar
+Volo
+Vecna
+Lolth
+Acererak
