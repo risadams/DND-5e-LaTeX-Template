@@ -65,7 +65,9 @@ ANCESTRIES = {
     "elf": "with pointed ears and fine, sharp features",
     "halfling": "a small person about three feet tall with an adult's proportions",
     "gnome": "a small person about three and a half feet tall, bright-eyed",
-    "dragonborn": "a tall humanoid with a dragon's scaled head and scaly skin, no tail and no wings",
+    # "no tail" was ignored (negations often are); describe what is there instead
+    "dragonborn": "a tall, tailless, wingless humanoid with a dragon's scaled head and scaly skin, "
+                  "standing upright on two legs like a human",
     "half-elf": "with slightly pointed ears",
     "half-orc": "with grey-green skin, a heavy brow and small tusks",
     "orc": "tall and muscular, with grey-green skin, a heavy brow and small tusks",
