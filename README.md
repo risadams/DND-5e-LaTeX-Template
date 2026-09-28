@@ -454,7 +454,7 @@ A page left blank before a chapter or part has no footer or page number, so it d
 | ------- | ------ |
 | `\maketitle` | A title page in the book's fonts, from `\title`, `\author` and, if you set it, `\date`. |
 | `\DndSubtitle{text}` | A line under the title on the title page. |
-| `\DndFacingArt[fade=..., graphics={...}]{file}` | Put before `\chapter` or `\part`: full-page art on the left-hand page facing it, instead of a blank page. If the text ends on a left-hand page, a blank right-hand page comes first so the art still faces the chapter. Left out of the printer-friendly edition. |
+| `\DndFacingArt[fade=..., graphics={...}]{file}` | Put before `\chapter` or `\part`: full-page art on the left-hand page facing it, instead of a blank page. If the text ends on a left-hand page, a blank right-hand page comes first so the art still faces the chapter. Right after `\part` (or its `\label`), the art goes on the back of the part page. Left out of the printer-friendly edition. |
 | `\DndSectionBreak[color]` | A centered ornament between two passages of the same section; the text after it starts without an indent. |
 | `\DndOrnament[width][color]` | The ornament on its own, e.g. on a title or credits page. |
 

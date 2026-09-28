@@ -60,11 +60,35 @@
 \bool_if:NT \l__dnd_layout_bool
   { \RenewDocumentCommand \cleardoublepage { } { \__dnd_clear_to_recto: } }
 
-% titlesec adds the blank page after a part page itself, in the empty page
-% style; give it the blank page style too (patched below with normal
-% catcodes, as \patchcmd retokenizes the macro)
+% With openright, titlesec adds a blank page after a part page itself. It is
+% held back until the part is done: if \DndFacingArt comes next (after an
+% optional \label), the art goes on the back of the part page instead;
+% otherwise the blank page is added in the blank page style. (Patched below
+% with normal catcodes, as \patchcmd retokenizes the macro.)
+\bool_new:N \g__dnd_part_back_bool
+
+% Replaces titlesec's "\null <page style> \newpage"
+\cs_new_protected:Npn \__dnd_part_back:w #1 \newpage
+  { \bool_gset_true:N \g__dnd_part_back_bool }
+
+% Replaces the \ignorespaces at the end of the part
+\cs_new_protected:Npn \__dnd_part_end:
+  {
+    \peek_meaning_ignore_spaces:NTF \label
+      { \__dnd_part_label:w }
+      {
+        \bool_if:NT \g__dnd_part_back_bool
+          {
+            \bool_gset_false:N \g__dnd_part_back_bool
+            \peek_meaning:NF \DndFacingArt { \__dnd_blank_page: }
+          }
+      }
+  }
+\cs_new_protected:Npn \__dnd_part_label:w \label #1
+  { \label {#1} \__dnd_part_end: }
+
 \msg_new:nnn { dnd } { structure / part_patch }
-  { Could~not~patch~titlesec;~the~page~after~a~part~keeps~its~background. }
+  { Could~not~patch~titlesec;~facing~art~cannot~use~the~back~of~a~part~page. }
 \cs_new_protected:Npn \__dnd_part_patch_failed:
   { \msg_warning:nn { dnd } { structure / part_patch } }
 
@@ -104,7 +128,9 @@
 % A full-page image on the left-hand page facing the next chapter or part,
 % instead of a blank page. Put it just before \chapter or \part. If the
 % text ends on a left-hand page, a blank right-hand page comes first so the
-% art still faces the chapter. Left out of the printer-friendly edition.
+% art still faces the chapter. Right after \part, it goes on the back of
+% the part page (see "Blank pages"). Left out of the printer-friendly
+% edition.
 % \DndFacingArt[fade=..., graphics={...}]{<file>}
 \NewDocumentCommand {\DndFacingArt} { O{} m }
   {
@@ -209,11 +235,18 @@
 
 \ExplSyntaxOff
 
-% The blank page after a part (see "Blank pages" above)
+% The blank page after a part (see "Blank pages" above). The end is patched
+% first, so the blank page is only held back if something will add it.
 \ifdefined\ttl@page@ii
   \patchcmd\ttl@page@ii
-    {{\thispagestyle{empty}}}
-    {{\thispagestyle{dndblank}}}
-    {}
+    {\ignorespaces}
+    {\csname __dnd_part_end:\endcsname}
+    {%
+      \patchcmd\ttl@page@ii
+        {\if@openright\null}
+        {\if@openright\csname __dnd_part_back:w\endcsname}
+        {}
+        {\csname __dnd_part_patch_failed:\endcsname}%
+    }
     {\csname __dnd_part_patch_failed:\endcsname}
 \fi
