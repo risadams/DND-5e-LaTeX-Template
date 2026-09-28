@@ -47,4 +47,18 @@ Text.
 
 \chapter{After the Part}
 Text.
+
+% The facing art goes on the back of the part page (#19): part page,
+% art, chapter on three pages in a row, with no blank pages
+\DndPartArt{examples/art/part}
+\part{A Part With Facing Art}
+\label{part:facing}
+\DndFacingArt{examples/art/chapter}
+\DndChapterArt{examples/art/landscape}
+\chapter{Facing the Part Page}
+Text.
+
+% Text right after a part still starts after the blank back of the part page
+\part{A Part With Text}
+Text after a part.
 \end{document}

@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * **Visible change:** body typography follows measurements of the 2014 core books (see [docs/typography.md](docs/typography.md)). Text is hyphenated (`hyphenate=false` restores the old line breaking); a single line of a paragraph is no longer left alone at the top or bottom of a column; columns end where their text ends (`\raggedbottom`); the columns on the last page of each chapter, part and the document are balanced (`balance=false` turns this off); subsections are 16.4pt and subsubsections 13pt (from 14.4pt and 12pt), and the space around headings matches the books. Existing documents will break lines and pages differently.
 
 ### Fixed
+* With `openright`, `\DndFacingArt` right after `\part` goes on the back of the part page, instead of after two blank pages (#19)
 * `DndReadAloud` no longer typesets a stray `;` (a "Missing character" warning in the log)
 * With XeLaTeX and the default fonts, curly quotes, guillemets, dashes, the ellipsis, "œ" and "ß" print correctly instead of going missing (or "ß" printing as "SS")
 * `fontpath` is looked up like any input file, so a book in another folder finds the template's `fonts/solbera/`

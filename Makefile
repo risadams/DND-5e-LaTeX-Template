@@ -87,4 +87,6 @@ test:
 	done; exit $$status
 	@grep -B1 'Monsters' test/appendix-include-screen.toc | head -1 | grep -q tocchapapp || \
 	  { echo "the appendix is not labeled Appendix in the contents"; exit 1; }
+	@grep -q 'Facing the Part Page}{17}' test/book-structure-screen.toc || \
+	  { echo "art after a part is not on the back of the part page (#19)"; exit 1; }
 	texlua bin/build --engine=$(ENGINE) --options=style=2024 --suffix=-2024 screen example.tex
