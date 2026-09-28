@@ -1,0 +1,24 @@
+{
+  "out": "generated/interior",
+  "book_mood": "a cold, foggy northern coast; grey-green sea, wet stone, lantern light in the mist",
+  "jobs": [
+    { "name": "chapter-location", "preset": "chapter", "count": 2,
+      "subject": "A ruined stone chapel half sunk in a misty tidal lake, its broken bell tower leaning, gulls on the roof, the shore of a fishing village in the distance" },
+    { "name": "part-travel", "preset": "part", "count": 2,
+      "subject": "A lone wagon on a cliff road above a stormy grey sea at dusk, a lighthouse far away on a headland" },
+    { "name": "facing-battle", "preset": "facing", "count": 2,
+      "subject": "Adventurers fighting a swarm of drowned zombies, pale and dripping seaweed, climbing out of the black water onto the chapel steps at night, a cleric's holy light blazing" },
+    { "name": "splash-creature", "preset": "splash", "count": 2,
+      "subject": "A kraken's enormous tentacles rising out of a stormy sea around a small fishing boat, lightning in the clouds" },
+    { "name": "faded-landscape", "preset": "faded-wide", "count": 2,
+      "subject": "A foggy fishing village of stone cottages and moored boats along a grey shingle beach, smoke rising from chimneys" },
+    { "name": "faded-vignette", "preset": "faded", "count": 2,
+      "subject": "An old priest ringing a green bronze bell in a lantern-lit belfry, fog drifting through the open arches" },
+    { "name": "spot-item", "preset": "spot", "count": 2,
+      "subject": "A tarnished bronze hand bell with a cracked lip and a knotted rope handle, spot illustration" },
+    { "name": "spot-creature", "preset": "spot", "count": 2,
+      "subject": "A giant crab with a barnacle-crusted shell and one huge claw raised, spot illustration" },
+    { "name": "spot-treasure", "preset": "spot", "count": 2,
+      "subject": "A small heap of old gold coins, a pearl necklace and a silver goblet spilling from a rotten wooden chest, spot illustration" }
+  ]
+}

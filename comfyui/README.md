@@ -86,7 +86,7 @@ A jobs file lists the images:
 }
 ```
 
-- `preset` is one of `full-page`, `chapter`, `span`, `column` or `square`, or `cover-front`, `cover-back` or `cover-wrap` (see [Sizes](#sizes)). `gen` and `print_size` override the sizes, e.g. `"gen": [1024, 1024]`.
+- `preset` is an interior preset (`chapter`, `part`, `facing`, `splash`, `faded`, `faded-wide`, `spot`, or the plain `full-page`, `span`, `column` and `square`; see [Sizes](#sizes)), an NPC preset (`bust`, `figure`, `npc-page`; see [NPC portraits](#npc-portraits)) or a cover preset (`cover-front`, `cover-back`, `cover-wrap`; see [Covers](#covers)). `gen` and `print_size` override the sizes, e.g. `"gen": [1024, 1024]`.
 - `title` and `subtitle` (`cover-front` and `cover-wrap` only) have Ideogram paint the title into the art; see [Covers](#covers).
 - Cover presets also take `title_position` (`top` or `bottom`, as in `\DndFrontCover`), `trim` (`[8.5, 11]`), `bleed` (`0.125`) and `spine` (`0.25`), in inches. Each cover image also gets a `_guides.png` copy showing the trim (cyan), the spine folds, the safe area (magenta), the title, author and blurb areas (yellow) and a barcode space (white), matching what `\DndCoverSpread[guides]` draws.
 - `composition` sets the COMPOSITION text (where things go, what to keep empty). Cover presets fill it in; set it to `""` to leave it empty.
@@ -98,19 +98,24 @@ A jobs file lists the images:
 
 The script reads the workflow (`workflows/dnd_art_t2i.json`, or `--workflow`) each time it runs. To change the house style, models or sampler settings, edit them in ComfyUI and save the workflow over that file. The script finds the nodes it fills in by their titles: SUBJECT, COMPOSITION, HOUSE_STYLE, GEN_WIDTH, GEN_HEIGHT, SEED and "Scale to print size". Keep those titles.
 
-Each image is written as `<name>_<seed>_draft.png` (and `_print.png`), with `<name>_<seed>.json` beside it. The JSON records the subject, house style, seed, sizes, LoRAs and a hash of the workflow file: the image's provenance. `comfyui/jobs/example.json` has three sample jobs, `comfyui/jobs/covers.json` has front, back and wraparound covers, and `comfyui/jobs/house-style-test.json` has 12 drafts for judging the house style across characters, scenes, SRD creatures, items and every preset. Their output goes to `comfyui/jobs/generated/`, which git ignores.
+Each image is written as `<name>_<seed>_draft.png` (and `_print.png`), with `<name>_<seed>.json` beside it. The JSON records the subject, house style, seed, sizes, LoRAs and a hash of the workflow file: the image's provenance. `comfyui/jobs/example.json` has three sample jobs, `comfyui/jobs/interior.json` has one job per interior preset, `comfyui/jobs/npcs.json` has NPC portraits, `comfyui/jobs/covers.json` has front, back and wraparound covers, and `comfyui/jobs/house-style-test.json` has 12 drafts for judging the house style across characters, scenes, SRD creatures, items and every preset. Their output goes to `comfyui/jobs/generated/`, which git ignores.
 
 ## Sizes
 
 Print needs 300 ppi at the final size. The sizes below are for letter paper with the template's layout: 0.75 in side margins, 0.33 in between the columns (so the text is 7.0 in wide and each column 3.335 in), and a 0.125 in bleed on every edge. Set **GEN_WIDTH** and **GEN_HEIGHT** to the Generate size, and the **Scale to print size** node to the Print size. The generate sizes are multiples of 16, about 2 megapixels, and within 0.5% of the print shape; the print stage crops the difference from the centre.
 
-| Command | Generate | Print (px) | Print size (in) |
-| --- | --- | --- | --- |
-| `\DndFullPageImage`, `\DndPartArt`, `\DndFacingArt`, `\DndPageBackground` | 1232 × 1584 | 2625 × 3375 | 8.75 × 11.25, full bleed |
-| `\DndChapterArt` (default `height=.4\paperheight`) | 2016 × 1040 | 2625 × 1350 | 8.75 × 4.5, bleed on top and sides |
-| `\DndFadedImage*`, `\DndSpanImage` (2:1) | 1920 × 960 | 2100 × 1050 | 7.0 × 3.5 |
-| `\DndFadedImage` in a column, portrait (3:4) | 1200 × 1600 | 1000 × 1335 | 3.335 × 4.45 |
-| `\DndFadedImage` in a column, square, or spot art | 1344 × 1344 | 1000 × 1000 | 3.335 × 3.335 |
+| Command | Preset | Generate | Print (px) | Print size (in) | Composition |
+| --- | --- | --- | --- | --- | --- |
+| `\DndChapterArt` (default `height=.4\paperheight`) | `chapter` | 2016 × 1040 | 2625 × 1350 | 8.75 × 4.5, bleed on top and sides | Wide scene; the bottom quarter quiet, where the art fades into the page above the chapter title |
+| `\DndPartArt` | `part` | 1232 × 1584 | 2625 × 3375 | 8.75 × 11.25, full bleed | The central band calm, behind the part title |
+| `\DndFacingArt` | `facing` | 1232 × 1584 | 2625 × 3375 | 8.75 × 11.25, full bleed | Subject in the left two thirds, away from the binding |
+| `\DndFullPageImage`, `\DndPageBackground` | `splash` or `full-page` | 1232 × 1584 | 2625 × 3375 | 8.75 × 11.25, full bleed | None |
+| `\DndFadedImage*`, `\DndSpanImage` (2:1) | `faded-wide` (or `span`) | 1920 × 960 | 2100 × 1050 | 7.0 × 3.5 | Subject centred, soft quiet edges |
+| `\DndFadedImage` in a column, portrait (3:4) | `faded` (or `column`) | 1200 × 1600 | 1000 × 1335 | 3.335 × 4.45 | Subject centred, soft quiet edges |
+| Spot art in a column, cut out | `spot` | 1344 × 1344 | 1000 × 1000 | 3.335 × 3.335 | One object or vignette on a plain background; cut out by default |
+| Any square image in a column | `square` | 1344 × 1344 | 1000 × 1000 | 3.335 × 3.335 | None |
+
+`full-page`, `span`, `column` and `square` are the plain sizes without a composition. The printer-friendly edition leaves out chapter, part and facing art, so only faded images and spot art need to look right on white paper.
 
 ### Covers
 
@@ -177,4 +182,18 @@ Use the cut-out PNG in a column (see "Cut-out art" in the main README). XeLaTeX 
 ### Keeping an NPC consistent
 
 The same character sheet with the same seed gives the closest match across a bust, a figure and scenes. `comfyui/jobs/npcs.json` has a four-image consistency set for one NPC (`mirela-consistency-1` to `-4`). If the faces drift too far between images, the next steps are img2img from a chosen portrait, or a small character LoRA trained locally from the portraits you keep.
+
+## Interior art
+
+`comfyui/jobs/interior.json` has one job for each interior preset, with subjects of the kinds a book needs: a location (chapter), a journey (part), a battle (facing), an SRD creature (splash), a landscape and a vignette (faded images), and an item, a creature and treasure as spot art. Use SRD monsters only; describe any creature the model might not know (see [House style](#house-style)).
+
+### Book mood
+
+A jobs file can set `book_mood`, one line that is added to the house style for every job in the file, so that one book's art feels like a set:
+
+```json
+{ "book_mood": "a cold, foggy northern coast; grey-green sea, wet stone, lantern light in the mist", "jobs": [ ... ] }
+```
+
+Keep it to the setting's colours, weather and light. Anything about figures or composition belongs in the subjects.
 

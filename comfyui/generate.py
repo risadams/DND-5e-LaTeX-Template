@@ -33,13 +33,40 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_WORKFLOW = os.path.join(HERE, "workflows", "dnd_art_t2i.json")
 BANNED_FILE = os.path.join(HERE, "banned-terms.txt")
 
-# Generate and print sizes per template command (see README, "Sizes").
+# Generate and print sizes per template command (see README, "Sizes"), with the
+# default COMPOSITION and whether the result is cut out. The composition never
+# says what an area is for (a title, text): that makes Ideogram letter it.
+FULL_PAGE = {"gen": (1232, 1584), "print": (2625, 3375)}
+COLUMN = {"gen": (1200, 1600), "print": (1000, 1335)}
+SPAN = {"gen": (1920, 960), "print": (2100, 1050)}
+SQUARE = {"gen": (1344, 1344), "print": (1000, 1000)}
 PRESETS = {
-    "full-page": {"gen": (1232, 1584), "print": (2625, 3375)},
-    "chapter":   {"gen": (2016, 1040), "print": (2625, 1350)},
-    "span":      {"gen": (1920, 960),  "print": (2100, 1050)},
-    "column":    {"gen": (1200, 1600), "print": (1000, 1335)},
-    "square":    {"gen": (1344, 1344), "print": (1000, 1000)},
+    # plain sizes, no composition
+    "full-page": FULL_PAGE,
+    "span": SPAN,
+    "column": COLUMN,
+    "square": SQUARE,
+    # one per art command
+    "chapter": {"gen": (2016, 1040), "print": (2625, 1350), "composition":
+                "A wide panoramic scene. The bottom quarter of the picture is quiet, soft and "
+                "simple, fading into mist or shadow, with nothing important in it."},
+    "part": dict(FULL_PAGE, composition=
+                 "The central band of the picture, from about two fifths to three fifths of its "
+                 "height, is calm, open sky, mist or shadow with no detail and no lettering. The "
+                 "main subject is above or below that band."),
+    "facing": dict(FULL_PAGE, composition=
+                   "The main subject is in the left two thirds of the picture. The right edge of "
+                   "the picture is calm and plain, with nothing important near it."),
+    "splash": FULL_PAGE,
+    "faded": dict(COLUMN, composition=
+                  "The subject is centred with space around it. The edges of the picture are "
+                  "soft, simple and quiet."),
+    "faded-wide": dict(SPAN, composition=
+                       "The subject is centred with space around it. The edges of the picture are "
+                       "soft, simple and quiet."),
+    "spot": dict(SQUARE, cutout=True, composition=
+                 "A single object or small vignette, centred, on a plain, flat, off-white "
+                 "background with no scenery, no floor and no cast shadow."),
 }
 
 # NPC portrait presets: print size in inches (column width 3.335in) and the
@@ -152,7 +179,10 @@ def cover_composition(preset, position, title="", subtitle=""):
 
 
 def job_style(style, job):
-    """The house style for a job: a painted title needs "no other text" instead of "no text"."""
+    """The house style for a job: the book's mood line, and "no other text" instead of
+    "no text" when the job paints a title."""
+    if job.get("_book_mood"):
+        style = style.rstrip("\n") + "\nMood for this book: " + job["_book_mood"]
     if not job.get("title"):
         return style
     allowed = "the title and subtitle" if job.get("subtitle") else "the title"
@@ -229,7 +259,8 @@ def node_by_title(wf, title, prefix=False):
 def job_stages(job):
     """Muted workflow stages a job switches on (node property dnd_stage)."""
     stages = set()
-    cutout = job.get("cutout", NPC_PRESETS.get(job.get("preset"), {}).get("cutout", False))
+    preset = job.get("preset", "full-page")
+    cutout = job.get("cutout", {**PRESETS, **NPC_PRESETS}.get(preset, {}).get("cutout", False))
     if job.get("print"):
         stages.add("print")
     if cutout:
@@ -327,7 +358,8 @@ def job_layout(job):
         composition = cover_composition(name, geom["title_position"],
                                         job.get("title", ""), job.get("subtitle", ""))
     else:
-        gen, prt, composition = PRESETS[name]["gen"], PRESETS[name]["print"], ""
+        gen, prt = PRESETS[name]["gen"], PRESETS[name]["print"]
+        composition = PRESETS[name].get("composition", "")
     gen = tuple(job.get("gen", gen))
     prt = tuple(job.get("print_size", prt))
     composition = job.get("composition", composition)
@@ -499,6 +531,8 @@ def main():
             j["draft"] = True
     npcs = spec.get("npcs", {})
     for j in jobs:
+        if spec.get("book_mood"):
+            j["_book_mood"] = spec["book_mood"]
         if "npc" in j:
             if j["npc"] not in npcs:
                 sys.exit(f"{j['name']}: no character sheet {j['npc']!r} in \"npcs\"")
