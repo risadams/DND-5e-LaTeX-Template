@@ -69,6 +69,7 @@ Write down the seed and the SUBJECT of every image you keep. Together with the w
 python comfyui/generate.py mybook/art/jobs.json
 python comfyui/generate.py mybook/art/jobs.json --only cover-hero
 python comfyui/generate.py mybook/art/jobs.json --check     # banned-terms check only
+python comfyui/generate.py mybook/art/jobs.json --dry-run   # sizes and prompts, no images
 ```
 
 A jobs file lists the images:
@@ -83,16 +84,18 @@ A jobs file lists the images:
 }
 ```
 
-- `preset` is one of `full-page`, `chapter`, `span`, `column` or `square` (see [Sizes](#sizes)). `gen` and `print_size` override the sizes, e.g. `"gen": [1024, 1024]`.
+- `preset` is one of `full-page`, `chapter`, `span`, `column` or `square`, or `cover-front`, `cover-back` or `cover-wrap` (see [Sizes](#sizes)). `gen` and `print_size` override the sizes, e.g. `"gen": [1024, 1024]`.
+- Cover presets also take `title_position` (`top` or `bottom`, as in `\DndFrontCover`), `trim` (`[8.5, 11]`), `bleed` (`0.125`) and `spine` (`0.25`), in inches. Each cover image also gets a `_guides.png` copy showing the trim (cyan), the spine folds, the safe area (magenta), the title, author and blurb areas (yellow) and a barcode space (white), matching what `\DndCoverSpread[guides]` draws.
+- `composition` sets the COMPOSITION text (where things go, what to keep empty). Cover presets fill it in; set it to `""` to leave it empty.
 - `count` is the number of images, each with a random seed. `seed` fixes the seed, for example to reproduce a draft.
 - `draft: true` is for trying out ideas quickly: the Turbo schedule at 0.7 × the generate size (about half the pixels, roughly a minute per image). Use the same seed without `draft` to get the finished image, which will differ in detail.
 - `schedule` is `turbo`, `default` or `quality` (12, 20 or 48 steps). Without it, the job uses the workflow's own setting.
 - `print: true` also runs the print stage.
 - `out` is the output folder, relative to the jobs file.
 
-The script reads the workflow (`workflows/dnd_art_t2i.json`, or `--workflow`) each time it runs. To change the house style, models or sampler settings, edit them in ComfyUI and save the workflow over that file. The script finds the nodes it fills in by their titles: SUBJECT, HOUSE_STYLE, GEN_WIDTH, GEN_HEIGHT, SEED and "Scale to print size". Keep those titles.
+The script reads the workflow (`workflows/dnd_art_t2i.json`, or `--workflow`) each time it runs. To change the house style, models or sampler settings, edit them in ComfyUI and save the workflow over that file. The script finds the nodes it fills in by their titles: SUBJECT, COMPOSITION, HOUSE_STYLE, GEN_WIDTH, GEN_HEIGHT, SEED and "Scale to print size". Keep those titles.
 
-Each image is written as `<name>_<seed>_draft.png` (and `_print.png`), with `<name>_<seed>.json` beside it. The JSON records the subject, house style, seed, sizes, LoRAs and a hash of the workflow file: the image's provenance. `comfyui/jobs/example.json` has three sample jobs, and `comfyui/jobs/house-style-test.json` has 12 drafts for judging the house style across characters, scenes, SRD creatures, items and every preset. Their output goes to `comfyui/jobs/generated/`, which git ignores.
+Each image is written as `<name>_<seed>_draft.png` (and `_print.png`), with `<name>_<seed>.json` beside it. The JSON records the subject, house style, seed, sizes, LoRAs and a hash of the workflow file: the image's provenance. `comfyui/jobs/example.json` has three sample jobs, `comfyui/jobs/covers.json` has front, back and wraparound covers, and `comfyui/jobs/house-style-test.json` has 12 drafts for judging the house style across characters, scenes, SRD creatures, items and every preset. Their output goes to `comfyui/jobs/generated/`, which git ignores.
 
 ## Sizes
 
@@ -106,6 +109,18 @@ Print needs 300 ppi at the final size. The sizes below are for letter paper with
 | `\DndFadedImage` in a column, portrait (3:4) | 1200 × 1600 | 1000 × 1335 | 3.335 × 4.45 |
 | `\DndFadedImage` in a column, square, or spot art | 1344 × 1344 | 1000 × 1000 | 3.335 × 3.335 |
 
-Covers and the wraparound cover spread depend on the spine width and come with #16.
+### Covers
+
+Cover sizes depend on the trim size, bleed and, for the wraparound spread, the spine width from your printer's cover calculator. `generate.py` works them out; the defaults are letter trim, 0.125 in bleed and a 0.25 in spine.
+
+| Preset | Command | Sheet (in) | Print (px) at the defaults |
+|---|---|---|---|
+| `cover-front` | `\DndFrontCover`, or `art=` of `\DndCoverSpread` | trim + 2 × bleed: 8.75 × 11.25 | 2625 × 3375 |
+| `cover-back` | `\DndBackCover`, or `back-art=` | trim + 2 × bleed: 8.75 × 11.25 | 2625 × 3375 |
+| `cover-wrap` | `wrap-art=` of `\DndCoverSpread` | 2 × trim width + spine + 2 × bleed: 17.5 × 11.25 | 5250 × 3375 |
+
+Each cover preset fills **COMPOSITION** with where the subject goes and what to keep empty. The template sets the title and subtitle 0.75 in from the top of the trim, and the author 0.75 in from the bottom; with `title-position=bottom` they swap. The back cover's blurb box sits just above the middle, and printers usually put the barcode in the lower right. For a wraparound, the subject goes in the right half (the front cover), and the left half stays quiet for the blurb.
+
+The generated art needs no text: LaTeX sets the title, subtitle, author, blurb and spine text.
 
 For A4 (8.27 × 11.69 in) or another bleed, work out the print size as inches × 300. For full-bleed art, add twice the bleed to the width and to the height.

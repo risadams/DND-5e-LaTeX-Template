@@ -42,6 +42,39 @@ PRESETS = {
     "square":    {"gen": (1344, 1344), "print": (1000, 1000)},
 }
 
+# Cover presets: sizes come from the trim size, bleed and spine (inches).
+COVER_PRESETS = {"cover-front", "cover-back", "cover-wrap"}
+COVER_DEFAULTS = {"trim": [8.5, 11], "bleed": 0.125, "spine": 0.25, "title_position": "top"}
+PPI = 300
+
+# Default COMPOSITION text per cover preset and title position.
+COMPOSITION = {
+    ("cover-front", "top"):
+        "Book cover composition: the main subject is large and fills the lower two thirds "
+        "of the picture, centred. The top quarter of the picture is calm, uncluttered sky or "
+        "shadow with no important detail, reserved for the title. Nothing important near the edges.",
+    ("cover-front", "bottom"):
+        "Book cover composition: the main subject is large and fills the upper two thirds "
+        "of the picture, centred. The bottom third of the picture is calm, uncluttered ground or "
+        "shadow with no important detail, reserved for the title. Nothing important near the edges.",
+    ("cover-back", None):
+        "Back cover composition: a quiet, atmospheric scene with no central figure. The middle "
+        "of the picture is calm and evenly toned, suitable for a block of text over it. "
+        "The lower right corner is plain.",
+    ("cover-wrap", "top"):
+        "A very wide panoramic scene for a wraparound book cover. The main subject is large, in "
+        "the right half of the picture. The left half continues the same scene quietly, with a "
+        "calm, evenly toned area in its middle and no figures there. The top quarter of the right "
+        "half is calm sky, reserved for the title. Nothing important in a narrow strip down the "
+        "exact centre.",
+    ("cover-wrap", "bottom"):
+        "A very wide panoramic scene for a wraparound book cover. The main subject is large, in "
+        "the upper part of the right half of the picture. The left half continues the same scene "
+        "quietly, with a calm, evenly toned area in its middle and no figures there. The bottom "
+        "third of the right half is calm ground or shadow, reserved for the title. Nothing "
+        "important in a narrow strip down the exact centre.",
+}
+
 # Ideogram4Scheduler settings: steps, mu, std.
 SCHEDULES = {
     "turbo":   (12, 0.5, 1.75),
@@ -53,6 +86,7 @@ SCHEDULES = {
 T_SUBJECT, T_STYLE = "SUBJECT", "HOUSE_STYLE"
 T_WIDTH, T_HEIGHT, T_SEED = "GEN_WIDTH", "GEN_HEIGHT", "SEED"
 T_PRINT_SCALE = "Scale to print size"
+T_COMPOSITION = "COMPOSITION"
 SKIP_TYPES = {"MarkdownNote", "Note"}
 WIDGET_TYPES = {"INT", "FLOAT", "STRING", "BOOLEAN", "COMBO"}
 MUTED, BYPASSED = 2, 4
@@ -153,6 +187,93 @@ def workflow_name(path):
     return (path if rel.startswith("..") else rel).replace(os.sep, "/")
 
 
+def gen_for_ratio(ratio, lo=1.8, hi=2.1):
+    """Width and height, multiples of 16 and lo-hi megapixels, closest to ratio."""
+    best = None
+    for w in range(512, 4096, 16):
+        for h in range(512, 4096, 16):
+            if lo <= w * h / 1e6 <= hi:
+                err = abs(w / h - ratio)
+                if best is None or err < best[0]:
+                    best = (err, w, h)
+    return best[1], best[2]
+
+
+def cover_geometry(job):
+    """Sheet layout of a cover job in inches (see lib/dndcover.sty)."""
+    g = {k: job.get(k, v) for k, v in COVER_DEFAULTS.items()}
+    tw, th = g["trim"]
+    b, s = g["bleed"], g["spine"]
+    if job["preset"] == "cover-wrap":
+        g["sheet"] = [2 * tw + s + 2 * b, th + 2 * b]
+        g["panels"] = {"back": b, "front": b + tw + s}
+    else:
+        g["sheet"] = [tw + 2 * b, th + 2 * b]
+        g["panels"] = {job["preset"][len("cover-"):]: b}
+    return g
+
+
+def job_layout(job):
+    """Preset name, generate size, print size, composition text and cover geometry."""
+    name = job.get("preset", "full-page")
+    geom = None
+    if name in COVER_PRESETS:
+        geom = cover_geometry(job)
+        sw, sh = geom["sheet"]
+        gen, prt = gen_for_ratio(sw / sh), (round(sw * PPI), round(sh * PPI))
+        pos = None if name == "cover-back" else geom["title_position"]
+        composition = COMPOSITION[(name, pos)]
+    else:
+        gen, prt, composition = PRESETS[name]["gen"], PRESETS[name]["print"], ""
+    gen = tuple(job.get("gen", gen))
+    prt = tuple(job.get("print_size", prt))
+    composition = job.get("composition", composition)
+    return name, gen, prt, composition, geom
+
+
+def draw_guides(png, geom, preset):
+    """A smaller copy of a cover image with trim, fold, safe-area and text areas drawn on."""
+    try:
+        from io import BytesIO
+        from PIL import Image, ImageDraw
+    except ImportError:
+        return None
+    im = Image.open(BytesIO(png)).convert("RGB")
+    im.thumbnail((1800, 1800))
+    sw, sh = geom["sheet"]
+    tw, th = geom["trim"]
+    b, k = geom["bleed"], im.width / sw
+    over = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(over)
+
+    def box(x0, y0, x1, y1, outline=None, fill=None, width=2):
+        # inches from the top-left corner of the sheet
+        d.rectangle([x0 * k, y0 * k, x1 * k, y1 * k], outline=outline, fill=fill, width=width)
+
+    box(b, b, sw - b, sh - b, outline=(0, 255, 255, 255))  # trim
+    if preset == "cover-wrap":
+        for x in (b + tw, b + tw + geom["spine"]):  # spine folds
+            d.line([x * k, 0, x * k, im.height], fill=(0, 255, 255, 255), width=2)
+    for panel, x0 in geom["panels"].items():
+        box(x0 + .25, b + .25, x0 + tw - .25, b + th - .25, outline=(255, 0, 255, 255))  # safe area
+        if panel == "front":
+            if geom["title_position"] == "top":
+                title, author = (b + .75, b + 2.35), (b + th - 1.15, b + th - .75)
+            else:
+                title, author = (b + th - 3.1, b + th - 1.5), (b + .75, b + 1.15)
+            for y0, y1 in (title, author):
+                box(x0 + .75, y0, x0 + tw - .75, y1, fill=(255, 220, 0, 90))
+        else:
+            cy = b + .45 * th  # blurb box centre, measured from the top
+            box(x0 + .75, cy - 2, x0 + tw - .75, cy + 2, fill=(255, 220, 0, 90))
+            box(x0 + tw - .25 - 2, b + th - .25 - 1.2, x0 + tw - .25, b + th - .25,
+                fill=(255, 255, 255, 140))  # barcode
+    im = Image.alpha_composite(im.convert("RGBA"), over).convert("RGB")
+    out = BytesIO()
+    im.save(out, "PNG")
+    return out.getvalue()
+
+
 def is_blocked(png):
     try:
         from io import BytesIO
@@ -164,13 +285,11 @@ def is_blocked(png):
 
 
 def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
-    preset = PRESETS[job.get("preset", "full-page")]
-    gen_w, gen_h = job.get("gen", preset["gen"])
+    preset_name, (gen_w, gen_h), (print_w, print_h), composition, geom = job_layout(job)
     draft = bool(job.get("draft", False))
     schedule = job.get("schedule", "turbo" if draft else None)
     if draft and "gen" not in job:
         gen_w, gen_h = round(gen_w * .7 / 16) * 16, round(gen_h * .7 / 16) * 16  # about half the pixels
-    print_w, print_h = job.get("print_size", preset["print"])
     do_print = bool(job.get("print", False))
     fixed_seed = job.get("seed")
     style = node_by_title(wf, T_STYLE, prefix=True)["widgets_values"][0]
@@ -180,6 +299,7 @@ def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
         seed = fixed_seed if fixed_seed is not None else random.randrange(2**50)
         for attempt in range(max_retries + 1):
             node_by_title(wf, T_SUBJECT, prefix=True)["widgets_values"][0] = job["subject"]
+            node_by_title(wf, T_COMPOSITION, prefix=True)["widgets_values"][0] = composition
             node_by_title(wf, T_WIDTH)["widgets_values"][0] = gen_w
             node_by_title(wf, T_HEIGHT)["widgets_values"][0] = gen_h
             node_by_title(wf, T_SEED)["widgets_values"][:2] = [seed, "fixed"]
@@ -225,11 +345,18 @@ def run_job(comfy, info, wf, wf_hash, job, out_dir, max_retries):
             with open(path, "wb") as f:
                 f.write(png)
             written.append(os.path.basename(path))
+            if geom is not None:
+                guides = draw_guides(png, geom, preset_name)
+                if guides is not None:
+                    path = os.path.join(out_dir, f"{base}_{suffix}_guides.png")
+                    with open(path, "wb") as f:
+                        f.write(guides)
+                    written.append(os.path.basename(path))
         loras = [n["widgets_values"][:2] for n in wf["nodes"]
                  if n["type"] == "LoraLoaderModelOnly" and n.get("mode", 0) == 0]
         sidecar = {
             "name": job["name"], "subject": job["subject"], "house_style": style,
-            "seed": seed, "preset": job.get("preset", "full-page"),
+            "composition": composition, "seed": seed, "preset": preset_name, "cover": geom,
             "generate_size": [gen_w, gen_h], "schedule": schedule or "workflow", "print_size": [print_w, print_h] if do_print else None,
             "loras": loras, "workflow": workflow_name(job["_workflow"]),
             "workflow_sha256": wf_hash, "files": written,
@@ -250,6 +377,8 @@ def main():
     ap.add_argument("--workflow", default=DEFAULT_WORKFLOW, help="UI-format workflow to use")
     ap.add_argument("--only", action="append", help="run only the job with this name (repeatable)")
     ap.add_argument("--check", action="store_true", help="check the prompts for banned terms and stop")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="show each job's sizes and prompt and build its graph, without generating")
     ap.add_argument("--retries", type=int, default=3, help="new seeds to try after a blocked card (default %(default)s)")
     args = ap.parse_args()
 
@@ -266,10 +395,16 @@ def main():
         if j.get("schedule", "turbo") not in SCHEDULES:
             print(f"{j['name']}: unknown schedule {j['schedule']!r} (use {', '.join(SCHEDULES)})")
             bad = True
-        if j.get("preset", "full-page") not in PRESETS:
-            print(f"{j['name']}: unknown preset {j['preset']!r} (use {', '.join(PRESETS)})")
+        if j.get("preset", "full-page") not in set(PRESETS) | COVER_PRESETS:
+            print(f"{j['name']}: unknown preset {j['preset']!r} "
+                  f"(use {', '.join(list(PRESETS) + sorted(COVER_PRESETS))})")
             bad = True
-        found = banned_in(j["subject"] + "\n" + style, terms)
+            continue
+        if j.get("title_position", "top") not in ("top", "bottom"):
+            print(f"{j['name']}: title_position must be top or bottom")
+            bad = True
+            continue
+        found = banned_in(j["subject"] + "\n" + job_layout(j)[3] + "\n" + style, terms)
         if found:
             print(f"{j['name']}: banned terms in prompt: {', '.join(found)}")
             bad = True
@@ -283,6 +418,18 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     comfy = Comfy(args.server)
     info = comfy.get("/object_info")
+    if args.dry_run:
+        for j in jobs:
+            preset_name, gen, prt, composition, geom = job_layout(j)
+            wf = json.loads(raw)
+            node_by_title(wf, T_COMPOSITION, prefix=True)
+            api = to_api(wf, info, include_muted=bool(j.get("print")))
+            sheet = "" if geom is None else ", sheet %.3f x %.3f in" % tuple(geom["sheet"])
+            print(f"{j['name']}: {preset_name}, generate {gen[0]}x{gen[1]}, "
+                  f"print {prt[0]}x{prt[1]}{sheet}, {len(api)} nodes")
+            if composition:
+                print(f"  composition: {composition}")
+        return
     for j in jobs:
         j["_workflow"] = os.path.abspath(args.workflow)
         print(f"{j['name']} ({j.get('preset', 'full-page')}, {j.get('count', 1)} image(s)"
