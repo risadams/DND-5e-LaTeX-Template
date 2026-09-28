@@ -1,6 +1,6 @@
 {
   "out": "generated/interior",
-  "book_mood": "a cold, foggy northern coast; grey-green sea, wet stone, lantern light in the mist",
+  "book_mood": "a cold, foggy northern coast; grey-green sea, wet stone, pale diffuse light",
   "jobs": [
     { "name": "chapter-location", "preset": "chapter", "count": 2,
       "subject": "A ruined stone chapel half sunk in a misty tidal lake, its broken bell tower leaning, gulls on the roof, the shore of a fishing village in the distance" },

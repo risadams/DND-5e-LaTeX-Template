@@ -192,8 +192,8 @@ The same character sheet with the same seed gives the closest match across a bus
 A jobs file can set `book_mood`, one line that is added to the house style for every job in the file, so that one book's art feels like a set:
 
 ```json
-{ "book_mood": "a cold, foggy northern coast; grey-green sea, wet stone, lantern light in the mist", "jobs": [ ... ] }
+{ "book_mood": "a cold, foggy northern coast; grey-green sea, wet stone, pale diffuse light", "jobs": [ ... ] }
 ```
 
-Keep it to the setting's colours, weather and light. Anything about figures or composition belongs in the subjects.
+Keep it to the setting's colours, weather and quality of light. Do not name objects: an earlier mood line with "lantern light in the mist" put a lantern, and a person holding it, into most pictures, including the spot art of a bell. Anything about figures or composition belongs in the subjects.
 
